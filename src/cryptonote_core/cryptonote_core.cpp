@@ -1607,7 +1607,6 @@ namespace cryptonote
     m_check_updates_interval.do_call(boost::bind(&core::check_updates, this));
     m_check_disk_space_interval.do_call(boost::bind(&core::check_disk_space, this));
     m_block_rate_interval.do_call(boost::bind(&core::check_block_rate, this));
-    m_blockchain_pruning_interval.do_call(boost::bind(&core::update_blockchain_pruning, this));
     m_miner.on_idle();
     m_mempool.on_idle();
     return true;
@@ -1809,31 +1808,15 @@ namespace cryptonote
     return f;
   }
   //-----------------------------------------------------------------------------------------------
-  static double probability1(unsigned int blocks, unsigned int expected)
+  static double probability(unsigned int blocks, unsigned int expected)
   {
     // https://www.umass.edu/wsp/resources/poisson/#computing
     return pow(expected, blocks) / (factorial(blocks) * exp(expected));
   }
   //-----------------------------------------------------------------------------------------------
-  static double probability(unsigned int blocks, unsigned int expected)
-  {
-    double p = 0.0;
-    if (blocks <= expected)
-    {
-      for (unsigned int b = 0; b <= blocks; ++b)
-        p += probability1(b, expected);
-    }
-    else if (blocks > expected)
-    {
-      for (unsigned int b = blocks; b <= expected * 3 /* close enough */; ++b)
-        p += probability1(b, expected);
-    }
-    return p;
-  }
-  //-----------------------------------------------------------------------------------------------
   bool core::check_block_rate()
   {
-    if (m_offline || m_nettype == FAKECHAIN || m_target_blockchain_height > get_current_blockchain_height())
+    if (m_offline || m_target_blockchain_height > get_current_blockchain_height())
     {
       MDEBUG("Not checking block rate, offline or syncing");
       return true;
@@ -1844,40 +1827,21 @@ namespace cryptonote
     const time_t now = time(NULL);
     const std::vector<time_t> timestamps = m_blockchain_storage.get_last_block_timestamps(60);
 
-    static const unsigned int seconds[] = { 5400, 3600, 1800, 1200, 600 };
+    static const unsigned int seconds[] = { 5400, 1800, 600 };
     for (size_t n = 0; n < sizeof(seconds)/sizeof(seconds[0]); ++n)
     {
       unsigned int b = 0;
-      const time_t time_boundary = now - static_cast<time_t>(seconds[n]);
-      for (time_t ts: timestamps) b += ts >= time_boundary;
+      for (time_t ts: timestamps) b += ts >= now - seconds[n];
       const double p = probability(b, seconds[n] / DIFFICULTY_TARGET_V2);
       MDEBUG("blocks in the last " << seconds[n] / 60 << " minutes: " << b << " (probability " << p << ")");
       if (p < threshold)
       {
         MWARNING("There were " << b << " blocks in the last " << seconds[n] / 60 << " minutes, there might be large hash rate changes, or we might be partitioned, cut off from the Monero network or under attack. Or it could be just sheer bad luck.");
-
-        std::shared_ptr<tools::Notify> block_rate_notify = m_block_rate_notify;
-        if (block_rate_notify)
-        {
-          auto expected = seconds[n] / DIFFICULTY_TARGET_V2;
-          block_rate_notify->notify("%t", std::to_string(seconds[n] / 60).c_str(), "%b", std::to_string(b).c_str(), "%e", std::to_string(expected).c_str(), NULL);
-        }
-
         break; // no need to look further
       }
     }
 
     return true;
-  }
-  //-----------------------------------------------------------------------------------------------
-  bool core::update_blockchain_pruning()
-  {
-    return m_blockchain_storage.update_blockchain_pruning();
-  }
-  //-----------------------------------------------------------------------------------------------
-  bool core::check_blockchain_pruning()
-  {
-    return m_blockchain_storage.check_blockchain_pruning();
   }
   //-----------------------------------------------------------------------------------------------
   void core::set_target_blockchain_height(uint64_t target_blockchain_height)
