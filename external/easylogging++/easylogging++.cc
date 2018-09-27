@@ -2071,12 +2071,6 @@ void VRegistry::setCategories(const char* categories, bool clear) {
     m_categoriesString += ",";
   m_categoriesString += categories;
 
-  size_t n_fields = m_categories.size() + 1;
-  for (const char *ptr = categories; *ptr; ++ptr)
-    if (*ptr == ',')
-      ++n_fields;
-  m_categories.reserve(n_fields);
-
   bool isCat = true;
   bool isLevel = false;
   std::stringstream ss;
