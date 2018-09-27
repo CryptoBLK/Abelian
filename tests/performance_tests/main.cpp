@@ -78,16 +78,10 @@ int main(int argc, char** argv)
   const command_line::arg_descriptor<bool> arg_verbose = { "verbose", "Verbose output", false };
   const command_line::arg_descriptor<bool> arg_stats = { "stats", "Including statistics (min/median)", false };
   const command_line::arg_descriptor<unsigned> arg_loop_multiplier = { "loop-multiplier", "Run for that many times more loops", 1 };
-  const command_line::arg_descriptor<std::string> arg_timings_database = { "timings-database", "Keep timings history in a file" };
   command_line::add_arg(desc_options, arg_filter);
   command_line::add_arg(desc_options, arg_verbose);
   command_line::add_arg(desc_options, arg_stats);
   command_line::add_arg(desc_options, arg_loop_multiplier);
-  command_line::add_arg(desc_options, arg_timings_database);
-
-  po::variables_map vm;
-  bool r = command_line::handle_error_helper(desc_options, [&]()
-  {
     po::store(po::parse_command_line(argc, argv, desc_options), vm);
     po::notify(vm);
     return true;
