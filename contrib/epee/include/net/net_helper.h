@@ -138,15 +138,6 @@ namespace net_utils
 			catch(...) { /* ignore */ }
 		}
 
-		inline void set_ssl(ssl_options_t ssl_options)
-		{
-			if (ssl_options)
-				m_ctx = ssl_options.create_context();
-			else
-				m_ctx = boost::asio::ssl::context(boost::asio::ssl::context::tlsv12);
-			m_ssl_options = std::move(ssl_options);
-		}
-
     inline
       bool connect(const std::string& addr, int port, std::chrono::milliseconds timeout)
     {
