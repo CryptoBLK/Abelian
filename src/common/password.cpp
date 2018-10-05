@@ -75,7 +75,7 @@ namespace
       {
         break;
       }
-      else if (ucs2_ch == L'\r')
+      else if (ucs2_ch == L'\n' || ucs2_ch == L'\r')
       {
         std::cout << std::endl;
         break;

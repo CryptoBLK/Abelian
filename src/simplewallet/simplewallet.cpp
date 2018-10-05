@@ -155,6 +155,7 @@ namespace
 
   const command_line::arg_descriptor< std::vector<std::string> > arg_command = {"command", ""};
 
+<<<<<<< HEAD
   const char* USAGE_START_MINING("start_mining [<number_of_threads>] [bg_mining] [ignore_battery]");
   const char* USAGE_SET_DAEMON("set_daemon <host>[:<port>] [trusted|untrusted]");
   const char* USAGE_SHOW_BALANCE("balance [detail]");
@@ -249,6 +250,9 @@ namespace
   const char* USAGE_HELP("help [<command>]");
 
   std::string input_line(const std::string& prompt, bool yesno = false)
+=======
+  std::string input_line(const std::string& prompt)
+>>>>>>> Merge pull request #4390
   {
 #ifdef HAVE_READLINE
     rdln::suspend_readline pause_readline;
