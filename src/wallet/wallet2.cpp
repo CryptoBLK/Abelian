@@ -184,6 +184,7 @@ namespace
 
     return public_keys;
   }
+<<<<<<< HEAD
 
   bool keys_intersect(const std::unordered_set<crypto::public_key>& s1, const std::unordered_set<crypto::public_key>& s2)
   {
@@ -231,6 +232,8 @@ namespace
         add_reason(reason, "tx was not relayed");
       return reason;
   }
+=======
+>>>>>>> Merge pull request #4036
 }
 
 namespace
@@ -3459,7 +3462,10 @@ bool wallet2::clear()
   m_subaddresses.clear();
   m_subaddress_labels.clear();
   m_multisig_rounds_passed = 0;
+<<<<<<< HEAD
   m_device_last_key_image_sync = 0;
+=======
+>>>>>>> Merge pull request #4036
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -4633,6 +4639,7 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
       // Need to store middle keys to be able to proceed in case of wallet shutdown.
       m_multisig_derivations = derivations;
     }
+<<<<<<< HEAD
   }
   
   if (!m_original_keys_available)
@@ -4642,6 +4649,8 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
     m_original_address = m_account.get_keys().m_account_address;
     m_original_view_secret_key = m_account.get_keys().m_view_secret_key;
     m_original_keys_available = true;
+=======
+>>>>>>> Merge pull request #4036
   }
 
   clear();
@@ -4656,6 +4665,10 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
   init_type(hw::device::device_type::SOFTWARE);
   m_original_keys_available = true;
   m_multisig = true;
+<<<<<<< HEAD
+=======
+  m_key_device_type = hw::device::device_type::SOFTWARE;
+>>>>>>> Merge pull request #4036
   m_multisig_threshold = threshold;
   m_multisig_signers = multisig_signers;
   ++m_multisig_rounds_passed;
@@ -4871,6 +4884,7 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
 
 bool wallet2::finalize_multisig(const epee::wipeable_string &password, const std::unordered_set<crypto::public_key> &pkeys, std::vector<crypto::public_key> signers)
 {
+<<<<<<< HEAD
   bool ready;
   uint32_t threshold, total;
   if (!multisig(&ready, &threshold, &total))
@@ -4882,12 +4896,7 @@ bool wallet2::finalize_multisig(const epee::wipeable_string &password, const std
   {
     MERROR("This multisig wallet is already finalized");
     return false;
-  }
-  if (threshold + 1 != total)
-  {
-    MERROR("finalize_multisig should only be used for N-1/N wallets, use exchange_multisig_keys instead");
-    return false;
-  }
+=======
   exchange_multisig_keys(password, pkeys, signers);
   return true;
 }
@@ -4904,8 +4913,34 @@ bool wallet2::unpack_extra_multisig_info(const std::vector<std::string>& info,
       {
           return false;
       }
+>>>>>>> Merge pull request #4036
+  }
+  if (threshold + 1 != total)
+  {
+    MERROR("finalize_multisig should only be used for N-1/N wallets, use exchange_multisig_keys instead");
+    return false;
+  }
+  exchange_multisig_keys(password, pkeys, signers);
+  return true;
+}
+
+<<<<<<< HEAD
+bool wallet2::unpack_extra_multisig_info(const std::vector<std::string>& info,
+  std::vector<crypto::public_key> &signers,
+  std::unordered_set<crypto::public_key> &pkeys) const
+{
+  // parse all multisig info
+  signers.resize(info.size(), crypto::null_pkey);
+  for (size_t i = 0; i < info.size(); ++i)
+  {
+      if (!verify_extra_multisig_info(info[i], pkeys, signers[i]))
+      {
+          return false;
+      }
   }
 
+=======
+>>>>>>> Merge pull request #4036
   return true;
 }
 

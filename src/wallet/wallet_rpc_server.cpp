@@ -3850,7 +3850,11 @@ namespace tools
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+<<<<<<< HEAD
   bool wallet_rpc_server::on_exchange_multisig_keys(const wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::request& req, wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::response& res, epee::json_rpc::error& er, const connection_context *ctx)
+=======
+  bool wallet_rpc_server::on_exchange_multisig_keys(const wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::request& req, wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::response& res, epee::json_rpc::error& er)
+>>>>>>> Merge pull request #4036
   {
     if (!m_wallet) return not_open(er);
     if (m_restricted)
@@ -3899,7 +3903,11 @@ namespace tools
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+<<<<<<< HEAD
   bool wallet_rpc_server::on_sign_multisig(const wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::request& req, wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::response& res, epee::json_rpc::error& er, const connection_context *ctx)
+=======
+  bool wallet_rpc_server::on_sign_multisig(const wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::request& req, wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::response& res, epee::json_rpc::error& er)
+>>>>>>> Merge pull request #4036
   {
     if (!m_wallet) return not_open(er);
     if (m_restricted)

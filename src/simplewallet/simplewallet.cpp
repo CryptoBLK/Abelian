@@ -1061,10 +1061,13 @@ bool simple_wallet::make_multisig_main(const std::vector<std::string> &args, boo
       success_msg_writer() << tr("Another step is needed");
       success_msg_writer() << multisig_extra_info;
       success_msg_writer() << tr("Send this multisig info to all other participants, then use exchange_multisig_keys <info1> [<info2>...] with others' multisig info");
+<<<<<<< HEAD
       if (called_by_mms)
       {
         get_message_store().process_wallet_created_data(get_multisig_wallet_state(), mms::message_type::additional_key_set, multisig_extra_info);
       }
+=======
+>>>>>>> Merge pull request #4036
       return true;
     }
   }
@@ -1138,6 +1141,7 @@ bool simple_wallet::finalize_multisig(const std::vector<std::string> &args)
   return true;
 }
 
+<<<<<<< HEAD
 bool simple_wallet::exchange_multisig_keys(const std::vector<std::string> &args)
 {
   exchange_multisig_keys_main(args, false);
@@ -1145,34 +1149,58 @@ bool simple_wallet::exchange_multisig_keys(const std::vector<std::string> &args)
 }
 
 bool simple_wallet::exchange_multisig_keys_main(const std::vector<std::string> &args, bool called_by_mms) {
+=======
+bool simple_wallet::exchange_multisig_keys(const std::vector<std::string> &args) {
+>>>>>>> Merge pull request #4036
     bool ready;
     if (m_wallet->key_on_device())
     {
       fail_msg_writer() << tr("command not supported by HW wallet");
+<<<<<<< HEAD
       return false;
+=======
+      return true;
+>>>>>>> Merge pull request #4036
     }
     if (!m_wallet->multisig(&ready))
     {
       fail_msg_writer() << tr("This wallet is not multisig");
+<<<<<<< HEAD
       return false;
+=======
+      return true;
+>>>>>>> Merge pull request #4036
     }
     if (ready)
     {
       fail_msg_writer() << tr("This wallet is already finalized");
+<<<<<<< HEAD
       return false;
+=======
+      return true;
+>>>>>>> Merge pull request #4036
     }
 
     const auto orig_pwd_container = get_and_verify_password();
     if(orig_pwd_container == boost::none)
     {
       fail_msg_writer() << tr("Your original password was incorrect.");
+<<<<<<< HEAD
       return false;
+=======
+      return true;
+>>>>>>> Merge pull request #4036
     }
 
     if (args.size() < 2)
     {
+<<<<<<< HEAD
       PRINT_USAGE(USAGE_EXCHANGE_MULTISIG_KEYS);
       return false;
+=======
+      fail_msg_writer() << tr("usage: exchange_multisig_keys <multisiginfo1> [<multisiginfo2>...]");
+      return true;
+>>>>>>> Merge pull request #4036
     }
 
     try
@@ -1183,22 +1211,32 @@ bool simple_wallet::exchange_multisig_keys_main(const std::vector<std::string> &
         message_writer() << tr("Another step is needed");
         message_writer() << multisig_extra_info;
         message_writer() << tr("Send this multisig info to all other participants, then use exchange_multisig_keys <info1> [<info2>...] with others' multisig info");
+<<<<<<< HEAD
         if (called_by_mms)
         {
           get_message_store().process_wallet_created_data(get_multisig_wallet_state(), mms::message_type::additional_key_set, multisig_extra_info);
         }
+=======
+>>>>>>> Merge pull request #4036
         return true;
       } else {
         uint32_t threshold, total;
         m_wallet->multisig(NULL, &threshold, &total);
         success_msg_writer() << tr("Multisig wallet has been successfully created. Current wallet type: ") << threshold << "/" << total;
+<<<<<<< HEAD
         success_msg_writer() << tr("Multisig address: ") << m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+=======
+>>>>>>> Merge pull request #4036
       }
     }
     catch (const std::exception &e)
     {
       fail_msg_writer() << tr("Failed to perform multisig keys exchange: ") << e.what();
+<<<<<<< HEAD
       return false;
+=======
+      return true;
+>>>>>>> Merge pull request #4036
     }
 
     return true;
@@ -3043,7 +3081,11 @@ simple_wallet::simple_wallet()
                            tr("Turn this wallet into a multisig wallet, extra step for N-1/N wallets"));
   m_cmd_binder.set_handler("exchange_multisig_keys",
                            boost::bind(&simple_wallet::exchange_multisig_keys, this, _1),
+<<<<<<< HEAD
                            tr(USAGE_EXCHANGE_MULTISIG_KEYS),
+=======
+                           tr("exchange_multisig_keys <string> [<string>...]"),
+>>>>>>> Merge pull request #4036
                            tr("Performs extra multisig keys exchange rounds. Needed for arbitrary M/N multisig wallets"));
   m_cmd_binder.set_handler("export_multisig_info",
                            boost::bind(&simple_wallet::export_multisig, this, _1),
