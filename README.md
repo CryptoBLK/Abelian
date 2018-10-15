@@ -226,11 +226,9 @@ invokes cmake commands as needed.
 * Install the dependencies
 * Change to the root of the source code directory, change to the most recent release branch, and build:
 
-    ```bash
-    cd monero
-    git checkout release-v0.14
-    make
-    ```
+        cd monero
+        git checkout v0.13.0.3
+        make
 
     *Optional*: If your machine has several cores and enough memory, enable
     parallel build by running `make -j<number of threads>` instead of `make`. For
@@ -423,9 +421,7 @@ application.
 
 * If you would like a specific [version/tag](https://github.com/monero-project/monero/tags), do a git checkout for that version. eg. 'v0.14.1.0'. If you don't care about the version and just want binaries from master, skip this step:
 	
-    ```bash
-    git checkout v0.14.1.0
-    ```
+        git checkout v0.13.0.3
 
 * If you are on a 64-bit system, run:
 
