@@ -227,7 +227,7 @@ invokes cmake commands as needed.
 * Change to the root of the source code directory, change to the most recent release branch, and build:
 
         cd monero
-        git checkout v0.13.0.3
+        git checkout v0.13.0.4
         make
 
     *Optional*: If your machine has several cores and enough memory, enable
@@ -287,24 +287,18 @@ Tested on a Raspberry Pi Zero with a clean install of minimal Raspbian Stretch (
 * Install the dependencies for Monero from the 'Debian' column in the table above.
 
 * Increase the system swap size:
-
-    ```bash
-    sudo /etc/init.d/dphys-swapfile stop  
-    sudo nano /etc/dphys-swapfile  
-    CONF_SWAPSIZE=2048
-    sudo /etc/init.d/dphys-swapfile start
-    ```
-
-* If using an external hard disk without an external power supply, ensure it gets enough power to avoid hardware issues when syncing, by adding the line "max_usb_current=1" to /boot/config.txt
-
-* Clone monero and checkout the most recent release version:
-
-    ```bash
-    git clone https://github.com/monero-project/monero.git
-    cd monero
-    git checkout tags/v0.14.1.0
-    ```
-
+```	
+	sudo /etc/init.d/dphys-swapfile stop  
+	sudo nano /etc/dphys-swapfile  
+	CONF_SWAPSIZE=1024  
+	sudo /etc/init.d/dphys-swapfile start  
+```
+* Clone monero and checkout most recent release version:
+```
+        git clone https://github.com/monero-project/monero.git
+	cd monero
+	git checkout tags/v0.13.0.4
+```
 * Build:
 
     ```bash
@@ -421,7 +415,7 @@ application.
 
 * If you would like a specific [version/tag](https://github.com/monero-project/monero/tags), do a git checkout for that version. eg. 'v0.14.1.0'. If you don't care about the version and just want binaries from master, skip this step:
 	
-        git checkout v0.13.0.3
+        git checkout v0.13.0.4
 
 * If you are on a 64-bit system, run:
 
