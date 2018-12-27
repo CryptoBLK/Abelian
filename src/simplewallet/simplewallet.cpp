@@ -109,16 +109,10 @@ typedef cryptonote::simple_wallet sw;
   if (m_wallet->ask_password() && !(pwd_container = get_and_verify_password())) { code; } \
   tools::wallet_keys_unlocker unlocker(*m_wallet, pwd_container);
 
-#define SCOPED_WALLET_UNLOCK() SCOPED_WALLET_UNLOCK_ON_BAD_PASSWORD(return true;)
-
-#define PRINT_USAGE(usage_help) fail_msg_writer() << boost::format(tr("usage: %s")) % usage_help;
-
 #define LONG_PAYMENT_ID_SUPPORT_CHECK() \
   do { \
     if (!m_long_payment_id_support) { \
-      fail_msg_writer() << tr("Warning: Long payment IDs are obsolete."); \
-      fail_msg_writer() << tr("Long payment IDs are not encrypted on the blockchain, and will harm your privacy."); \
-      fail_msg_writer() << tr("Use --long-payment-id-support-bad-for-privacy if you really must use one, and warn the recipient they are using an obsolete feature that will disappear in the future."); \
+      fail_msg_writer() << tr("Long payment IDs are obsolete. Use --long-payment-id-support if you really must use one."); \
       return true; \
     } \
   } while(0)
@@ -151,108 +145,11 @@ namespace
   const command_line::arg_descriptor<bool> arg_create_address_file = {"create-address-file", sw::tr("Create an address file for new wallets"), false};
   const command_line::arg_descriptor<std::string> arg_subaddress_lookahead = {"subaddress-lookahead", tools::wallet2::tr("Set subaddress lookahead sizes to <major>:<minor>"), ""};
   const command_line::arg_descriptor<bool> arg_use_english_language_names = {"use-english-language-names", sw::tr("Display English language names"), false};
-  const command_line::arg_descriptor<bool> arg_long_payment_id_support = {"long-payment-id-support-bad-for-privacy", sw::tr("Support obsolete long (unencrypted) payment ids (using them harms your privacy)"), false};
+  const command_line::arg_descriptor<bool> arg_long_payment_id_support = {"long-payment-id-support", sw::tr("Support obsolete long (unencrypted) payment ids"), false};
 
   const command_line::arg_descriptor< std::vector<std::string> > arg_command = {"command", ""};
 
-<<<<<<< HEAD
-  const char* USAGE_START_MINING("start_mining [<number_of_threads>] [bg_mining] [ignore_battery]");
-  const char* USAGE_SET_DAEMON("set_daemon <host>[:<port>] [trusted|untrusted]");
-  const char* USAGE_SHOW_BALANCE("balance [detail]");
-  const char* USAGE_INCOMING_TRANSFERS("incoming_transfers [available|unavailable] [verbose] [uses] [index=<N1>[,<N2>[,...]]]");
-  const char* USAGE_PAYMENTS("payments <PID_1> [<PID_2> ... <PID_N>]");
-  const char* USAGE_PAYMENT_ID("payment_id");
-  const char* USAGE_TRANSFER("transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] (<URI> | <address> <amount>) [<payment_id>]");
-  const char* USAGE_LOCKED_TRANSFER("locked_transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] (<URI> | <addr> <amount>) <lockblocks> [<payment_id (obsolete)>]");
-  const char* USAGE_LOCKED_SWEEP_ALL("locked_sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <lockblocks> [<payment_id (obsolete)>]");
-  const char* USAGE_SWEEP_ALL("sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] [outputs=<N>] <address> [<payment_id (obsolete)>]");
-  const char* USAGE_SWEEP_BELOW("sweep_below <amount_threshold> [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> [<payment_id (obsolete)>]");
-  const char* USAGE_SWEEP_SINGLE("sweep_single [<priority>] [<ring_size>] [outputs=<N>] <key_image> <address> [<payment_id (obsolete)>]");
-  const char* USAGE_DONATE("donate [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <amount> [<payment_id (obsolete)>]");
-  const char* USAGE_SIGN_TRANSFER("sign_transfer [export_raw]");
-  const char* USAGE_SET_LOG("set_log <level>|{+,-,}<categories>");
-  const char* USAGE_ACCOUNT("account\n"
-                            "  account new <label text with white spaces allowed>\n"
-                            "  account switch <index> \n"
-                            "  account label <index> <label text with white spaces allowed>\n"
-                            "  account tag <tag_name> <account_index_1> [<account_index_2> ...]\n"
-                            "  account untag <account_index_1> [<account_index_2> ...]\n"
-                            "  account tag_description <tag_name> <description>");
-  const char* USAGE_ADDRESS("address [ new <label text with white spaces allowed> | all | <index_min> [<index_max>] | label <index> <label text with white spaces allowed>]");
-  const char* USAGE_INTEGRATED_ADDRESS("integrated_address [<payment_id> | <address>]");
-  const char* USAGE_ADDRESS_BOOK("address_book [(add ((<address> [pid <id>])|<integrated address>) [<description possibly with whitespaces>])|(delete <index>)]");
-  const char* USAGE_SET_VARIABLE("set <option> [<value>]");
-  const char* USAGE_GET_TX_KEY("get_tx_key <txid>");
-  const char* USAGE_SET_TX_KEY("set_tx_key <txid> <tx_key>");
-  const char* USAGE_CHECK_TX_KEY("check_tx_key <txid> <txkey> <address>");
-  const char* USAGE_GET_TX_PROOF("get_tx_proof <txid> <address> [<message>]");
-  const char* USAGE_CHECK_TX_PROOF("check_tx_proof <txid> <address> <signature_file> [<message>]");
-  const char* USAGE_GET_SPEND_PROOF("get_spend_proof <txid> [<message>]");
-  const char* USAGE_CHECK_SPEND_PROOF("check_spend_proof <txid> <signature_file> [<message>]");
-  const char* USAGE_GET_RESERVE_PROOF("get_reserve_proof (all|<amount>) [<message>]");
-  const char* USAGE_CHECK_RESERVE_PROOF("check_reserve_proof <address> <signature_file> [<message>]");
-  const char* USAGE_SHOW_TRANSFERS("show_transfers [in|out|pending|failed|pool|coinbase] [index=<N1>[,<N2>,...]] [<min_height> [<max_height>]]");
-  const char* USAGE_UNSPENT_OUTPUTS("unspent_outputs [index=<N1>[,<N2>,...]] [<min_amount> [<max_amount>]]");
-  const char* USAGE_RESCAN_BC("rescan_bc [hard|soft|keep_ki] [start_height=0]");
-  const char* USAGE_SET_TX_NOTE("set_tx_note <txid> [free text note]");
-  const char* USAGE_GET_TX_NOTE("get_tx_note <txid>");
-  const char* USAGE_GET_DESCRIPTION("get_description");
-  const char* USAGE_SET_DESCRIPTION("set_description [free text note]");
-  const char* USAGE_SIGN("sign <filename>");
-  const char* USAGE_VERIFY("verify <filename> <address> <signature>");
-  const char* USAGE_EXPORT_KEY_IMAGES("export_key_images <filename>");
-  const char* USAGE_IMPORT_KEY_IMAGES("import_key_images <filename>");
-  const char* USAGE_HW_KEY_IMAGES_SYNC("hw_key_images_sync");
-  const char* USAGE_HW_RECONNECT("hw_reconnect");
-  const char* USAGE_EXPORT_OUTPUTS("export_outputs <filename>");
-  const char* USAGE_IMPORT_OUTPUTS("import_outputs <filename>");
-  const char* USAGE_SHOW_TRANSFER("show_transfer <txid>");
-  const char* USAGE_MAKE_MULTISIG("make_multisig <threshold> <string1> [<string>...]");
-  const char* USAGE_FINALIZE_MULTISIG("finalize_multisig <string> [<string>...]");
-  const char* USAGE_EXCHANGE_MULTISIG_KEYS("exchange_multisig_keys <string> [<string>...]");
-  const char* USAGE_EXPORT_MULTISIG_INFO("export_multisig_info <filename>");
-  const char* USAGE_IMPORT_MULTISIG_INFO("import_multisig_info <filename> [<filename>...]");
-  const char* USAGE_SIGN_MULTISIG("sign_multisig <filename>");
-  const char* USAGE_SUBMIT_MULTISIG("submit_multisig <filename>");
-  const char* USAGE_EXPORT_RAW_MULTISIG_TX("export_raw_multisig_tx <filename>");
-  const char* USAGE_MMS("mms [<subcommand> [<subcommand_parameters>]]");
-  const char* USAGE_MMS_INIT("mms init <required_signers>/<authorized_signers> <own_label> <own_transport_address>");
-  const char* USAGE_MMS_INFO("mms info");
-  const char* USAGE_MMS_SIGNER("mms signer [<number> <label> [<transport_address> [<monero_address>]]]");
-  const char* USAGE_MMS_LIST("mms list");
-  const char* USAGE_MMS_NEXT("mms next [sync]");
-  const char* USAGE_MMS_SYNC("mms sync");
-  const char* USAGE_MMS_TRANSFER("mms transfer <transfer_command_arguments>");
-  const char* USAGE_MMS_DELETE("mms delete (<message_id> | all)");
-  const char* USAGE_MMS_SEND("mms send [<message_id>]");
-  const char* USAGE_MMS_RECEIVE("mms receive");
-  const char* USAGE_MMS_EXPORT("mms export <message_id>");
-  const char* USAGE_MMS_NOTE("mms note [<label> <text>]");
-  const char* USAGE_MMS_SHOW("mms show <message_id>");
-  const char* USAGE_MMS_SET("mms set <option_name> [<option_value>]");
-  const char* USAGE_MMS_SEND_SIGNER_CONFIG("mms send_signer_config");
-  const char* USAGE_MMS_START_AUTO_CONFIG("mms start_auto_config [<label> <label> ...]");
-  const char* USAGE_MMS_STOP_AUTO_CONFIG("mms stop_auto_config");
-  const char* USAGE_MMS_AUTO_CONFIG("mms auto_config <auto_config_token>");
-  const char* USAGE_PRINT_RING("print_ring <key_image> | <txid>");
-  const char* USAGE_SET_RING("set_ring <filename> | ( <key_image> absolute|relative <index> [<index>...] )");
-  const char* USAGE_UNSET_RING("unset_ring <txid> | ( <key_image> [<key_image>...] )");
-  const char* USAGE_SAVE_KNOWN_RINGS("save_known_rings");
-  const char* USAGE_MARK_OUTPUT_SPENT("mark_output_spent <amount>/<offset> | <filename> [add]");
-  const char* USAGE_MARK_OUTPUT_UNSPENT("mark_output_unspent <amount>/<offset>");
-  const char* USAGE_IS_OUTPUT_SPENT("is_output_spent <amount>/<offset>");
-  const char* USAGE_FREEZE("freeze <key_image>");
-  const char* USAGE_THAW("thaw <key_image>");
-  const char* USAGE_FROZEN("frozen <key_image>");
-  const char* USAGE_NET_STATS("net_stats");
-  const char* USAGE_WELCOME("welcome");
-  const char* USAGE_VERSION("version");
-  const char* USAGE_HELP("help [<command>]");
-
-  std::string input_line(const std::string& prompt, bool yesno = false)
-=======
   std::string input_line(const std::string& prompt)
->>>>>>> Merge pull request #4390
   {
 #ifdef HAVE_READLINE
     rdln::suspend_readline pause_readline;
@@ -1061,13 +958,6 @@ bool simple_wallet::make_multisig_main(const std::vector<std::string> &args, boo
       success_msg_writer() << tr("Another step is needed");
       success_msg_writer() << multisig_extra_info;
       success_msg_writer() << tr("Send this multisig info to all other participants, then use exchange_multisig_keys <info1> [<info2>...] with others' multisig info");
-<<<<<<< HEAD
-      if (called_by_mms)
-      {
-        get_message_store().process_wallet_created_data(get_multisig_wallet_state(), mms::message_type::additional_key_set, multisig_extra_info);
-      }
-=======
->>>>>>> Merge pull request #4036
       return true;
     }
   }
@@ -1141,66 +1031,35 @@ bool simple_wallet::finalize_multisig(const std::vector<std::string> &args)
   return true;
 }
 
-<<<<<<< HEAD
-bool simple_wallet::exchange_multisig_keys(const std::vector<std::string> &args)
-{
-  exchange_multisig_keys_main(args, false);
-  return true;
-}
-
-bool simple_wallet::exchange_multisig_keys_main(const std::vector<std::string> &args, bool called_by_mms) {
-=======
 bool simple_wallet::exchange_multisig_keys(const std::vector<std::string> &args) {
->>>>>>> Merge pull request #4036
     bool ready;
     if (m_wallet->key_on_device())
     {
       fail_msg_writer() << tr("command not supported by HW wallet");
-<<<<<<< HEAD
-      return false;
-=======
       return true;
->>>>>>> Merge pull request #4036
     }
     if (!m_wallet->multisig(&ready))
     {
       fail_msg_writer() << tr("This wallet is not multisig");
-<<<<<<< HEAD
-      return false;
-=======
       return true;
->>>>>>> Merge pull request #4036
     }
     if (ready)
     {
       fail_msg_writer() << tr("This wallet is already finalized");
-<<<<<<< HEAD
-      return false;
-=======
       return true;
->>>>>>> Merge pull request #4036
     }
 
     const auto orig_pwd_container = get_and_verify_password();
     if(orig_pwd_container == boost::none)
     {
       fail_msg_writer() << tr("Your original password was incorrect.");
-<<<<<<< HEAD
-      return false;
-=======
       return true;
->>>>>>> Merge pull request #4036
     }
 
     if (args.size() < 2)
     {
-<<<<<<< HEAD
-      PRINT_USAGE(USAGE_EXCHANGE_MULTISIG_KEYS);
-      return false;
-=======
       fail_msg_writer() << tr("usage: exchange_multisig_keys <multisiginfo1> [<multisiginfo2>...]");
       return true;
->>>>>>> Merge pull request #4036
     }
 
     try
@@ -1211,32 +1070,17 @@ bool simple_wallet::exchange_multisig_keys(const std::vector<std::string> &args)
         message_writer() << tr("Another step is needed");
         message_writer() << multisig_extra_info;
         message_writer() << tr("Send this multisig info to all other participants, then use exchange_multisig_keys <info1> [<info2>...] with others' multisig info");
-<<<<<<< HEAD
-        if (called_by_mms)
-        {
-          get_message_store().process_wallet_created_data(get_multisig_wallet_state(), mms::message_type::additional_key_set, multisig_extra_info);
-        }
-=======
->>>>>>> Merge pull request #4036
         return true;
       } else {
         uint32_t threshold, total;
         m_wallet->multisig(NULL, &threshold, &total);
         success_msg_writer() << tr("Multisig wallet has been successfully created. Current wallet type: ") << threshold << "/" << total;
-<<<<<<< HEAD
-        success_msg_writer() << tr("Multisig address: ") << m_wallet->get_account().get_public_address_str(m_wallet->nettype());
-=======
->>>>>>> Merge pull request #4036
       }
     }
     catch (const std::exception &e)
     {
       fail_msg_writer() << tr("Failed to perform multisig keys exchange: ") << e.what();
-<<<<<<< HEAD
-      return false;
-=======
       return true;
->>>>>>> Merge pull request #4036
     }
 
     return true;
@@ -2809,33 +2653,33 @@ simple_wallet::simple_wallet()
                            boost::bind(&simple_wallet::show_blockchain_height, this, _1),
                            tr("Show the blockchain height."));
   m_cmd_binder.set_handler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
-                           tr(USAGE_TRANSFER),
+                           tr("transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] (<URI> | <address> <amount>) [<payment_id (obsolete)>]"),
                            tr("Transfer <amount> to <address>. If the parameter \"index=<N1>[,<N2>,...]\" is specified, the wallet uses outputs received by addresses of those indices. If omitted, the wallet randomly chooses address indices to be used. In any case, it tries its best not to combine outputs across multiple addresses. <priority> is the priority of the transaction. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used. <ring_size> is the number of inputs to include for untraceability. Multiple payments can be made at once by adding URI_2 or <address_2> <amount_2> etcetera (before the payment ID, if it's included)"));
   m_cmd_binder.set_handler("locked_transfer",
                            boost::bind(&simple_wallet::locked_transfer, this, _1),
-                           tr(USAGE_LOCKED_TRANSFER),
+                           tr("locked_transfer [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] (<URI> | <addr> <amount>) <lockblocks> [<payment_id (obsolete)>]"),
                            tr("Transfer <amount> to <address> and lock it for <lockblocks> (max. 1000000). If the parameter \"index=<N1>[,<N2>,...]\" is specified, the wallet uses outputs received by addresses of those indices. If omitted, the wallet randomly chooses address indices to be used. In any case, it tries its best not to combine outputs across multiple addresses. <priority> is the priority of the transaction. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used. <ring_size> is the number of inputs to include for untraceability. Multiple payments can be made at once by adding URI_2 or <address_2> <amount_2> etcetera (before the payment ID, if it's included)"));
   m_cmd_binder.set_handler("locked_sweep_all",
                            boost::bind(&simple_wallet::locked_sweep_all, this, _1),
-                           tr(USAGE_LOCKED_SWEEP_ALL),
+                           tr("locked_sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <lockblocks> [<payment_id (obsolete)>]"),
                            tr("Send all unlocked balance to an address and lock it for <lockblocks> (max. 1000000). If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. <priority> is the priority of the sweep. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used. <ring_size> is the number of inputs to include for untraceability."));
   m_cmd_binder.set_handler("sweep_unmixable",
                            boost::bind(&simple_wallet::sweep_unmixable, this, _1),
                            tr("Send all unmixable outputs to yourself with ring_size 1"));
   m_cmd_binder.set_handler("sweep_all", boost::bind(&simple_wallet::sweep_all, this, _1),
-                           tr(USAGE_SWEEP_ALL),
+                           tr("sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] [outputs=<N>] <address> [<payment_id (obsolete)>]"),
                            tr("Send all unlocked balance to an address. If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. If the parameter \"outputs=<N>\" is specified and  N > 0, wallet splits the transaction into N even outputs."));
   m_cmd_binder.set_handler("sweep_below",
                            boost::bind(&simple_wallet::sweep_below, this, _1),
-                           tr(USAGE_SWEEP_BELOW),
+                           tr("sweep_below <amount_threshold> [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> [<payment_id (obsolete)>]"),
                            tr("Send all unlocked outputs below the threshold to an address."));
   m_cmd_binder.set_handler("sweep_single",
                            boost::bind(&simple_wallet::sweep_single, this, _1),
-                           tr(USAGE_SWEEP_SINGLE),
+                           tr("sweep_single [<priority>] [<ring_size>] [outputs=<N>] <key_image> <address> [<payment_id (obsolete)>]"),
                            tr("Send a single output of the given key image to an address without change."));
   m_cmd_binder.set_handler("donate",
                            boost::bind(&simple_wallet::donate, this, _1),
-                           tr(USAGE_DONATE),
+                           tr("donate [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <amount> [<payment_id (obsolete)>]"),
                            tr("Donate <amount> to the development team (donate.getmonero.org)."));
   m_cmd_binder.set_handler("sign_transfer",
                            boost::bind(&simple_wallet::sign_transfer, this, _1),
@@ -3065,7 +2909,6 @@ simple_wallet::simple_wallet()
                            tr("Change the wallet's password."));
   m_cmd_binder.set_handler("payment_id",
                            boost::bind(&simple_wallet::payment_id, this, _1),
-                           tr(USAGE_PAYMENT_ID),
                            tr("Generate a new random full size payment id (obsolete). These will be unencrypted on the blockchain, see integrated_address for encrypted short payment ids."));
   m_cmd_binder.set_handler("fee",
                            boost::bind(&simple_wallet::print_fee_info, this, _1),
@@ -3081,11 +2924,7 @@ simple_wallet::simple_wallet()
                            tr("Turn this wallet into a multisig wallet, extra step for N-1/N wallets"));
   m_cmd_binder.set_handler("exchange_multisig_keys",
                            boost::bind(&simple_wallet::exchange_multisig_keys, this, _1),
-<<<<<<< HEAD
-                           tr(USAGE_EXCHANGE_MULTISIG_KEYS),
-=======
                            tr("exchange_multisig_keys <string> [<string>...]"),
->>>>>>> Merge pull request #4036
                            tr("Performs extra multisig keys exchange rounds. Needed for arbitrary M/N multisig wallets"));
   m_cmd_binder.set_handler("export_multisig_info",
                            boost::bind(&simple_wallet::export_multisig, this, _1),
@@ -6930,7 +6769,7 @@ bool simple_wallet::accept_loaded_tx(const std::function<size_t()> get_num_txes,
         {
           if (!payment_id_string.empty())
             payment_id_string += ", ";
-          payment_id_string += std::string("unencrypted payment ID ") + epee::string_tools::pod_to_hex(payment_id);
+          payment_id_string = std::string("unencrypted payment ID ") + epee::string_tools::pod_to_hex(payment_id);
           payment_id_string += " (OBSOLETE)";
         }
       }
