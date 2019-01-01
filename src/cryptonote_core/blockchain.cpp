@@ -675,6 +675,9 @@ block Blockchain::pop_block_from_blockchain()
     throw;
   }
 
+  // make sure the hard fork object updates its current version
+  m_hardfork->on_block_popped(1);
+
   pop_from_long_term_block_weights();
 
   // return transactions from popped block to the tx_pool

@@ -292,19 +292,17 @@ void HardFork::on_block_popped(uint64_t nblocks)
   const uint64_t new_chain_height = db.height();
   const uint64_t old_chain_height = new_chain_height + nblocks;
   uint8_t version;
-  for (uint64_t height = old_chain_height - 1; height >= new_chain_height; --height)
+  uint64_t height;
+  for (height = old_chain_height - 1; height >= new_chain_height; --height)
   {
-    version = versions.back();
-    last_versions[version]--;
     versions.pop_back();
     version = db.get_hard_fork_version(height);
     versions.push_front(version);
-    last_versions[version]++;
   }
 
   // does not take voting into account
   for (current_fork_index = heights.size() - 1; current_fork_index > 0; --current_fork_index)
-    if (new_chain_height >= heights[current_fork_index].height)
+    if (height >= heights[current_fork_index].height)
       break;
 }
 
