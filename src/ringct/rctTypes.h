@@ -252,7 +252,7 @@ namespace rct {
         {
           FIELD(type)
           if (type == RCTTypeNull)
-            return ar.stream().good();
+            return true;
           if (type != RCTTypeFull && type != RCTTypeSimple && type != RCTTypeBulletproof && type != RCTTypeBulletproof2)
             return false;
           VARINT_FIELD(txnFee)
@@ -325,7 +325,7 @@ namespace rct {
         bool serialize_rctsig_prunable(Archive<W> &ar, uint8_t type, size_t inputs, size_t outputs, size_t mixin)
         {
           if (type == RCTTypeNull)
-            return ar.stream().good();
+            return true;
           if (type != RCTTypeFull && type != RCTTypeSimple && type != RCTTypeBulletproof && type != RCTTypeBulletproof2)
             return false;
           if (type == RCTTypeBulletproof || type == RCTTypeBulletproof2)

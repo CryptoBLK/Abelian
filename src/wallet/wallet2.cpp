@@ -184,56 +184,6 @@ namespace
 
     return public_keys;
   }
-<<<<<<< HEAD
-
-  bool keys_intersect(const std::unordered_set<crypto::public_key>& s1, const std::unordered_set<crypto::public_key>& s2)
-  {
-    if (s1.empty() || s2.empty())
-      return false;
-
-    for (const auto& e: s1)
-    {
-      if (s2.find(e) != s2.end())
-        return true;
-    }
-
-    return false;
-  }
-
-  void add_reason(std::string &reasons, const char *reason)
-  {
-    if (!reasons.empty())
-      reasons += ", ";
-    reasons += reason;
-  }
-
-  std::string get_text_reason(const cryptonote::COMMAND_RPC_SEND_RAW_TX::response &res)
-  {
-      std::string reason;
-      if (res.low_mixin)
-        add_reason(reason, "bad ring size");
-      if (res.double_spend)
-        add_reason(reason, "double spend");
-      if (res.invalid_input)
-        add_reason(reason, "invalid input");
-      if (res.invalid_output)
-        add_reason(reason, "invalid output");
-      if (res.too_big)
-        add_reason(reason, "too big");
-      if (res.overspend)
-        add_reason(reason, "overspend");
-      if (res.fee_too_low)
-        add_reason(reason, "fee too low");
-      if (res.not_rct)
-        add_reason(reason, "tx is not ringct");
-      if (res.sanity_check_failed)
-        add_reason(reason, "tx sanity check failed");
-      if (res.not_relayed)
-        add_reason(reason, "tx was not relayed");
-      return reason;
-  }
-=======
->>>>>>> Merge pull request #4036
 }
 
 namespace
@@ -3462,10 +3412,6 @@ bool wallet2::clear()
   m_subaddresses.clear();
   m_subaddress_labels.clear();
   m_multisig_rounds_passed = 0;
-<<<<<<< HEAD
-  m_device_last_key_image_sync = 0;
-=======
->>>>>>> Merge pull request #4036
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -4639,18 +4585,6 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
       // Need to store middle keys to be able to proceed in case of wallet shutdown.
       m_multisig_derivations = derivations;
     }
-<<<<<<< HEAD
-  }
-  
-  if (!m_original_keys_available)
-  {
-    // Save the original i.e. non-multisig keys so the MMS can continue to use them to encrypt and decrypt messages
-    // (making a wallet multisig overwrites those keys, see account_base::make_multisig)
-    m_original_address = m_account.get_keys().m_account_address;
-    m_original_view_secret_key = m_account.get_keys().m_view_secret_key;
-    m_original_keys_available = true;
-=======
->>>>>>> Merge pull request #4036
   }
 
   clear();
@@ -4665,10 +4599,7 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
   init_type(hw::device::device_type::SOFTWARE);
   m_original_keys_available = true;
   m_multisig = true;
-<<<<<<< HEAD
-=======
   m_key_device_type = hw::device::device_type::SOFTWARE;
->>>>>>> Merge pull request #4036
   m_multisig_threshold = threshold;
   m_multisig_signers = multisig_signers;
   ++m_multisig_rounds_passed;
@@ -4884,19 +4815,6 @@ std::string wallet2::make_multisig(const epee::wipeable_string &password,
 
 bool wallet2::finalize_multisig(const epee::wipeable_string &password, const std::unordered_set<crypto::public_key> &pkeys, std::vector<crypto::public_key> signers)
 {
-<<<<<<< HEAD
-  bool ready;
-  uint32_t threshold, total;
-  if (!multisig(&ready, &threshold, &total))
-  {
-    MERROR("This is not a multisig wallet");
-    return false;
-  }
-  if (ready)
-  {
-    MERROR("This multisig wallet is already finalized");
-    return false;
-=======
   exchange_multisig_keys(password, pkeys, signers);
   return true;
 }
@@ -4913,7 +4831,6 @@ bool wallet2::unpack_extra_multisig_info(const std::vector<std::string>& info,
       {
           return false;
       }
->>>>>>> Merge pull request #4036
   }
   if (threshold + 1 != total)
   {
@@ -4924,23 +4841,6 @@ bool wallet2::unpack_extra_multisig_info(const std::vector<std::string>& info,
   return true;
 }
 
-<<<<<<< HEAD
-bool wallet2::unpack_extra_multisig_info(const std::vector<std::string>& info,
-  std::vector<crypto::public_key> &signers,
-  std::unordered_set<crypto::public_key> &pkeys) const
-{
-  // parse all multisig info
-  signers.resize(info.size(), crypto::null_pkey);
-  for (size_t i = 0; i < info.size(); ++i)
-  {
-      if (!verify_extra_multisig_info(info[i], pkeys, signers[i]))
-      {
-          return false;
-      }
-  }
-
-=======
->>>>>>> Merge pull request #4036
   return true;
 }
 
@@ -6328,7 +6228,12 @@ bool wallet2::sign_tx(unsigned_tx_set &exported_txs, std::vector<wallet2::pendin
     LOG_PRINT_L1(" " << (n+1) << ": " << sd.sources.size() << " inputs, ring size " << sd.sources[0].outputs.size());
     signed_txes.ptx.push_back(pending_tx());
     tools::wallet2::pending_tx &ptx = signed_txes.ptx.back();
-    rct::RCTConfig rct_config = sd.rct_config;
+    rct::RCTConfig rct_config = { rct::RangeProofBorromean, 0 };
+    if (sd.use_bulletproofs)
+    {
+      rct_config.range_proof_type = rct::RangeProofPaddedBulletproof;
+      rct_config.bp_version = use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1;
+    }
     crypto::secret_key tx_key;
     std::vector<crypto::secret_key> additional_tx_keys;
     rct::multisig_out msout;
@@ -6805,7 +6710,15 @@ bool wallet2::sign_multisig_tx(multisig_tx_set &exported_txs, std::vector<crypto
     cryptonote::transaction tx;
     rct::multisig_out msout = ptx.multisig_sigs.front().msout;
     auto sources = sd.sources;
-    rct::RCTConfig rct_config = sd.rct_config;
+    rct::RCTConfig rct_config = { rct::RangeProofBorromean, 0 };
+    if (sd.use_bulletproofs)
+    {
+      rct_config.range_proof_type = rct::RangeProofBulletproof;
+      for (const rct::Bulletproof &proof: ptx.tx.rct_signatures.p.bulletproofs)
+        if (proof.V.size() > 1)
+          rct_config.range_proof_type = rct::RangeProofPaddedBulletproof;
+      rct_config.bp_version = use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1;
+    }
     bool r = cryptonote::construct_tx_with_tx_key(m_account.get_keys(), m_subaddresses, sources, sd.splitted_dsts, ptx.change_dts.addr, sd.extra, tx, sd.unlock_time, ptx.tx_key, ptx.additional_tx_keys, sd.use_rct, rct_config, &msout, false);
     THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sd.sources, sd.splitted_dsts, sd.unlock_time, m_nettype);
 

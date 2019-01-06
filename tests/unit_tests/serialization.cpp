@@ -591,9 +591,9 @@ TEST(Serialization, serializes_ringct_types)
   amount_keys.push_back(rct::hash_to_scalar(rct::zero()));
   rct::skpkGen(Sk, Pk);
   destinations.push_back(Pk);
-  //compute rct data with mixin 3
+  //compute rct data with mixin 500
   const rct::RCTConfig rct_config{ rct::RangeProofPaddedBulletproof, 0 };
-  s0 = rct::genRctSimple(rct::zero(), sc, pc, destinations, inamounts, amounts, amount_keys, NULL, NULL, 0, 3, rct_config, hw::get_device("default"));
+  s0 = rct::genRct(rct::zero(), sc, pc, destinations, amounts, amount_keys, NULL, NULL, 3, rct_config, hw::get_device("default"));
 
   mg0 = s0.p.MGs[0];
   ASSERT_TRUE(serialization::dump_binary(mg0, blob));

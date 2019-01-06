@@ -176,14 +176,8 @@ TEST(ringct, range_proofs)
 
         const rct::RCTConfig rct_config { RangeProofBorromean, 0 };
 
-        //compute rct data with mixin 3 - should fail since full type with > 1 input
-        bool ok = false;
-        try { genRct(rct::zero(), sc, pc, destinations, amounts, amount_keys, NULL, NULL, 3, rct_config, hw::get_device("default")); }
-        catch(...) { ok = true; }
-        ASSERT_TRUE(ok);
-
-        //compute rct data with mixin 3
-        rctSig s = genRctSimple(rct::zero(), sc, pc, destinations, inamounts, amounts, amount_keys, NULL, NULL, 0, 3, rct_config, hw::get_device("default"));
+        //compute rct data with mixin 500
+        rctSig s = genRct(rct::zero(), sc, pc, destinations, amounts, amount_keys, NULL, NULL, 3, rct_config, hw::get_device("default"));
 
         //verify rct data
         ASSERT_TRUE(verRctSimple(s));
@@ -199,8 +193,8 @@ TEST(ringct, range_proofs)
         destinations[1] = Pk;
 
 
-        //compute rct data with mixin 3
-        s = genRctSimple(rct::zero(), sc, pc, destinations, inamounts, amounts, amount_keys, NULL, NULL, 0, 3, rct_config, hw::get_device("default"));
+        //compute rct data with mixin 500
+        s = genRct(rct::zero(), sc, pc, destinations, amounts, amount_keys, NULL, NULL, 3, rct_config, hw::get_device("default"));
 
         //verify rct data
         ASSERT_FALSE(verRctSimple(s));
@@ -247,8 +241,8 @@ TEST(ringct, range_proofs_with_fee)
 
         const rct::RCTConfig rct_config { RangeProofBorromean, 0 };
 
-        //compute rct data with mixin 3
-        rctSig s = genRctSimple(rct::zero(), sc, pc, destinations, inamounts, amounts, amount_keys, NULL, NULL, 1, 3, rct_config, hw::get_device("default"));
+        //compute rct data with mixin 500
+        rctSig s = genRct(rct::zero(), sc, pc, destinations, amounts, amount_keys, NULL, NULL, 3, rct_config, hw::get_device("default"));
 
         //verify rct data
         ASSERT_TRUE(verRctSimple(s));
@@ -264,8 +258,8 @@ TEST(ringct, range_proofs_with_fee)
         destinations[1] = Pk;
 
 
-        //compute rct data with mixin 3
-        s = genRctSimple(rct::zero(), sc, pc, destinations, inamounts, amounts, amount_keys, NULL, NULL, 500, 3, rct_config, hw::get_device("default"));
+        //compute rct data with mixin 500
+        s = genRct(rct::zero(), sc, pc, destinations, amounts, amount_keys, NULL, NULL, 3, rct_config, hw::get_device("default"));
 
         //verify rct data
         ASSERT_FALSE(verRctSimple(s));
