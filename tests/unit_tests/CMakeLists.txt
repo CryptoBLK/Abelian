@@ -64,9 +64,7 @@ set(unit_tests_sources
   mul_div.cpp
   multiexp.cpp
   multisig.cpp
-  net.cpp
   notify.cpp
-  output_distribution.cpp
   parse_amount.cpp
   pruning.cpp
   random.cpp

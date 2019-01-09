@@ -82,6 +82,7 @@ TEST(notify, works)
         ok = true;
         break;
       }
+      std::cout << "got: [" << s << "]" << std::endl;
     }
   }
   boost::filesystem::remove(name_template);
