@@ -9978,66 +9978,7 @@ void wallet2::cold_sign_tx(const std::vector<pending_tx>& ptx_vector, signed_tx_
     throw std::invalid_argument("Device does not support cold sign protocol");
   }
 
-  unsigned_tx_set txs;
-  for (auto &tx: ptx_vector)
-  {
-    txs.txes.push_back(get_construction_data_with_decrypted_short_payment_id(tx, m_account.get_device()));
-  }
-  txs.transfers = std::make_pair(0, m_transfers);
-
-  auto dev_cold = dynamic_cast<::hw::device_cold*>(&hwdev);
-  CHECK_AND_ASSERT_THROW_MES(dev_cold, "Device does not implement cold signing interface");
-
-  hw::tx_aux_data aux_data;
-  hw::wallet_shim wallet_shim;
-  setup_shim(&wallet_shim, this);
-  aux_data.tx_recipients = dsts_info;
-  aux_data.bp_version = use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1;
-  dev_cold->tx_sign(&wallet_shim, txs, exported_txs, aux_data);
-  tx_device_aux = aux_data.tx_device_aux;
-
-  MDEBUG("Signed tx data from hw: " << exported_txs.ptx.size() << " transactions");
-  for (auto &c_ptx: exported_txs.ptx) LOG_PRINT_L0(cryptonote::obj_to_json_str(c_ptx.tx));
-}
-//----------------------------------------------------------------------------------------------------
-uint64_t wallet2::cold_key_image_sync(uint64_t &spent, uint64_t &unspent) {
-  auto & hwdev = get_account().get_device();
-  CHECK_AND_ASSERT_THROW_MES(hwdev.has_ki_cold_sync(), "Device does not support cold ki sync protocol");
-
-  auto dev_cold = dynamic_cast<::hw::device_cold*>(&hwdev);
-  CHECK_AND_ASSERT_THROW_MES(dev_cold, "Device does not implement cold signing interface");
-
-  std::vector<std::pair<crypto::key_image, crypto::signature>> ski;
-  hw::wallet_shim wallet_shim;
-  setup_shim(&wallet_shim, this);
-
-  dev_cold->ki_sync(&wallet_shim, m_transfers, ski);
-
-  // Call COMMAND_RPC_IS_KEY_IMAGE_SPENT only if daemon is trusted.
-  uint64_t import_res = import_key_images(ski, 0, spent, unspent, is_trusted_daemon());
-  m_device_last_key_image_sync = time(NULL);
-
-  return import_res;
-}
-//----------------------------------------------------------------------------------------------------
-void wallet2::get_hard_fork_info(uint8_t version, uint64_t &earliest_height) const
-{
-  boost::optional<std::string> result = m_node_rpc_proxy.get_earliest_height(version, earliest_height);
-  throw_on_rpc_response_error(result, "get_hard_fork_info");
-}
-//----------------------------------------------------------------------------------------------------
-bool wallet2::use_fork_rules(uint8_t version, int64_t early_blocks) const
-{
-  // TODO: How to get fork rule info from light wallet node?
-  if(m_light_wallet)
-    return true;
-  uint64_t height, earliest_height;
-  boost::optional<std::string> result = m_node_rpc_proxy.get_height(height);
-  throw_on_rpc_response_error(result, "get_info");
-  result = m_node_rpc_proxy.get_earliest_height(version, earliest_height);
-  throw_on_rpc_response_error(result, "get_hard_fork_info");
-
-  bool close_enough = (int64_t)height >= (int64_t)earliest_height - early_blocks && earliest_height != std::numeric_limits<uint64_t>::max(); // start using the rules that many blocks beforehand
+  bool close_enough = height >= earliest_height - early_blocks && earliest_height != std::numeric_limits<uint64_t>::max(); // start using the rules that many blocks beforehand
   if (close_enough)
     LOG_PRINT_L2("Using v" << (unsigned)version << " rules");
   else
