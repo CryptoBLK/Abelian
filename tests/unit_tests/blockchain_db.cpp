@@ -319,8 +319,6 @@ TYPED_TEST(BlockchainDBTest, RetrieveBlockData)
   this->get_filenames();
   this->init_hard_fork();
 
-  db_wtxn_guard guard(this->m_db);
-
   ASSERT_NO_THROW(this->m_db->add_block(this->m_blocks[0], t_sizes[0], t_sizes[0],  t_diffs[0], t_coins[0], this->m_txs[0]));
 
   ASSERT_EQ(t_sizes[0], this->m_db->get_block_weight(0));
