@@ -1099,7 +1099,7 @@ namespace hw {
         bool rc = this->controle_device->secret_key_to_public_key(sec_x, pub_x);
         log_hexbuffer("secret_key_to_public_key: [[OUT]] pub", pub_x.data, 32);
         if (!rc){
-          log_message("FAIL secret_key_to_public_key", "secret_key rejected");
+          log_message("secret_key_to_public_key", "secret_key rejected");
         }
         #endif
 
