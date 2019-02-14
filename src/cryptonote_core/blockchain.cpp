@@ -3949,7 +3949,7 @@ bool Blockchain::update_next_cumulative_weight_limit(uint64_t *long_term_effecti
 
   if (hf_version < HF_VERSION_LONG_TERM_BLOCK_WEIGHT)
   {
-    std::vector<size_t> weights;
+    std::vector<uint64_t> weights;
     get_last_n_blocks_weights(weights, CRYPTONOTE_REWARD_BLOCKS_WINDOW);
     m_current_block_cumul_weight_median = epee::misc_utils::median(weights);
     long_term_block_weight = weights.back();

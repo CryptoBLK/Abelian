@@ -182,8 +182,8 @@ static inline int use_v4_jit(void)
     if (variant >= 4) \
     { \
       chunk1 = veorq_u64(chunk1, chunk2); \
-      _c = veorq_u64(_c, chunk3); \
-      _c = veorq_u64(_c, chunk1); \
+      _c = vreinterpretq_u8_u64(veorq_u64(vreinterpretq_u64_u8(_c), chunk3)); \
+      _c = vreinterpretq_u8_u64(veorq_u64(vreinterpretq_u64_u8(_c), chunk1)); \
     } \
   } while (0)
 
@@ -1526,6 +1526,7 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
       aesb_single_round(p, c1, a);
 
       VARIANT2_PORTABLE_SHUFFLE_ADD(c1, a, long_state, j);
+      copy_block(p, c1);
       xor_blocks(p, b);
       VARIANT1_1(p);
 
@@ -1539,10 +1540,10 @@ void cn_slow_hash(const void *data, size_t length, char *hash, int variant, int 
       VARIANT4_RANDOM_MATH(a1, c, r, b, b + AES_BLOCK_SIZE);
       mul(c1, c, d);
       VARIANT2_2_PORTABLE();
-      VARIANT2_PORTABLE_SHUFFLE_ADD(c1, a1, long_state, j);
-      sum_half_blocks(a, d);
-      swap_blocks(a, c);
-      xor_blocks(a, c);
+      VARIANT2_PORTABLE_SHUFFLE_ADD(c1, a, long_state, j);
+      sum_half_blocks(a1, d);
+      swap_blocks(a1, c);
+      xor_blocks(a1, c);
       VARIANT1_2(U64(c) + 1);
       copy_block(p, c);
 

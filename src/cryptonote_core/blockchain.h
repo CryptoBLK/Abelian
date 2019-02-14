@@ -1318,7 +1318,7 @@ namespace cryptonote
      *
      * @return the long term median block weight
      */
-    uint64_t get_long_term_block_weight_median(uint64_t start_height, size_t count) const;
+    void get_last_n_blocks_weights(std::vector<uint64_t>& weights, size_t count) const;
 
     /**
      * @brief checks if a transaction is unlocked (its outputs spendable)
