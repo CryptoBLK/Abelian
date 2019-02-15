@@ -528,10 +528,10 @@ bool Blockchain::init(BlockchainDB* db, const network_type nettype, bool offline
   {
     m_long_term_block_weights.push_front(db_height - 1 - m_long_term_block_weights.size());
   }
-  if (!m_long_term_block_weights.empty())
-    m_long_term_block_weights.pop_back();
+  m_long_term_block_weights_height = db_height;
 
-  update_next_cumulative_weight_limit();
+  if (!update_next_cumulative_weight_limit())
+    return false;
   return true;
 }
 //------------------------------------------------------------------
@@ -721,9 +721,8 @@ block Blockchain::pop_block_from_blockchain()
   m_check_txin_table.clear();
 
   CHECK_AND_ASSERT_THROW_MES(update_next_cumulative_weight_limit(), "Error updating next cumulative weight limit");
-  uint64_t top_block_height;
-  crypto::hash top_block_hash = get_tail_id(top_block_height);
-  m_tx_pool.on_blockchain_dec(top_block_height, top_block_hash);
+
+  m_tx_pool.on_blockchain_dec(m_db->height()-1, get_tail_id());
   invalidate_block_template_cache();
 
   return popped_block;
