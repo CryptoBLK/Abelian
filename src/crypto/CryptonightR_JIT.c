@@ -4,18 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#if !(defined(_MSC_VER) || defined(__MINGW32__))
-#include <sys/mman.h>
-#endif
 
-#include "int-util.h"
+#include "common/int-util.h"
 #include "hash-ops.h"
 #include "variant4_random_math.h"
 #include "CryptonightR_JIT.h"
 #include "CryptonightR_template.h"
 
 static const uint8_t prologue[] = {
-#if defined __i386 || defined __x86_64__
 	0x4C, 0x8B, 0xD7,	// mov r10, rdi
 	0x53,			// push rbx
 	0x55,			// push rbp
@@ -30,11 +26,9 @@ static const uint8_t prologue[] = {
 	0x41, 0x8B, 0x42, 0x18,	// mov eax, DWORD PTR [r10+24]
 	0x41, 0x8B, 0x52, 0x1C,	// mov edx, DWORD PTR [r10+28]
 	0x45, 0x8B, 0x4A, 0x20,	// mov r9d, DWORD PTR [r10+32]
-#endif
 };
 
 static const uint8_t epilogue[] = {
-#if defined __i386 || defined __x86_64__
 	0x49, 0x8B, 0xE3,	// mov rsp, r11
 	0x41, 0x89, 0x1A,	// mov DWORD PTR [r10], ebx
 	0x41, 0x89, 0x72, 0x04,	// mov DWORD PTR [r10+4], esi
@@ -44,7 +38,6 @@ static const uint8_t epilogue[] = {
 	0x5D,			// pop rbp
 	0x5B,			// pop rbx
 	0xC3,			// ret
-#endif
 };
 
 #define APPEND_CODE(src, size) \
@@ -57,14 +50,8 @@ static const uint8_t epilogue[] = {
 
 int v4_generate_JIT_code(const struct V4_Instruction* code, v4_random_math_JIT_func buf, const size_t buf_size)
 {
-#if defined __i386 || defined __x86_64__
 	uint8_t* JIT_code = (uint8_t*) buf;
 	const uint8_t* JIT_code_end = JIT_code + buf_size;
-
-#if !(defined(_MSC_VER) || defined(__MINGW32__))
-	if (mprotect((void*)buf, buf_size, PROT_READ | PROT_WRITE))
-		return 1;
-#endif
 
 	APPEND_CODE(prologue, sizeof(prologue));
 
@@ -108,16 +95,5 @@ int v4_generate_JIT_code(const struct V4_Instruction* code, v4_random_math_JIT_f
 	}
 
 	APPEND_CODE(epilogue, sizeof(epilogue));
-
-#if !(defined(_MSC_VER) || defined(__MINGW32__))
-	if (mprotect((void*)buf, buf_size, PROT_READ | PROT_EXEC))
-		return 1;
-#endif
-
-	__builtin___clear_cache((char*)buf, (char*)JIT_code);
-
 	return 0;
-#else
-	return 1;
-#endif
 }
