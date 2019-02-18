@@ -1370,9 +1370,11 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   uint64_t pool_cookie;
 
   m_tx_pool.lock();
-  const auto unlock_guard = epee::misc_utils::create_scope_leave_handler([&]() { m_tx_pool.unlock(); });
+  const auto txpool_unlocker = epee::misc_utils::create_scope_leave_handler([&]() { m_tx_pool.unlock(); });
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
-  if (m_btc_valid && !from_block) {
+
+  height = m_db->height();
+  if (m_btc_valid) {
     // The pool cookie is atomic. The lack of locking is OK, as if it changes
     // just as we compare it, we'll just use a slightly old template, but
     // this would be the case anyway if we'd lock, and the change happened
@@ -1466,6 +1468,9 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
 
   CHECK_AND_ASSERT_MES(diffic, false, "difficulty overhead.");
 
+  median_weight = m_current_block_cumul_weight_limit / 2;
+  already_generated_coins = m_db->get_block_already_generated_coins(height - 1);
+
   size_t txs_weight;
   uint64_t fee;
   if (!m_tx_pool.fill_block_template(b, median_weight, already_generated_coins, txs_weight, fee, expected_reward, b.major_version))
@@ -1519,6 +1524,10 @@ bool Blockchain::create_block_template(block& b, const crypto::hash *from_block,
   {
     LOG_ERROR("Creating block template: error: wrongly calculated fee");
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> blockchain: fix block template creation race
   MDEBUG("Creating block template: height " << height <<
       ", median weight " << median_weight <<
       ", already generated coins " << already_generated_coins <<
