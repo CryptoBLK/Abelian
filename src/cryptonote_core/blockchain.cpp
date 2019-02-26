@@ -3940,12 +3940,10 @@ bool Blockchain::update_next_cumulative_weight_limit(uint64_t *long_term_effecti
     }
     else
     {
-      uint64_t nblocks = std::min<uint64_t>(m_long_term_block_weights_window, db_height);
-      if (nblocks == db_height)
-        --nblocks;
+      const uint64_t nblocks = std::min<uint64_t>(m_long_term_block_weights_window, db_height - 1);
       weights.resize(nblocks);
       for (uint64_t h = 0; h < nblocks; ++h)
-        weights[h] = m_db->get_block_long_term_weight(db_height - nblocks + h - 1);
+        weights[h] = m_db->get_block_long_term_weight(db_height - nblocks + h);
       new_weights = weights;
       long_term_median = epee::misc_utils::median(weights);
     }
