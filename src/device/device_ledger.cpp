@@ -325,17 +325,7 @@ namespace hw {
       offset += strlen(MONERO_VERSION);
       this->buffer_send[4] = offset-5;
       this->length_send = offset;
-      this->exchange();
-
-      ASSERT_X(this->length_recv>=3, "Communication error, less than three bytes received. Check your application version.");
-
-      unsigned int device_version = 0;
-      device_version = VERSION(this->buffer_recv[0], this->buffer_recv[1], this->buffer_recv[2]);
-  
-      ASSERT_X (device_version >= MINIMAL_APP_VERSION,  
-                "Unsupported device application version: " << VERSION_MAJOR(device_version)<<"."<<VERSION_MINOR(device_version)<<"."<<VERSION_MICRO(device_version) << 
-                " At least " << MINIMAL_APP_VERSION_MAJOR<<"."<<MINIMAL_APP_VERSION_MINOR<<"."<<MINIMAL_APP_VERSION_MICRO<<" is required.");
-     
+      this->exchange();      
       return true;
     }
      
@@ -1307,13 +1297,18 @@ namespace hw {
       const cryptonote::account_keys           sender_account_keys_x          = sender_account_keys;
       memmove((void*)sender_account_keys_x.m_view_secret_key.data, dbg_viewkey.data, 32);
 
-      const crypto::public_key                 &txkey_pub_x                    = txkey_pub;
-      const crypto::secret_key                 &tx_key_x                       = tx_key;
-      const cryptonote::tx_destination_entry   &dst_entr_x                     = dst_entr;
-      const boost::optional<cryptonote::account_public_address> &change_addr_x = change_addr;
-      const size_t                             &output_index_x                 = output_index;
-      const bool                               &need_additional_txkeys_x       = need_additional_txkeys;
-      const std::vector<crypto::secret_key>    &additional_tx_keys_x           = additional_tx_keys;
+      const crypto::public_key                 txkey_pub_x                    = txkey_pub;
+      const crypto::secret_key                 tx_key_x                       = hw::ledger::decrypt(tx_key);
+      const cryptonote::tx_destination_entry   dst_entr_x                     = dst_entr;
+      const boost::optional<cryptonote::account_public_address> change_addr_x = change_addr;
+      const size_t                             output_index_x                 = output_index;
+      const bool                               need_additional_txkeys_x       = need_additional_txkeys;
+      
+      std::vector<crypto::secret_key>    additional_tx_keys_x;
+      for (const auto k: additional_tx_keys) {
+        additional_tx_keys_x.push_back(hw::ledger::decrypt(k));
+      }
+      
       std::vector<crypto::public_key>          additional_tx_public_keys_x;
       std::vector<rct::key>                    amount_keys_x;
       crypto::public_key                       out_eph_public_key_x;
@@ -1356,6 +1351,9 @@ namespace hw {
       offset += 4;
       //tx_sec
       memmove(&this->buffer_send[offset], sec->data, 32);
+      offset += 32;
+      //tx_pub
+      memmove(&this->buffer_send[offset], txkey_pub.data, 32);
       offset += 32;
       //Aout
       memmove(&this->buffer_send[offset], dst_entr.addr.m_view_public_key.data, 32);
@@ -1414,7 +1412,7 @@ namespace hw {
       #ifdef DEBUG_HWDEVICE
       hw::ledger::check32("generate_output_ephemeral_keys", "amount_key", (const char*)amount_keys_x.back().bytes, (const char*)hw::ledger::decrypt(amount_keys.back()).bytes);
       if (need_additional_txkeys) {
-        hw::ledger::check32("generate_output_ephemeral_keys", "additional_tx_key", additional_tx_keys_x.back().data, additional_tx_keys.back().data);
+        hw::ledger::check32("generate_output_ephemeral_keys", "additional_tx_key", additional_tx_public_keys_x.back().data, additional_tx_public_keys.back().data);
       }
       hw::ledger::check32("generate_output_ephemeral_keys", "out_eph_public_key", out_eph_public_key_x.data, out_eph_public_key.data);
       #endif
