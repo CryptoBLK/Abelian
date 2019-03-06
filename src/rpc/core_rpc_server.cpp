@@ -1529,7 +1529,7 @@ namespace cryptonote
       error_resp.message = "Internal error: can't get last block.";
       return false;
     }
-    const bool restricted = m_restricted && ctx;
+    const bool restricted = m_restricted;
     bool response_filled = fill_block_header_response(last_block, false, last_block_height, last_block_hash, res.block_header, req.fill_pow_hash && !restricted);
     if (!response_filled)
     {
@@ -1572,7 +1572,7 @@ namespace cryptonote
       return false;
     }
     uint64_t block_height = boost::get<txin_gen>(blk.miner_tx.vin.front()).height;
-    const bool restricted = m_restricted && ctx;
+    const bool restricted = m_restricted;
     bool response_filled = fill_block_header_response(blk, orphan, block_height, block_hash, res.block_header, req.fill_pow_hash && !restricted);
     if (!response_filled)
     {
@@ -1623,7 +1623,7 @@ namespace cryptonote
         return false;
       }
       res.headers.push_back(block_header_response());
-      const bool restricted = m_restricted && ctx;
+      const bool restricted = m_restricted;
       bool response_filled = fill_block_header_response(blk, false, block_height, block_hash, res.headers.back(), req.fill_pow_hash && !restricted);
       if (!response_filled)
       {
@@ -1658,7 +1658,7 @@ namespace cryptonote
       error_resp.message = "Internal error: can't get block by height. Height = " + std::to_string(req.height) + '.';
       return false;
     }
-    const bool restricted = m_restricted && ctx;
+    const bool restricted = m_restricted;
     bool response_filled = fill_block_header_response(blk, false, req.height, block_hash, res.block_header, req.fill_pow_hash && !restricted);
     if (!response_filled)
     {
@@ -1714,7 +1714,7 @@ namespace cryptonote
       return false;
     }
     uint64_t block_height = boost::get<txin_gen>(blk.miner_tx.vin.front()).height;
-    const bool restricted = m_restricted && ctx;
+    const bool restricted = m_restricted;
     bool response_filled = fill_block_header_response(blk, orphan, block_height, block_hash, res.block_header, req.fill_pow_hash && !restricted);
     if (!response_filled)
     {
