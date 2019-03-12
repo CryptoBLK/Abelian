@@ -9,3 +9,6 @@
 [submodule "external/rapidjson"]
 	path = external/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "src/liboqs-cpp"]
+	path = src/liboqs-cpp
+	url = https://github.com/open-quantum-safe/liboqs-cpp

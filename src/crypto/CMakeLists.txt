@@ -80,6 +80,7 @@ monero_add_library(cncrypto
   ${crypto_private_headers})
 target_link_libraries(cncrypto
   PUBLIC
+        oqs
     epee
     ${Boost_SYSTEM_LIBRARY}
     ${SODIUM_LIBRARY}
