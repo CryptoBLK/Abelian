@@ -43,6 +43,7 @@
 #include "warnings.h"
 #include "crypto.h"
 #include "hash.h"
+#include "liboqs-cpp/include/oqs_cpp.h"
 
 namespace {
   static void local_abort(const char *msg)
@@ -121,7 +122,7 @@ namespace crypto {
   }
   /* generate a random 32-byte (256-bit) integer and copy it to res */
   static inline void random_scalar(ec_scalar &res) {
-    random32_unbiased((unsigned char*)res.data);
+   // random32_unbiased((unsigned char*)res.data);
   }
 
   void hash_to_scalar(const void *data, size_t length, ec_scalar &res) {
@@ -138,6 +139,14 @@ namespace crypto {
     ge_p3 point;
 
     secret_key rng;
+    // OQS
+    auto sigScheme = "DEFAULT";
+    oqs::Signature signer{ sigScheme };
+
+    auto test = signer.get_details();
+    auto pubkey = signer.generate_keypair();
+
+    oqs::bytes secret = signer.export_secret_key();
 
     if (recover)
     {
@@ -145,13 +154,14 @@ namespace crypto {
     }
     else
     {
-      random_scalar(rng);
+      rng.data = secret;
     }
     sec = rng;
-    sc_reduce32(&unwrap(sec));  // reduce in case second round of keys (sendkeys)
+    // sc_reduce32(&unwrap(sec));  // reduce in case second round of keys (sendkeys)
 
-    ge_scalarmult_base(&point, &unwrap(sec));
-    ge_p3_tobytes(&pub, &point);
+    //ge_scalarmult_base(&point, &unwrap(sec));
+    //ge_p3_tobytes(&pub, &point);
+    pub.data = pubkey;
 
     return rng;
   }
@@ -262,6 +272,12 @@ namespace crypto {
     ge_p3 tmp3;
     ec_scalar k;
     s_comm buf;
+
+    // OQS
+    auto sigScheme = "DEFAULT";
+    oqs::Signature signer{ sigScheme };
+
+    auto signMe = signer.sign(oqs::bytes((unsigned char)*prefix_hash.data));
 #if !defined(NDEBUG)
     {
       ge_p3 t;
@@ -281,11 +297,13 @@ namespace crypto {
     ge_scalarmult_base(&tmp3, &k);
     ge_p3_tobytes(&buf.comm, &tmp3);
     hash_to_scalar(&buf, sizeof(s_comm), sig.c);
-    if (!sc_isnonzero((const unsigned char*)sig.c.data))
-      goto try_again;
+
+    //if (!sc_isnonzero((const unsigned char*)sig.c.data))
+    //  goto try_again;
     sc_mulsub(&sig.r, &sig.c, &unwrap(sec), &k);
-    if (!sc_isnonzero((const unsigned char*)sig.r.data))
-      goto try_again;
+
+    //if (!sc_isnonzero((const unsigned char*)sig.r.data))
+    //  goto try_again;
   }
 
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
