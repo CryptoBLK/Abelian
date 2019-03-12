@@ -40,10 +40,11 @@
 #include "common/pod-class.h"
 #include "memwipe.h"
 #include "mlocker.h"
-#include "generic-ops.h"
+//#include "generic-ops.h"
 #include "hex.h"
 #include "span.h"
 #include "hash.h"
+#include "liboqs-cpp/include/oqs_cpp.h"
 
 namespace crypto {
 
@@ -53,11 +54,13 @@ namespace crypto {
 
 #pragma pack(push, 1)
   POD_CLASS ec_point {
-    char data[32];
+    //char data[1504];
+    oqs::bytes data;
   };
 
   POD_CLASS ec_scalar {
-    char data[32];
+    //oqs::bytes data[2112];
+    oqs::bytes data;
   };
 
   POD_CLASS public_key: ec_point {
@@ -99,10 +102,10 @@ namespace crypto {
   void hash_to_scalar(const void *data, size_t length, ec_scalar &res);
   void random32_unbiased(unsigned char *bytes);
 
-  static_assert(sizeof(ec_point) == 32 && sizeof(ec_scalar) == 32 &&
+  /*static_assert(sizeof(ec_point) == 32 && sizeof(ec_scalar) == 32 &&
     sizeof(public_key) == 32 && sizeof(secret_key) == 32 &&
     sizeof(key_derivation) == 32 && sizeof(key_image) == 32 &&
-    sizeof(signature) == 64, "Invalid structure size");
+    sizeof(signature) == 64, "Invalid structure size");*/
 
   class crypto_ops {
     crypto_ops();
@@ -306,7 +309,7 @@ namespace crypto {
   const extern crypto::secret_key null_skey;
 }
 
-CRYPTO_MAKE_HASHABLE(public_key)
-CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
-CRYPTO_MAKE_HASHABLE(key_image)
-CRYPTO_MAKE_COMPARABLE(signature)
+//CRYPTO_MAKE_HASHABLE(public_key)
+//CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
+//CRYPTO_MAKE_HASHABLE(key_image)
+//CRYPTO_MAKE_COMPARABLE(signature)
