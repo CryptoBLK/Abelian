@@ -40,11 +40,10 @@
 #include "common/pod-class.h"
 #include "memwipe.h"
 #include "mlocker.h"
-//#include "generic-ops.h"
+#include "generic-ops.h"
 #include "hex.h"
 #include "span.h"
 #include "hash.h"
-#include "liboqs-cpp/include/oqs_cpp.h"
 
 namespace crypto {
 
@@ -54,13 +53,13 @@ namespace crypto {
 
 #pragma pack(push, 1)
   POD_CLASS ec_point {
-    //char data[1504];
-    oqs::bytes data;
+    char data[1504];
+    //oqs::bytes data;
   };
 
   POD_CLASS ec_scalar {
-    //oqs::bytes data[2112];
-    oqs::bytes data;
+    char data[2112];
+    //oqs::bytes data;
   };
 
   POD_CLASS public_key: ec_point {
@@ -309,7 +308,7 @@ namespace crypto {
   const extern crypto::secret_key null_skey;
 }
 
-//CRYPTO_MAKE_HASHABLE(public_key)
-//CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
-//CRYPTO_MAKE_HASHABLE(key_image)
-//CRYPTO_MAKE_COMPARABLE(signature)
+CRYPTO_MAKE_HASHABLE(public_key)
+CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
+CRYPTO_MAKE_HASHABLE(key_image)
+CRYPTO_MAKE_COMPARABLE(signature)

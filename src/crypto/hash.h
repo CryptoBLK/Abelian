@@ -35,7 +35,7 @@
 #include <boost/utility/value_init.hpp>
 
 #include "common/pod-class.h"
-//#include "generic-ops.h"
+#include "generic-ops.h"
 #include "hex.h"
 #include "span.h"
 
@@ -94,5 +94,5 @@ namespace crypto {
   const static crypto::hash8 null_hash8 = boost::value_initialized<crypto::hash8>();
 }
 
-//CRYPTO_MAKE_HASHABLE(hash)
-//CRYPTO_MAKE_COMPARABLE(hash8)
+CRYPTO_MAKE_HASHABLE(hash)
+CRYPTO_MAKE_COMPARABLE(hash8)
