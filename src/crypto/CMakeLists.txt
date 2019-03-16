@@ -84,6 +84,7 @@ monero_add_library(cncrypto
 target_link_libraries(cncrypto
   PUBLIC
         oqs
+        sha3
     epee
     ${Boost_SYSTEM_LIBRARY}
     ${SODIUM_LIBRARY}
