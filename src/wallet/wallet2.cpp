@@ -1765,7 +1765,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
       if (!hwdev.generate_key_derivation(tx_pub_key, keys.m_view_secret_key, derivation))
       {
         MWARNING("Failed to generate key derivation from tx pubkey in " << txid << ", skipping");
-//        static_assert(sizeof(derivation) == sizeof(rct::key), "Mismatched sizes of key_derivation and rct::key");
+///        static_assert(sizeof(derivation) == sizeof(rct::key), "Mismatched sizes of key_derivation and rct::key");
         memcpy(&derivation, rct::identity().bytes, sizeof(derivation));
       }
 
@@ -4315,9 +4315,9 @@ crypto::secret_key wallet2::generate(const std::string& wallet_, const epee::wip
   setup_keys(password);
 
   // calculate a starting refresh height
-  if(m_refresh_from_block_height == 0 && !recover){
-    m_refresh_from_block_height = estimate_blockchain_height();
-  }
+  //if(m_refresh_from_block_height == 0 && !recover){
+  //  m_refresh_from_block_height = estimate_blockchain_height();
+  //}
 
   create_keys_file(wallet_, false, password, m_nettype != MAINNET || create_address_file);
 

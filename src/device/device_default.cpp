@@ -151,8 +151,8 @@ namespace hw {
 
             ge_p3 p3;
             ge_cached cached;
-            CHECK_AND_ASSERT_THROW_MES(ge_frombytes_vartime(&p3, (const unsigned char*)keys.m_account_address.m_spend_public_key.data) == 0,
-                "ge_frombytes_vartime failed to convert spend public key");
+            //CHECK_AND_ASSERT_THROW_MES(ge_frombytes_vartime(&p3, (const unsigned char*)keys.m_account_address.m_spend_public_key.data) == 0,
+             //   "ge_frombytes_vartime failed to convert spend public key");
             ge_p3_to_cached(&cached, &p3);
 
             for (uint32_t idx = begin; idx < end; ++idx)

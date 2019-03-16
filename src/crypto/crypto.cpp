@@ -68,6 +68,7 @@ namespace crypto {
   extern "C" {
 #include "crypto-ops.h"
 #include "random.h"
+      #include <oqs/sha3.h>
   }
 
   const crypto::public_key null_pkey = crypto::public_key{};
@@ -273,11 +274,6 @@ namespace crypto {
     ec_scalar k;
     s_comm buf;
 
-    // OQS
-    auto sigScheme = "DEFAULT";
-    oqs::Signature signer{ sigScheme };
-
-    auto signMe = signer.sign(oqs::bytes((unsigned char)*prefix_hash.data));
 #if !defined(NDEBUG)
     {
       ge_p3 t;
@@ -285,7 +281,7 @@ namespace crypto {
       assert(sc_check(&sec) == 0);
       ge_scalarmult_base(&t, &sec);
       ge_p3_tobytes(&t2, &t);
-//      assert(pub == t2);
+      assert(pub == t2);
     }
 #endif
     buf.h = prefix_hash;
@@ -298,12 +294,12 @@ namespace crypto {
     ge_p3_tobytes(&buf.comm, &tmp3);
     hash_to_scalar(&buf, sizeof(s_comm), sig.c);
 
-    //if (!sc_isnonzero((const unsigned char*)sig.c.data))
-    //  goto try_again;
+    if (!sc_isnonzero((const unsigned char*)sig.c.data))
+      goto try_again;
     sc_mulsub(&sig.r, &sig.c, &unwrap(sec), &k);
 
-    //if (!sc_isnonzero((const unsigned char*)sig.r.data))
-    //  goto try_again;
+    if (!sc_isnonzero((const unsigned char*)sig.r.data))
+      goto try_again;
   }
 
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
@@ -357,13 +353,13 @@ namespace crypto {
         ge_scalarmult_base(&dbg_R_p3, &r);
         ge_p3_tobytes(&dbg_R, &dbg_R_p3);
       }
-//      assert(R == dbg_R);
+      assert(R == dbg_R);
       // check D == r*A
       ge_p2 dbg_D_p2;
       ge_scalarmult(&dbg_D_p2, &r, &A_p3);
       public_key dbg_D;
       ge_tobytes(&dbg_D, &dbg_D_p2);
-   //   assert(D == dbg_D);
+      assert(D == dbg_D);
     }
 #endif
 
@@ -542,9 +538,9 @@ POP_WARNINGS
       assert(sc_check(&sec) == 0);
       ge_scalarmult_base(&t, &sec);
       ge_p3_tobytes(&t2, &t);
-     // assert(*pubs[sec_index] == t2);
+      assert(*pubs[sec_index] == t2);
       generate_key_image(*pubs[sec_index], sec, t3);
-//      assert(image == t3);
+      assert(image == t3);
       for (i = 0; i < pubs_count; i++) {
         assert(check_key(*pubs[i]));
       }
