@@ -141,15 +141,18 @@ namespace crypto {
 
     secret_key rng;
 
+    crypto_sign_keypair(&rng, &pub);
+    sec = rng;
+
     // OQS
-    auto sigScheme = "DEFAULT";
-    oqs::Signature signer{ sigScheme };
+    //auto sigScheme = "DEFAULT";
+    //oqs::Signature signer{ sigScheme };
 
-    auto test = signer.get_details();
-    auto pubkey = signer.generate_keypair();
+    //auto test = signer.get_details();
+    //auto pubkey = signer.generate_keypair();
 
-    oqs::bytes secret = signer.export_secret_key();
-
+    //oqs::bytes secret = signer.export_secret_key();
+    /*
     if (recover)
     {
       rng = recovery_key;
@@ -158,12 +161,13 @@ namespace crypto {
     {
       std::copy(secret.begin(), secret.end(), &rng);
     }
-    sec = rng;
+
     // sc_reduce32(&unwrap(sec));  // reduce in case second round of keys (sendkeys)
 
     //ge_scalarmult_base(&point, &unwrap(sec));
     //ge_p3_tobytes(&pub, &point);
     std::copy(pubkey.begin(), pubkey.end(), &pub);
+    */
 
     return rng;
   }

@@ -75,6 +75,8 @@ set(crypto_private_headers
   CryptonightR_JIT.h
   CryptonightR_template.h)
 
+include_directories(../dilithium)
+
 monero_private_headers(cncrypto
   ${crypto_private_headers})
 monero_add_library(cncrypto
@@ -84,7 +86,6 @@ monero_add_library(cncrypto
 target_link_libraries(cncrypto
   PUBLIC
         oqs
-        sha3
     epee
     ${Boost_SYSTEM_LIBRARY}
     ${SODIUM_LIBRARY}
