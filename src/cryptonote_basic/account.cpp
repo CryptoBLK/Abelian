@@ -39,6 +39,8 @@ extern "C"
 {
 #include "crypto/keccak.h"
 #include <oqs/sha3.h>
+#include <dilithium/fips202.h>
+
 }
 #include "cryptonote_basic_impl.h"
 #include "cryptonote_format_utils.h"
@@ -153,8 +155,7 @@ DISABLE_VS_WARNINGS(4244 4345)
     // rng for generating second set of keys is hash of first rng.  means only one set of electrum-style words needed for recovery
     crypto::secret_key second;
 
-    oqs::C::OQS_SHA3_shake256((uint8_t *)&second, sizeof(crypto::secret_key), (uint8_t *)&m_keys.m_spend_secret_key, sizeof(crypto::secret_key));
-
+    shake256((uint8_t *)&second, sizeof(crypto::secret_key), (uint8_t *)&m_keys.m_spend_secret_key, sizeof(crypto::secret_key));
     generate_keys(m_keys.m_account_address.m_view_public_key, m_keys.m_view_secret_key, second, two_random ? false : true);
 
     struct tm timestamp = {0};
