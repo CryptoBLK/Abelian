@@ -5,8 +5,8 @@
 #include "poly.h"
 #include "polyvec.h"
 
-void expand_mat(polyvecl mat[K], const unsigned char rho[SEEDBYTES]);
-void expand_mat_avx(polyvecl mat[K], const unsigned char rho[SEEDBYTES]);
+void expand_mat(polyvecl mat[_K], const unsigned char rho[SEEDBYTES]);
+void expand_mat_avx(polyvecl mat[_K], const unsigned char rho[SEEDBYTES]);
 void challenge(poly *c, const unsigned char mu[CRHBYTES],
                const polyveck *w1);
 

@@ -7,7 +7,7 @@
 
 /* Vectors of polynomials of length L */
 typedef struct {
-  poly vec[L];
+  poly vec[_L];
 } polyvecl;
 
 void polyvecl_reduce(polyvecl *v);
@@ -27,7 +27,7 @@ int polyvecl_chknorm(const polyvecl *v, uint32_t B);
 
 /* Vectors of polynomials of length K */
 typedef struct {
-  poly vec[K];
+  poly vec[_K];
 } polyveck;
 
 void polyveck_reduce(polyveck *v);

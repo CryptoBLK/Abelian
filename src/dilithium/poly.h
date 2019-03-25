@@ -6,7 +6,7 @@
 #include "fips202.h"
 
 typedef struct {
-  uint32_t coeffs[N];
+  uint32_t coeffs[_N];
 } poly __attribute__((aligned(32)));
 
 void poly_reduce(poly *a);

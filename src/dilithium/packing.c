@@ -22,7 +22,7 @@ void pack_pk(unsigned char pk[CRYPTO_PUBLICKEYBYTES],
     pk[i] = rho[i];
   pk += SEEDBYTES;
 
-  for(i = 0; i < K; ++i)
+  for(i = 0; i < _K; ++i)
     polyt1_pack(pk + i*POLT1_SIZE_PACKED, t1->vec+i);
 }
 
@@ -45,7 +45,7 @@ void unpack_pk(unsigned char rho[SEEDBYTES],
     rho[i] = pk[i];
   pk += SEEDBYTES;
 
-  for(i = 0; i < K; ++i)
+  for(i = 0; i < _K; ++i)
     polyt1_unpack(t1->vec+i, pk + i*POLT1_SIZE_PACKED);
 }
 
@@ -84,15 +84,15 @@ void pack_sk(unsigned char sk[CRYPTO_SECRETKEYBYTES],
     sk[i] = tr[i];
   sk += CRHBYTES;
 
-  for(i = 0; i < L; ++i)
+  for(i = 0; i < _L; ++i)
     polyeta_pack(sk + i*POLETA_SIZE_PACKED, s1->vec+i);
-  sk += L*POLETA_SIZE_PACKED;
+  sk += _L*POLETA_SIZE_PACKED;
 
-  for(i = 0; i < K; ++i)
+  for(i = 0; i < _K; ++i)
     polyeta_pack(sk + i*POLETA_SIZE_PACKED, s2->vec+i);
-  sk += K*POLETA_SIZE_PACKED;
+  sk += _K*POLETA_SIZE_PACKED;
 
-  for(i = 0; i < K; ++i)
+  for(i = 0; i < _K; ++i)
     polyt0_pack(sk + i*POLT0_SIZE_PACKED, t0->vec+i);
 }
 
@@ -131,15 +131,15 @@ void unpack_sk(unsigned char rho[SEEDBYTES],
     tr[i] = sk[i];
   sk += CRHBYTES;
 
-  for(i=0; i < L; ++i)
+  for(i=0; i < _L; ++i)
     polyeta_unpack(s1->vec+i, sk + i*POLETA_SIZE_PACKED);
-  sk += L*POLETA_SIZE_PACKED;
+  sk += _L*POLETA_SIZE_PACKED;
 
-  for(i=0; i < K; ++i)
+  for(i=0; i < _K; ++i)
     polyeta_unpack(s2->vec+i, sk + i*POLETA_SIZE_PACKED);
-  sk += K*POLETA_SIZE_PACKED;
+  sk += _K*POLETA_SIZE_PACKED;
 
-  for(i=0; i < K; ++i)
+  for(i=0; i < _K; ++i)
     polyt0_unpack(t0->vec+i, sk + i*POLT0_SIZE_PACKED);
 }
 
@@ -161,36 +161,36 @@ void pack_sig(unsigned char sig[CRYPTO_BYTES],
   unsigned int i, j, k;
   uint64_t signs, mask;
 
-  for(i = 0; i < L; ++i)
+  for(i = 0; i < _L; ++i)
     polyz_pack(sig + i*POLZ_SIZE_PACKED, z->vec+i);
-  sig += L*POLZ_SIZE_PACKED;
+  sig += _L*POLZ_SIZE_PACKED;
 
   /* Encode h */
   k = 0;
-  for(i = 0; i < K; ++i) {
-    for(j = 0; j < N; ++j)
+  for(i = 0; i < _K; ++i) {
+    for(j = 0; j < _N; ++j)
       if(h->vec[i].coeffs[j] != 0)
         sig[k++] = j;
 
     sig[OMEGA + i] = k;
   }
   while(k < OMEGA) sig[k++] = 0;
-  sig += OMEGA + K;
+  sig += OMEGA + _K;
 
   /* Encode c */
   signs = 0;
   mask = 1;
-  for(i = 0; i < N/8; ++i) {
+  for(i = 0; i < _N/8; ++i) {
     sig[i] = 0;
     for(j = 0; j < 8; ++j) {
       if(c->coeffs[8*i+j] != 0) {
         sig[i] |= (1U << j);
-        if(c->coeffs[8*i+j] == (Q - 1)) signs |= mask;
+        if(c->coeffs[8*i+j] == (_Q - 1)) signs |= mask;
         mask <<= 1;
       }
     }
   }
-  sig += N/8;
+  sig += _N/8;
   for(i = 0; i < 8; ++i)
     sig[i] = signs >> 8*i;
 }
@@ -216,14 +216,14 @@ int unpack_sig(polyvecl *z,
   unsigned int i, j, k;
   uint64_t signs, mask;
 
-  for(i = 0; i < L; ++i)
+  for(i = 0; i < _L; ++i)
     polyz_unpack(z->vec+i, sig + i*POLZ_SIZE_PACKED);
-  sig += L*POLZ_SIZE_PACKED;
+  sig += _L*POLZ_SIZE_PACKED;
 
   /* Decode h */
   k = 0;
-  for(i = 0; i < K; ++i) {
-    for(j = 0; j < N; ++j)
+  for(i = 0; i < _K; ++i) {
+    for(j = 0; j < _N; ++j)
       h->vec[i].coeffs[j] = 0;
 
     if(sig[OMEGA + i] < k || sig[OMEGA + i] > OMEGA)
@@ -243,25 +243,25 @@ int unpack_sig(polyvecl *z,
     if(sig[j])
       return 1;
 
-  sig += OMEGA + K;
+  sig += OMEGA + _K;
 
   /* Decode c */
-  for(i = 0; i < N; ++i)
+  for(i = 0; i < _N; ++i)
     c->coeffs[i] = 0;
 
   signs = 0;
   for(i = 0; i < 8; ++i)
-    signs |= (uint64_t)sig[N/8+i] << 8*i;
+    signs |= (uint64_t)sig[_N/8+i] << 8*i;
 
   /* Extra sign bits are zero for strong unforgeability */
   if(signs >> 60)
     return 1;
 
   mask = 1;
-  for(i = 0; i < N/8; ++i) {
+  for(i = 0; i < _N/8; ++i) {
     for(j = 0; j < 8; ++j) {
       if((sig[i] >> j) & 0x01) {
-        c->coeffs[8*i+j] = (signs & mask) ? Q - 1 : 1;
+        c->coeffs[8*i+j] = (signs & mask) ? _Q - 1 : 1;
         mask <<= 1;
       }
     }

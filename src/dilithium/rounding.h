@@ -20,12 +20,12 @@ inline uint32_t power2round(uint32_t a, uint32_t *a0)  {
   int32_t t;
 
   /* Centralized remainder mod 2^D */
-  t = a & ((1 << D) - 1);
-  t -= (1 << (D-1)) + 1;
-  t += (t >> 31) & (1 << D);
-  t -= (1 << (D-1)) - 1;
-  *a0 = Q + t;
-  a = (a - t) >> D;
+  t = a & ((1 << _D) - 1);
+  t -= (1 << (_D-1)) + 1;
+  t += (t >> 31) & (1 << _D);
+  t -= (1 << (_D-1)) - 1;
+  *a0 = _Q + t;
+  a = (a - t) >> _D;
   return a;
 }
 
@@ -44,8 +44,8 @@ inline uint32_t power2round(uint32_t a, uint32_t *a0)  {
 * Returns a1.
 **************************************************/
 inline uint32_t decompose(uint32_t a, uint32_t *a0) {
-#if ALPHA != (Q-1)/16
-#error "decompose assumes ALPHA == (Q-1)/16"
+#if ALPHA != (_Q-1)/16
+#error "decompose assumes ALPHA == (_Q-1)/16"
 #endif
   int32_t t, u;
 
@@ -64,7 +64,7 @@ inline uint32_t decompose(uint32_t a, uint32_t *a0) {
   a -= u & 1;
 
   /* Border case */
-  *a0 = Q + t - (a >> 4);
+  *a0 = _Q + t - (a >> 4);
   a &= 0xF;
   return a;
 }
@@ -82,7 +82,7 @@ inline uint32_t decompose(uint32_t a, uint32_t *a0) {
 * Returns 1 if high bits of a and b differ and 0 otherwise.
 **************************************************/
 inline unsigned int make_hint(const uint32_t a0, const uint32_t a1) {
-  if(a0 <= GAMMA2 || a0 > Q - GAMMA2 || (a0 == Q - GAMMA2 && a1 == 0))
+  if(a0 <= GAMMA2 || a0 > _Q - GAMMA2 || (a0 == _Q - GAMMA2 && a1 == 0))
     return 0;
 
   return 1;
@@ -104,7 +104,7 @@ inline uint32_t use_hint(const uint32_t a, const unsigned int hint) {
   a1 = decompose(a, &a0);
   if(hint == 0)
     return a1;
-  else if(a0 > Q)
+  else if(a0 > _Q)
     return (a1 + 1) & 0xF;
   else
     return (a1 - 1) & 0xF;

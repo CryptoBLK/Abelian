@@ -17,7 +17,8 @@ set(dilithium_headers
         ntt.h
         rounding.h
         fips202.h
-        fips202x4.h)
+        fips202x4.h
+        randombytes.h)
 
 set(dilithium_sources
         sign.c
@@ -32,5 +33,10 @@ set(dilithium_sources
         rounding.c
         fips202.c
         fips202x4.c
+        randombytes.c
         keccak4x/KeccakP-1600-times4-SIMD256.o)
+
+add_library(dilithium
+        ${dilithium_headers}
+        ${dilithium_sources})
 

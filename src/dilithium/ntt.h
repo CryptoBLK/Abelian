@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include "params.h"
 
-extern const uint32_t zetas[N];
-extern const uint32_t zetas_inv[N];
+extern const uint32_t zetas[_N];
+extern const uint32_t zetas_inv[_N];
 
 void ntt(uint32_t *phat, const uint32_t *p, const uint32_t *zetas) asm("ntt");
 void invntt(uint32_t *p, const uint32_t *phat, const uint32_t *zetas_inv) asm("invntt");
