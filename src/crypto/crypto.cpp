@@ -147,6 +147,8 @@ namespace crypto {
     std::memcpy(&rng, sk, CRYPTO_SECRETKEYBYTES);
     std::memcpy(&pub, pk, CRYPTO_PUBLICKEYBYTES);
 
+    sec = rng;
+
     return rng;
   }
 
