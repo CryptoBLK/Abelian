@@ -49,18 +49,16 @@ namespace crypto {
 
   extern "C" {
   #include "random.h"
-  #include "dilithium/api.h"
+  #include "dilithium/params.h"
   }
 
 #pragma pack(push, 1)
   POD_CLASS ec_point {
-    char data[CRYPTO_PUBLICKEYBYTES]; // We need to agree on this!
-    //oqs::bytes data;
+      char data[CRYPTO_PUBLICKEYBYTES]; // We need to agree on this!
   };
 
   POD_CLASS ec_scalar {
-    char data[CRYPTO_SECRETKEYBYTES]; // We need to agree on this!
-    //oqs::bytes data;
+      char data[CRYPTO_SECRETKEYBYTES]; // We need to agree on this!
   };
 
   POD_CLASS public_key: ec_point {

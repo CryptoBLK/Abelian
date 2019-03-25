@@ -68,7 +68,7 @@ namespace crypto {
   extern "C" {
 #include "crypto-ops.h"
 #include "random.h"
-      #include <oqs/sha3.h>
+      #include "dilithium/sign.h"
   }
 
   const crypto::public_key null_pkey = crypto::public_key{};
@@ -136,37 +136,15 @@ namespace crypto {
    * 
    */
   secret_key crypto_ops::generate_keys(public_key &pub, secret_key &sec, const secret_key& recovery_key, bool recover) {
-    ge_p3 point;
-
     secret_key rng;
 
-    crypto_sign_keypair(&rng, &pub);
-    sec = rng;
+    unsigned char pk[CRYPTO_PUBLICKEYBYTES];
+    unsigned char sk[CRYPTO_SECRETKEYBYTES];
 
-    // OQS
-    //auto sigScheme = "DEFAULT";
-    //oqs::Signature signer{ sigScheme };
+    crypto_sign_keypair(pk, sk);
 
-    //auto test = signer.get_details();
-    //auto pubkey = signer.generate_keypair();
-
-    //oqs::bytes secret = signer.export_secret_key();
-    /*
-    if (recover)
-    {
-      rng = recovery_key;
-    }
-    else
-    {
-      std::copy(secret.begin(), secret.end(), &rng);
-    }
-
-    // sc_reduce32(&unwrap(sec));  // reduce in case second round of keys (sendkeys)
-
-    //ge_scalarmult_base(&point, &unwrap(sec));
-    //ge_p3_tobytes(&pub, &point);
-    std::copy(pubkey.begin(), pubkey.end(), &pub);
-    */
+    std::memcpy(&rng, sk, CRYPTO_SECRETKEYBYTES);
+    std::memcpy(&pub, pk, CRYPTO_PUBLICKEYBYTES);
 
     return rng;
   }

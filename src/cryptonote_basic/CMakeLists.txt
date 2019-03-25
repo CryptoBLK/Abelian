@@ -70,6 +70,8 @@ monero_add_library(cryptonote_basic
 target_link_libraries(cryptonote_basic
   PUBLIC
     common
+        sha3
+        dilithium
     cncrypto
     checkpoints
     device
