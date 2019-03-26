@@ -1,8 +1,6 @@
 #include <stdint.h>
-#include <immintrin.h>
 #include "test/cpucycles.h"
 #include "fips202.h"
-#include "fips202x4.h"
 #include "params.h"
 #include "reduce.h"
 #include "rounding.h"
@@ -23,9 +21,11 @@ extern unsigned long long *tred, *tadd, *tmul, *tround, *tsample, *tpack;
 * Arguments:   - poly *a: pointer to input/output polynomial
 **************************************************/
 void poly_reduce(poly *a) {
+  unsigned int i;
   DBENCH_START();
 
-  reduce32(a->coeffs, a->coeffs);
+  for(i = 0; i < N; ++i)
+    a->coeffs[i] = reduce32(a->coeffs[i]);
 
   DBENCH_STOP(*tred);
 }
@@ -39,9 +39,11 @@ void poly_reduce(poly *a) {
 * Arguments:   - poly *a: pointer to input/output polynomial
 **************************************************/
 void poly_csubq(poly *a) {
+  unsigned int i;
   DBENCH_START();
 
-  csubq(a->coeffs, a->coeffs);
+  for(i = 0; i < N; ++i)
+    a->coeffs[i] = csubq(a->coeffs[i]);
 
   DBENCH_STOP(*tred);
 }
@@ -55,10 +57,11 @@ void poly_csubq(poly *a) {
 * Arguments:   - poly *a: pointer to input/output polynomial
 **************************************************/
 void poly_freeze(poly *a) {
+  unsigned int i;
   DBENCH_START();
 
-  reduce32(a->coeffs, a->coeffs); //FIXME
-  csubq(a->coeffs, a->coeffs);
+  for(i = 0; i < N; ++i)
+    a->coeffs[i] = freeze(a->coeffs[i]);
 
   DBENCH_STOP(*tred);
 }
@@ -76,7 +79,7 @@ void poly_add(poly *c, const poly *a, const poly *b)  {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N; ++i)
+  for(i = 0; i < N; ++i)
     c->coeffs[i] = a->coeffs[i] + b->coeffs[i];
 
   DBENCH_STOP(*tadd);
@@ -98,8 +101,26 @@ void poly_sub(poly *c, const poly *a, const poly *b) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N; ++i)
-    c->coeffs[i] = a->coeffs[i] + 2*_Q - b->coeffs[i];
+  for(i = 0; i < N; ++i)
+    c->coeffs[i] = a->coeffs[i] + 2*Q - b->coeffs[i];
+
+  DBENCH_STOP(*tadd);
+}
+
+/*************************************************
+* Name:        poly_neg
+*
+* Description: Negate polynomial. Assumes input coefficients to be standard
+*              representatives.
+*
+* Arguments:   - poly *a: pointer to input/output polynomial
+**************************************************/
+void poly_neg(poly *a) {
+  unsigned int i;
+  DBENCH_START();
+
+  for(i = 0; i < N; ++i)
+    a->coeffs[i] = Q - a->coeffs[i];
 
   DBENCH_STOP(*tadd);
 }
@@ -117,7 +138,7 @@ void poly_shiftl(poly *a, unsigned int k) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N; ++i)
+  for(i = 0; i < N; ++i)
     a->coeffs[i] <<= k;
 
   DBENCH_STOP(*tmul);
@@ -134,7 +155,7 @@ void poly_shiftl(poly *a, unsigned int k) {
 void poly_ntt(poly *a) {
   DBENCH_START();
 
-  ntt(a->coeffs, a->coeffs, zetas);
+  ntt(a->coeffs);
 
   DBENCH_STOP(*tmul);
 }
@@ -150,7 +171,7 @@ void poly_ntt(poly *a) {
 void poly_invntt_montgomery(poly *a) {
   DBENCH_START();
 
-  invntt(a->coeffs, a->coeffs, zetas_inv);
+  invntt_frominvmont(a->coeffs);
 
   DBENCH_STOP(*tmul);
 }
@@ -168,9 +189,11 @@ void poly_invntt_montgomery(poly *a) {
 *              - const poly *b: pointer to second input polynomial
 **************************************************/
 void poly_pointwise_invmontgomery(poly *c, const poly *a, const poly *b) {
+  unsigned int i;
   DBENCH_START();
 
-  pointwise_mul(c->coeffs, a->coeffs, b->coeffs);
+  for(i = 0; i < N; ++i)
+    c->coeffs[i] = montgomery_reduce((uint64_t)a->coeffs[i] * b->coeffs[i]);
 
   DBENCH_STOP(*tmul);
 }
@@ -190,8 +213,8 @@ void poly_pointwise_invmontgomery(poly *c, const poly *a, const poly *b) {
 void poly_power2round(poly *a1, poly *a0, const poly *a) {
   unsigned int i;
   DBENCH_START();
-  
-  for(i = 0; i < _N; ++i)
+
+  for(i = 0; i < N; ++i)
     a1->coeffs[i] = power2round(a->coeffs[i], a0->coeffs+i);
 
   DBENCH_STOP(*tround);
@@ -214,7 +237,7 @@ void poly_decompose(poly *a1, poly *a0, const poly *a) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N; ++i)
+  for(i = 0; i < N; ++i)
     a1->coeffs[i] = decompose(a->coeffs[i], a0->coeffs+i);
 
   DBENCH_STOP(*tround);
@@ -224,21 +247,22 @@ void poly_decompose(poly *a1, poly *a0, const poly *a) {
 * Name:        poly_make_hint
 *
 * Description: Compute hint polynomial. The coefficients of which indicate
-*              whether the low bits of the corresponding coefficient of
-*              the input polynomial overflow into the high bits.
+*              whether the high bits of the corresponding coefficients
+*              of the first input polynomial and of the sum of the input
+*              polynomials differ.
 *
 * Arguments:   - poly *h: pointer to output hint polynomial
-*              - const poly *a0: pointer to low part of input polynomial
-*              - const poly *a1: pointer to high part of input polynomial
+*              - const poly *a: pointer to first input polynomial
+*              - const poly *b: pointer to second input polynomial
 *
 * Returns number of 1 bits.
 **************************************************/
-unsigned int poly_make_hint(poly *h, const poly *a0, const poly *a1) {
+unsigned int poly_make_hint(poly *h, const poly *a, const poly *b) {
   unsigned int i, s = 0;
   DBENCH_START();
 
-  for(i = 0; i < _N; ++i) {
-    h->coeffs[i] = make_hint(a0->coeffs[i], a1->coeffs[i]);
+  for(i = 0; i < N; ++i) {
+    h->coeffs[i] = make_hint(a->coeffs[i], b->coeffs[i]);
     s += h->coeffs[i];
   }
 
@@ -259,7 +283,7 @@ void poly_use_hint(poly *a, const poly *b, const poly *h) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N; ++i)
+  for(i = 0; i < N; ++i)
     a->coeffs[i] = use_hint(b->coeffs[i], h->coeffs[i]);
 
   DBENCH_STOP(*tround);
@@ -284,11 +308,11 @@ int poly_chknorm(const poly *a, uint32_t B) {
   /* It is ok to leak which coefficient violates the bound since
      the probability for each coefficient is independent of secret
      data but we must not leak the sign of the centralized representative. */
-  for(i = 0; i < _N; ++i) {
+  for(i = 0; i < N; ++i) {
     /* Absolute value of centralized representative */
-    t = (_Q-1)/2 - a->coeffs[i];
+    t = (Q-1)/2 - a->coeffs[i];
     t ^= (t >> 31);
-    t = (_Q-1)/2 - t;
+    t = (Q-1)/2 - t;
 
     if((uint32_t)t >= B) {
       DBENCH_STOP(*tsample);
@@ -316,13 +340,13 @@ void poly_uniform(poly *a, const unsigned char *buf) {
   DBENCH_START();
 
   ctr = pos = 0;
-  while(ctr < _N) {
+  while(ctr < N) {
     t  = buf[pos++];
     t |= (uint32_t)buf[pos++] << 8;
     t |= (uint32_t)buf[pos++] << 16;
     t &= 0x7FFFFF;
 
-    if(t < _Q)
+    if(t < Q)
       a->coeffs[ctr++] = t;
   }
 
@@ -366,9 +390,9 @@ static unsigned int rej_eta(uint32_t *a,
 #endif
 
     if(t0 <= 2*ETA)
-      a[ctr++] = _Q + ETA - t0;
+      a[ctr++] = Q + ETA - t0;
     if(t1 <= 2*ETA && ctr < len)
-      a[ctr++] = _Q + ETA - t1;
+      a[ctr++] = Q + ETA - t1;
   }
 
   DBENCH_STOP(*tsample);
@@ -405,52 +429,11 @@ void poly_uniform_eta(poly *a,
   shake256_absorb(state, inbuf, SEEDBYTES + 1);
   shake256_squeezeblocks(outbuf, 2, state);
 
-  ctr = rej_eta(a->coeffs, _N, outbuf, 2*SHAKE256_RATE);
-  if(ctr < _N) {
+  ctr = rej_eta(a->coeffs, N, outbuf, 2*SHAKE256_RATE);
+  if(ctr < N) {
     shake256_squeezeblocks(outbuf, 1, state);
-    rej_eta(a->coeffs + ctr, _N - ctr, outbuf, SHAKE256_RATE);
+    rej_eta(a->coeffs + ctr, N - ctr, outbuf, SHAKE256_RATE);
   }
-}
-
-void poly_uniform_eta_4x(poly *a0,
-                         poly *a1,
-                         poly *a2,
-                         poly *a3,
-                         const unsigned char seed[SEEDBYTES],
-                         unsigned char nonce0,
-                         unsigned char nonce1,
-                         unsigned char nonce2,
-                         unsigned char nonce3)
-{
-  unsigned int i;
-  unsigned char inbuf[4][SEEDBYTES + 1];
-  unsigned char outbuf[4][2*SHAKE256_RATE];
-  __m256i state[25];
-
-  for(i= 0; i < SEEDBYTES; ++i) {
-    inbuf[0][i] = seed[i];
-    inbuf[1][i] = seed[i];
-    inbuf[2][i] = seed[i];
-    inbuf[3][i] = seed[i];
-  }
-  inbuf[0][SEEDBYTES] = nonce0;
-  inbuf[1][SEEDBYTES] = nonce1;
-  inbuf[2][SEEDBYTES] = nonce2;
-  inbuf[3][SEEDBYTES] = nonce3;
-
-  shake256_absorb4x(state, inbuf[0], inbuf[1], inbuf[2], inbuf[3],
-                    SEEDBYTES + 1);
-  shake256_squeezeblocks4x(outbuf[0], outbuf[1], outbuf[2], outbuf[3], 2,
-                           state);
-
-  if(rej_eta(a0->coeffs, _N, outbuf[0], 2*SHAKE256_RATE) < _N)
-    poly_uniform_eta(a0, seed, nonce0);
-  if(rej_eta(a1->coeffs, _N, outbuf[1], 2*SHAKE256_RATE) < _N)
-    poly_uniform_eta(a1, seed, nonce1);
-  if(rej_eta(a2->coeffs, _N, outbuf[2], 2*SHAKE256_RATE) < _N)
-    poly_uniform_eta(a2, seed, nonce2);
-  if(rej_eta(a3->coeffs, _N, outbuf[3], 2*SHAKE256_RATE) < _N)
-    poly_uniform_eta(a3, seed, nonce3);
 }
 
 /*************************************************
@@ -494,9 +477,9 @@ static unsigned int rej_gamma1m1(uint32_t *a,
     pos += 5;
 
     if(t0 <= 2*GAMMA1 - 2)
-      a[ctr++] = _Q + GAMMA1 - 1 - t0;
+      a[ctr++] = Q + GAMMA1 - 1 - t0;
     if(t1 <= 2*GAMMA1 - 2 && ctr < len)
-      a[ctr++] = _Q + GAMMA1 - 1 - t1;
+      a[ctr++] = Q + GAMMA1 - 1 - t1;
   }
 
   DBENCH_STOP(*tsample);
@@ -534,57 +517,13 @@ void poly_uniform_gamma1m1(poly *a,
   shake256_absorb(state, inbuf, SEEDBYTES + CRHBYTES + 2);
   shake256_squeezeblocks(outbuf, 5, state);
 
-  ctr = rej_gamma1m1(a->coeffs, _N, outbuf, 5*SHAKE256_RATE);
-  if(ctr < _N) {
+  ctr = rej_gamma1m1(a->coeffs, N, outbuf, 5*SHAKE256_RATE);
+  if(ctr < N) {
     /* There are no bytes left in outbuf
        since 5*SHAKE256_RATE is divisible by 5 */
     shake256_squeezeblocks(outbuf, 1, state);
-    rej_gamma1m1(a->coeffs + ctr, _N - ctr, outbuf, SHAKE256_RATE);
+    rej_gamma1m1(a->coeffs + ctr, N - ctr, outbuf, SHAKE256_RATE);
   }
-}
-
-void poly_uniform_gamma1m1_4x(poly *a0,
-                              poly *a1,
-                              poly *a2,
-                              poly *a3,
-                              const unsigned char seed[SEEDBYTES + CRHBYTES],
-                              uint16_t nonce0,
-                              uint16_t nonce1,
-                              uint16_t nonce2,
-                              uint16_t nonce3)
-{
-  unsigned int i;
-  unsigned char inbuf[4][SEEDBYTES + CRHBYTES + 2];
-  unsigned char outbuf[4][5*SHAKE256_RATE];
-  __m256i state[25];
-
-  for(i = 0; i < SEEDBYTES + CRHBYTES; ++i) {
-    inbuf[0][i] = seed[i];
-    inbuf[1][i] = seed[i];
-    inbuf[2][i] = seed[i];
-    inbuf[3][i] = seed[i];
-  }
-  inbuf[0][SEEDBYTES + CRHBYTES] = nonce0 & 0xFF;
-  inbuf[0][SEEDBYTES + CRHBYTES + 1] = nonce0 >> 8;
-  inbuf[1][SEEDBYTES + CRHBYTES] = nonce1 & 0xFF;
-  inbuf[1][SEEDBYTES + CRHBYTES + 1] = nonce1 >> 8;
-  inbuf[2][SEEDBYTES + CRHBYTES] = nonce2 & 0xFF;
-  inbuf[2][SEEDBYTES + CRHBYTES + 1] = nonce2 >> 8;
-  inbuf[3][SEEDBYTES + CRHBYTES] = nonce3 & 0xFF;
-  inbuf[3][SEEDBYTES + CRHBYTES + 1] = nonce3 >> 8;
-
-  shake256_absorb4x(state, inbuf[0], inbuf[1], inbuf[2], inbuf[3],
-                    SEEDBYTES + CRHBYTES + 2);
-  shake256_squeezeblocks4x(outbuf[0], outbuf[1], outbuf[2], outbuf[3], 5, state);
-
-  if(rej_gamma1m1(a0->coeffs, _N, outbuf[0], 5*SHAKE256_RATE) < _N)
-    poly_uniform_gamma1m1(a0, seed, nonce0);
-  if(rej_gamma1m1(a1->coeffs, _N, outbuf[1], 5*SHAKE256_RATE) < _N)
-    poly_uniform_gamma1m1(a1, seed, nonce1);
-  if(rej_gamma1m1(a2->coeffs, _N, outbuf[2], 5*SHAKE256_RATE) < _N)
-    poly_uniform_gamma1m1(a2, seed, nonce2);
-  if(rej_gamma1m1(a3->coeffs, _N, outbuf[3], 5*SHAKE256_RATE) < _N)
-    poly_uniform_gamma1m1(a3, seed, nonce3);
 }
 
 /*************************************************
@@ -628,9 +567,9 @@ void polyeta_pack(unsigned char *r, const poly *a) {
     r[3*i+2] |= t[7] << 5;
   }
 #else
-  for(i = 0; i < _N/2; ++i) {
-    t[0] = _Q + ETA - a->coeffs[2*i+0];
-    t[1] = _Q + ETA - a->coeffs[2*i+1];
+  for(i = 0; i < N/2; ++i) {
+    t[0] = Q + ETA - a->coeffs[2*i+0];
+    t[1] = Q + ETA - a->coeffs[2*i+1];
     r[i] = t[0] | (t[1] << 4);
   }
 #endif
@@ -672,11 +611,11 @@ void polyeta_unpack(poly *r, const unsigned char *a) {
     r->coeffs[8*i+7] = Q + ETA - r->coeffs[8*i+7];
   }
 #else
-  for(i = 0; i < _N/2; ++i) {
+  for(i = 0; i < N/2; ++i) {
     r->coeffs[2*i+0] = a[i] & 0x0F;
     r->coeffs[2*i+1] = a[i] >> 4;
-    r->coeffs[2*i+0] = _Q + ETA - r->coeffs[2*i+0];
-    r->coeffs[2*i+1] = _Q + ETA - r->coeffs[2*i+1];
+    r->coeffs[2*i+0] = Q + ETA - r->coeffs[2*i+0];
+    r->coeffs[2*i+1] = Q + ETA - r->coeffs[2*i+1];
   }
 #endif
 
@@ -694,13 +633,13 @@ void polyeta_unpack(poly *r, const unsigned char *a) {
 *              - const poly *a: pointer to input polynomial
 **************************************************/
 void polyt1_pack(unsigned char *r, const poly *a) {
-#if _D != 14
-#error "polyt1_pack() assumes _D == 14"
+#if D != 14
+#error "polyt1_pack() assumes D == 14"
 #endif
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N/8; ++i) {
+  for(i = 0; i < N/8; ++i) {
     r[9*i+0]  =  a->coeffs[8*i+0] & 0xFF;
     r[9*i+1]  = (a->coeffs[8*i+0] >> 8) | ((a->coeffs[8*i+1] & 0x7F) << 1);
     r[9*i+2]  = (a->coeffs[8*i+1] >> 7) | ((a->coeffs[8*i+2] & 0x3F) << 2);
@@ -728,7 +667,7 @@ void polyt1_unpack(poly *r, const unsigned char *a) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N/8; ++i) {
+  for(i = 0; i < N/8; ++i) {
     r->coeffs[8*i+0] =  a[9*i+0]       | ((uint32_t)(a[9*i+1] & 0x01) << 8);
     r->coeffs[8*i+1] = (a[9*i+1] >> 1) | ((uint32_t)(a[9*i+2] & 0x03) << 7);
     r->coeffs[8*i+2] = (a[9*i+2] >> 2) | ((uint32_t)(a[9*i+3] & 0x07) << 6);
@@ -757,11 +696,11 @@ void polyt0_pack(unsigned char *r, const poly *a) {
   uint32_t t[4];
   DBENCH_START();
 
-  for(i = 0; i < _N/4; ++i) {
-    t[0] = _Q + (1 << (_D-1)) - a->coeffs[4*i+0];
-    t[1] = _Q + (1 << (_D-1)) - a->coeffs[4*i+1];
-    t[2] = _Q + (1 << (_D-1)) - a->coeffs[4*i+2];
-    t[3] = _Q + (1 << (_D-1)) - a->coeffs[4*i+3];
+  for(i = 0; i < N/4; ++i) {
+    t[0] = Q + (1 << (D-1)) - a->coeffs[4*i+0];
+    t[1] = Q + (1 << (D-1)) - a->coeffs[4*i+1];
+    t[2] = Q + (1 << (D-1)) - a->coeffs[4*i+2];
+    t[3] = Q + (1 << (D-1)) - a->coeffs[4*i+3];
 
     r[7*i+0]  =  t[0];
     r[7*i+1]  =  t[0] >> 8;
@@ -791,7 +730,7 @@ void polyt0_unpack(poly *r, const unsigned char *a) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N/4; ++i) {
+  for(i = 0; i < N/4; ++i) {
     r->coeffs[4*i+0]  = a[7*i+0];
     r->coeffs[4*i+0] |= (uint32_t)(a[7*i+1] & 0x3F) << 8;
 
@@ -806,10 +745,10 @@ void polyt0_unpack(poly *r, const unsigned char *a) {
     r->coeffs[4*i+3]  = a[7*i+5] >> 2;
     r->coeffs[4*i+3] |= (uint32_t)a[7*i+6] << 6;
 
-    r->coeffs[4*i+0] = _Q + (1 << (_D-1)) - r->coeffs[4*i+0];
-    r->coeffs[4*i+1] = _Q + (1 << (_D-1)) - r->coeffs[4*i+1];
-    r->coeffs[4*i+2] = _Q + (1 << (_D-1)) - r->coeffs[4*i+2];
-    r->coeffs[4*i+3] = _Q + (1 << (_D-1)) - r->coeffs[4*i+3];
+    r->coeffs[4*i+0] = Q + (1 << (D-1)) - r->coeffs[4*i+0];
+    r->coeffs[4*i+1] = Q + (1 << (D-1)) - r->coeffs[4*i+1];
+    r->coeffs[4*i+2] = Q + (1 << (D-1)) - r->coeffs[4*i+2];
+    r->coeffs[4*i+3] = Q + (1 << (D-1)) - r->coeffs[4*i+3];
   }
 
   DBENCH_STOP(*tpack);
@@ -834,12 +773,12 @@ void polyz_pack(unsigned char *r, const poly *a) {
   uint32_t t[2];
   DBENCH_START();
 
-  for(i = 0; i < _N/2; ++i) {
+  for(i = 0; i < N/2; ++i) {
     /* Map to {0,...,2*GAMMA1 - 2} */
     t[0] = GAMMA1 - 1 - a->coeffs[2*i+0];
-    t[0] += ((int32_t)t[0] >> 31) & _Q;
+    t[0] += ((int32_t)t[0] >> 31) & Q;
     t[1] = GAMMA1 - 1 - a->coeffs[2*i+1];
-    t[1] += ((int32_t)t[1] >> 31) & _Q;
+    t[1] += ((int32_t)t[1] >> 31) & Q;
 
     r[5*i+0]  = t[0];
     r[5*i+1]  = t[0] >> 8;
@@ -866,7 +805,7 @@ void polyz_unpack(poly *r, const unsigned char *a) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N/2; ++i) {
+  for(i = 0; i < N/2; ++i) {
     r->coeffs[2*i+0]  = a[5*i+0];
     r->coeffs[2*i+0] |= (uint32_t)a[5*i+1] << 8;
     r->coeffs[2*i+0] |= (uint32_t)(a[5*i+2] & 0x0F) << 16;
@@ -876,9 +815,9 @@ void polyz_unpack(poly *r, const unsigned char *a) {
     r->coeffs[2*i+1] |= (uint32_t)a[5*i+4] << 12;
 
     r->coeffs[2*i+0] = GAMMA1 - 1 - r->coeffs[2*i+0];
-    r->coeffs[2*i+0] += ((int32_t)r->coeffs[2*i+0] >> 31) & _Q;
+    r->coeffs[2*i+0] += ((int32_t)r->coeffs[2*i+0] >> 31) & Q;
     r->coeffs[2*i+1] = GAMMA1 - 1 - r->coeffs[2*i+1];
-    r->coeffs[2*i+1] += ((int32_t)r->coeffs[2*i+1] >> 31) & _Q;
+    r->coeffs[2*i+1] += ((int32_t)r->coeffs[2*i+1] >> 31) & Q;
   }
 
   DBENCH_STOP(*tpack);
@@ -898,7 +837,7 @@ void polyw1_pack(unsigned char *r, const poly *a) {
   unsigned int i;
   DBENCH_START();
 
-  for(i = 0; i < _N/2; ++i)
+  for(i = 0; i < N/2; ++i)
     r[i] = a->coeffs[2*i+0] | (a->coeffs[2*i+1] << 4);
 
   DBENCH_STOP(*tpack);

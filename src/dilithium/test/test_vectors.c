@@ -29,7 +29,7 @@ int main(void) {
       printf("%.2hhX", seed[j]);
     printf("\n");
 
-    expand_mat_avx(mat, seed);
+    expand_mat(mat, seed);
     printf("A = ((");
     for(j = 0; j < K; ++j) {
       for(k = 0; k < L; ++k) {
@@ -43,22 +43,8 @@ int main(void) {
       }
     }
 
-#if L == 2
-    poly_uniform_eta_4x(&s.vec[0], &s.vec[1], &tmp.vec[0], &tmp.vec[1], seed,
-                        0, 1, 2, 3);
-#elif L == 3
-    poly_uniform_eta_4x(&s.vec[0], &s.vec[1], &s.vec[2], &tmp.vec[0], seed,
-                        0, 1, 2, 3);
-#elif L == 4
-    poly_uniform_eta_4x(&s.vec[0], &s.vec[1], &s.vec[2], &s.vec[3], seed,
-                        0, 1, 2, 3);
-#elif L == 5
-    poly_uniform_eta_4x(&s.vec[0], &s.vec[1], &s.vec[2], &s.vec[3], seed,
-                        0, 1, 2, 3);
-    poly_uniform_eta(&s.vec[4], seed, 4);
-#else
-#error
-#endif
+    for(j = 0; j < L; ++j)
+      poly_uniform_eta(&s.vec[j], seed, j);
 
     printf("s = ((");
     for(j = 0; j < L; ++j) {
@@ -72,22 +58,8 @@ int main(void) {
       }
     }
 
-#if L == 2
-    poly_uniform_gamma1m1_4x(&y.vec[0], &y.vec[1], &tmp.vec[0], &tmp.vec[1],
-                             seed, 0, 1, 2, 3);
-#elif L == 3
-    poly_uniform_gamma1m1_4x(&y.vec[0], &y.vec[1], &y.vec[2], &tmp.vec[0], seed,
-                             0, 1, 2, 3);
-#elif L == 4
-    poly_uniform_gamma1m1_4x(&y.vec[0], &y.vec[1], &y.vec[2], &y.vec[3], seed,
-                             0, 1, 2, 3);
-#elif L == 5
-    poly_uniform_gamma1m1_4x(&y.vec[0], &y.vec[1], &y.vec[2], &y.vec[3], seed,
-                             0, 1, 2, 3);
-    poly_uniform_gamma1m1(&y.vec[4], seed, 4);
-#else
-#error
-#endif
+    for(j = 0; j < L; ++j)
+      poly_uniform_gamma1m1(&y.vec[j], seed, j);
 
     printf("y = ((");
     for(j = 0; j < L; ++j) {

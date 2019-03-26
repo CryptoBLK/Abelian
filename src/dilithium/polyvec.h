@@ -7,11 +7,9 @@
 
 /* Vectors of polynomials of length L */
 typedef struct {
-  poly vec[_L];
+  poly vec[L];
 } polyvecl;
 
-void polyvecl_reduce(polyvecl *v);
-void polyvecl_csubq(polyvecl *v);
 void polyvecl_freeze(polyvecl *v);
 
 void polyvecl_add(polyvecl *w, const polyvecl *u, const polyvecl *v);
@@ -27,7 +25,7 @@ int polyvecl_chknorm(const polyvecl *v, uint32_t B);
 
 /* Vectors of polynomials of length K */
 typedef struct {
-  poly vec[_K];
+  poly vec[K];
 } polyveck;
 
 void polyveck_reduce(polyveck *v);
@@ -46,8 +44,8 @@ int polyveck_chknorm(const polyveck *v, uint32_t B);
 void polyveck_power2round(polyveck *v1, polyveck *v0, const polyveck *v);
 void polyveck_decompose(polyveck *v1, polyveck *v0, const polyveck *v);
 unsigned int polyveck_make_hint(polyveck *h,
-                                const polyveck *v0,
-                                const polyveck *v1);
+                                const polyveck *u,
+                                const polyveck *v);
 void polyveck_use_hint(polyveck *w, const polyveck *v, const polyveck *h);
 
 #endif
