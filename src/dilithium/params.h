@@ -2,7 +2,7 @@
 #define PARAMS_H
 
 #ifndef MODE
-#define MODE 2
+#define MODE 1
 #endif
 
 #define SEEDBYTES 32U

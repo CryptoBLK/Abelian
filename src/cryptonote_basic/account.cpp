@@ -34,11 +34,10 @@
 #include "account.h"
 #include "warnings.h"
 #include "crypto/crypto.h"
-#include "liboqs-cpp/include/oqs_cpp.h"
+
 extern "C"
 {
 #include "crypto/keccak.h"
-#include <oqs/sha3.h>
 #include <dilithium/fips202.h>
 
 }
