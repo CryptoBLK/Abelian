@@ -49,7 +49,7 @@ namespace crypto {
 
   extern "C" {
   #include "random.h"
-  #include "dilithium/params.h"
+  #include "dilithium/api.h"
   }
 
 #pragma pack(push, 1)

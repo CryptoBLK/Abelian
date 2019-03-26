@@ -94,10 +94,10 @@ void keccak(const uint8_t *in, size_t inlen, uint8_t *md, int mdlen)
     size_t i, rsiz, rsizw;
 
     static_assert(HASH_DATA_AREA <= sizeof(temp), "Bad keccak preconditions");
-    //if (mdlen <= 0 || (mdlen > 100 && sizeof(st) != (size_t)mdlen))
-   // {
-   //   local_abort("Bad keccak use");
-    //}
+    if (mdlen <= 0 || (mdlen > 100 && sizeof(st) != (size_t)mdlen))
+    {
+      local_abort("Bad keccak use");
+    }
 
     rsiz = sizeof(state_t) == mdlen ? HASH_DATA_AREA : 200 - 2 * mdlen;
     rsizw = rsiz / 8;
@@ -111,10 +111,10 @@ void keccak(const uint8_t *in, size_t inlen, uint8_t *md, int mdlen)
     }
     
     // last block and padding
-    //if (inlen + 1 >= sizeof(temp) || inlen > rsiz || rsiz - inlen + inlen + 1 >= sizeof(temp) || rsiz == 0 || rsiz - 1 >= sizeof(temp) || rsizw * 8 > sizeof(temp))
-    //{
-    //  local_abort("Bad keccak use");
-    //}
+    if (inlen + 1 >= sizeof(temp) || inlen > rsiz || rsiz - inlen + inlen + 1 >= sizeof(temp) || rsiz == 0 || rsiz - 1 >= sizeof(temp) || rsizw * 8 > sizeof(temp))
+    {
+      local_abort("Bad keccak use");
+    }
 
     if (inlen > 0)
       memcpy(temp, in, inlen);
@@ -127,10 +127,10 @@ void keccak(const uint8_t *in, size_t inlen, uint8_t *md, int mdlen)
 
     keccakf(st, KECCAK_ROUNDS);
 
-    //if (((size_t)mdlen % sizeof(uint64_t)) != 0)
-    //{
-    //  local_abort("Bad keccak use");
-    //}
+    if (((size_t)mdlen % sizeof(uint64_t)) != 0)
+    {
+      local_abort("Bad keccak use");
+    }
     memcpy_swap64le(md, st, mdlen/sizeof(uint64_t));
 }
 

@@ -68,7 +68,6 @@ namespace crypto {
   extern "C" {
 #include "crypto-ops.h"
 #include "random.h"
-      #include "dilithium/sign.h"
   }
 
   const crypto::public_key null_pkey = crypto::public_key{};
@@ -141,7 +140,7 @@ namespace crypto {
     unsigned char pk[CRYPTO_PUBLICKEYBYTES];
     unsigned char sk[CRYPTO_SECRETKEYBYTES];
 
-    crypto_sign_keypair(pk, sk);
+    crypto::crypto_sign_keypair(pk, sk);
 
     std::memcpy(&rng, sk, CRYPTO_SECRETKEYBYTES);
     std::memcpy(&pub, pk, CRYPTO_PUBLICKEYBYTES);
