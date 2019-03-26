@@ -42,7 +42,6 @@
 #include "warnings.h"
 #include "crypto.h"
 #include "hash.h"
-#include "liboqs-cpp/include/oqs_cpp.h"
 
 namespace {
   static void local_abort(const char *msg)
@@ -166,7 +165,7 @@ namespace crypto {
   }
 
   bool crypto_ops::generate_key_derivation(const public_key &key1, const secret_key &key2, key_derivation &derivation) {
-    ge_p3 point;
+   /* ge_p3 point;
     ge_p2 point2;
     ge_p1p1 point3;
     assert(sc_check(&key2) == 0);
@@ -177,6 +176,8 @@ namespace crypto {
     ge_mul8(&point3, &point2);
     ge_p1p1_to_p2(&point2, &point3);
     ge_tobytes(&derivation, &point2);
+    */
+
     return true;
   }
 

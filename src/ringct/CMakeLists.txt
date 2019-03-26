@@ -71,7 +71,6 @@ monero_add_library(ringct
 target_link_libraries(ringct
   PUBLIC
     common
-        oqs
     cncrypto
     cryptonote_basic
     device

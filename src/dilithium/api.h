@@ -2,7 +2,7 @@
 #define API_H
 
 #ifndef MODE
-#define MODE 2
+#define MODE 1
 #endif
 
 #if MODE == 0
