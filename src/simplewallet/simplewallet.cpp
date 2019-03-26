@@ -517,6 +517,18 @@ namespace
     return true;
   }
 
+  void print_public_key(const crypto::public_key &k)
+  {
+    static constexpr const char hex[] = u8"0123456789abcdef";
+    const uint8_t *ptr = (const uint8_t*)k.data;
+    for (size_t i = 0, sz = sizeof(k); i < sz; ++i)
+    {
+      putchar(hex[*ptr >> 4]);
+      putchar(hex[*ptr & 15]);
+      ++ptr;
+    }
+  }
+
   void print_secret_key(const crypto::secret_key &k)
   {
     static constexpr const char hex[] = u8"0123456789abcdef";
@@ -3646,8 +3658,17 @@ boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::pr
     message_writer(console_color_white, true) << tr("Generated new wallet: ")
       << m_wallet->get_account().get_public_address_str(m_wallet->nettype());
     PAUSE_READLINE();
-    std::cout << tr("View key: ");
+
+    std::cout << tr("\n\nView public-key: ");
+    print_public_key(m_wallet->get_account().get_keys().m_account_address.m_view_public_key);
+    std::cout << tr("\n\nView secret-key: ");
     print_secret_key(m_wallet->get_account().get_keys().m_view_secret_key);
+
+    std::cout << tr("\n\nSpend public-key: ");
+    print_public_key(m_wallet->get_account().get_keys().m_account_address.m_spend_public_key);
+    std::cout << tr("\n\nSpend secret-key: ");
+    print_secret_key(m_wallet->get_account().get_keys().m_spend_secret_key);
+
     putchar('\n');
   }
   catch (const std::exception& e)

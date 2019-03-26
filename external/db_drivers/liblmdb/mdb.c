@@ -646,7 +646,7 @@ static txnid_t mdb_debug_start;
 	 *	#MDB_DUPSORT data items must fit on a node in a regular page.
 	 */
 #ifndef MDB_MAXKEYSIZE
-#define MDB_MAXKEYSIZE	 ((MDB_DEVEL) ? 0 : 511)
+#define MDB_MAXKEYSIZE	 ((MDB_DEVEL) ? 0 : 5110)
 #endif
 
 	/**	The maximum size of a key we can write to the environment. */

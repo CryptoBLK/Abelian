@@ -28,6 +28,8 @@
 //
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
+#include "dilithium/params.h"
+
 #include "common/command_line.h"
 #include "common/scoped_message_writer.h"
 #include "common/password.h"
@@ -282,6 +284,9 @@ int main(int argc, char const * argv[])
 
     if (!command_line::is_arg_defaulted(vm, daemon_args::arg_max_concurrency))
       tools::set_max_concurrency(command_line::get_arg(vm, daemon_args::arg_max_concurrency));
+
+    MGINFO("CRYPTO_PUBLICKEYBYTES "<< CRYPTO_PUBLICKEYBYTES);
+    MGINFO("CRYPTO_SECRETKEYBYTES "<< CRYPTO_SECRETKEYBYTES);
 
     // logging is now set up
     MGINFO("Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")");
