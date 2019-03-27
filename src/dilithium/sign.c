@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include "params.h"
 #include "sign.h"
 #include "randombytes.h"
@@ -104,7 +105,7 @@ void challenge(poly *c,
 *
 * Returns 0 (success)
 **************************************************/
-int crypto_sign_keypair(unsigned char *pk, unsigned char *sk) {
+int crypto_sign_keypair(unsigned char *pk, unsigned char *sk, const unsigned char *seed) {
   unsigned int i;
   unsigned char seedbuf[3*SEEDBYTES];
   unsigned char tr[CRHBYTES];
@@ -115,7 +116,8 @@ int crypto_sign_keypair(unsigned char *pk, unsigned char *sk) {
   polyveck s2, t, t1, t0;
 
   /* Expand 32 bytes of randomness into rho, rhoprime and key */
-  randombytes(seedbuf, SEEDBYTES);
+  //randombytes(seedbuf, SEEDBYTES);
+  memcpy(seedbuf,seed,SEEDBYTES);
   shake256(seedbuf, 3*SEEDBYTES, seedbuf, SEEDBYTES);
   rho = seedbuf;
   rhoprime = rho + SEEDBYTES;
