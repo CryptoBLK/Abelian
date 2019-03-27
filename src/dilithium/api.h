@@ -29,7 +29,7 @@
 
 #define CRYPTO_ALGNAME "Dilithium"
 
-int crypto_sign_keypair(unsigned char *pk, unsigned char *sk);
+int crypto_sign_keypair(unsigned char *pk, unsigned char *sk, const unsigned char *seed);
 
 int crypto_sign(unsigned char *sm, unsigned long long *smlen,
                 const unsigned char *msg, unsigned long long len,

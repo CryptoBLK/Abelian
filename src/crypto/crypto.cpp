@@ -136,11 +136,14 @@ namespace crypto {
    */
   secret_key crypto_ops::generate_keys(public_key &pub, secret_key &sec, const secret_key& recovery_key, bool recover) {
     secret_key rng;
+    secret_key seed;
 
     unsigned char pk[CRYPTO_PUBLICKEYBYTES];
     unsigned char sk[CRYPTO_SECRETKEYBYTES];
 
-    crypto::crypto_sign_keypair(pk, sk);
+    random_scalar(seed);
+
+    crypto::crypto_sign_keypair(pk, sk, &seed);
 
     std::memcpy(&rng, sk, CRYPTO_SECRETKEYBYTES);
     std::memcpy(&pub, pk, CRYPTO_PUBLICKEYBYTES);
@@ -177,6 +180,11 @@ namespace crypto {
     ge_mul8(&point3, &point2);
     ge_p1p1_to_p2(&point2, &point3);
     ge_tobytes(&derivation, &point2);
+    */
+
+   /**
+    * Removing the implementation since it just checks for key correctness,
+    * will have another checking for Dilithium.
     */
 
     return true;
@@ -253,9 +261,9 @@ namespace crypto {
     ec_point X;
     ec_point Y;
   };
-
+// Dilithium Signature - crypto_sign
   void crypto_ops::generate_signature(const hash &prefix_hash, const public_key &pub, const secret_key &sec, signature &sig) {
-    ge_p3 tmp3;
+    /*ge_p3 tmp3;
     ec_scalar k;
     s_comm buf;
 
@@ -284,9 +292,12 @@ namespace crypto {
     sc_mulsub(&sig.r, &sig.c, &unwrap(sec), &k);
 
     if (!sc_isnonzero((const unsigned char*)sig.r.data))
-      goto try_again;
-  }
+      goto try_again;*/
 
+    unsigned long long signatureLen;
+    crypto::crypto_sign((unsigned char *)&sig, &signatureLen, (unsigned char *)&prefix_hash, sizeof(prefix_hash), &sec);
+  }
+// Dilithium Signature - crypto_open
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
     ge_p2 tmp2;
     ge_p3 tmp3;
