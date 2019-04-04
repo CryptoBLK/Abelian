@@ -3020,6 +3020,7 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
           sc_reduce32((unsigned char*)key.data);
           multisig_keys = m_wallet->decrypt<epee::wipeable_string>(std::string(multisig_keys.data(), multisig_keys.size()), key, true);
         }
+        // TODO: Resolve this when finished building with 32 byte data types for seed.
         else
           m_recovery_key = cryptonote::decrypt_key(m_recovery_key, seed_pass);
       }
@@ -3600,7 +3601,7 @@ boost::optional<tools::password_container> simple_wallet::get_and_verify_passwor
 }
 //----------------------------------------------------------------------------------------------------
 boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::program_options::variables_map& vm,
-  const crypto::secret_key& recovery_key, bool recover, bool two_random, const std::string &old_language)
+  const crypto::rand_seed & recovery_key, bool recover, bool two_random, const std::string &old_language)
 {
   auto rc = tools::wallet2::make_new(vm, false, password_prompter);
   m_wallet = std::move(rc.first);
@@ -3651,24 +3652,15 @@ boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::pr
 
   bool create_address_file = command_line::get_arg(vm, arg_create_address_file);
 
-  crypto::secret_key recovery_val;
+  crypto::rand_seed recovery_val;
   try
   {
     recovery_val = m_wallet->generate(m_wallet_file, std::move(rc.second).password(), recovery_key, recover, two_random, create_address_file);
     message_writer(console_color_white, true) << tr("Generated new wallet: ")
       << m_wallet->get_account().get_public_address_str(m_wallet->nettype());
     PAUSE_READLINE();
-
-    std::cout << tr("\n\nView public-key: ");
-    print_public_key(m_wallet->get_account().get_keys().m_account_address.m_view_public_key);
-    std::cout << tr("\n\nView secret-key: ");
+    std::cout << tr("View key: ");
     print_secret_key(m_wallet->get_account().get_keys().m_view_secret_key);
-
-    std::cout << tr("\n\nSpend public-key: ");
-    print_public_key(m_wallet->get_account().get_keys().m_account_address.m_spend_public_key);
-    std::cout << tr("\n\nSpend secret-key: ");
-    print_secret_key(m_wallet->get_account().get_keys().m_spend_secret_key);
-
     putchar('\n');
   }
   catch (const std::exception& e)

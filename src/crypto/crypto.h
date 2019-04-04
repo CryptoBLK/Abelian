@@ -63,11 +63,18 @@ namespace crypto {
       char data[CRYPTO_SECRETKEYBYTES]; // We need to agree on this!
   };
 
+  // Randomness data type
+  POD_CLASS pq_seed {
+        char data[32]; // We need to agree on this!
+  };
+
   POD_CLASS public_key: ec_point {
     friend class crypto_ops;
   };
 
   using secret_key = epee::mlocked<tools::scrubbed<ec_scalar>>;
+
+  using rand_seed = epee::mlocked<tools::scrubbed<pq_seed>>;
 
   POD_CLASS public_keyV {
     std::vector<public_key> keys;
@@ -94,12 +101,12 @@ namespace crypto {
   };
 
   POD_CLASS signature {
-    ec_scalar c, r;
+    ec_scalar c, r; // TODO: changed to 32 byte rand for creating and checking ring sigs
     friend class crypto_ops;
   };
 #pragma pack(pop)
 
-  void hash_to_scalar(const void *data, size_t length, ec_scalar &res);
+  void hash_to_scalar(const void *data, size_t length, ec_scalar &res); // TODO: need to clarify for the output to be 32
   void random32_unbiased(unsigned char *bytes);
 
   /*static_assert(sizeof(ec_point) == 32 && sizeof(ec_scalar) == 32 &&
@@ -113,8 +120,8 @@ namespace crypto {
     void operator=(const crypto_ops &);
     ~crypto_ops();
 
-    static secret_key generate_keys(public_key &pub, secret_key &sec, const secret_key& recovery_key = secret_key(), bool recover = false);
-    friend secret_key generate_keys(public_key &pub, secret_key &sec, const secret_key& recovery_key, bool recover);
+    static rand_seed generate_keys(public_key &pub, secret_key &sec, const rand_seed& recovery_key = rand_seed(), bool recover = false);
+    friend rand_seed generate_keys(public_key &pub, secret_key &sec, const rand_seed& recovery_key, bool recover);
     static bool check_key(const public_key &);
     friend bool check_key(const public_key &);
     static bool secret_key_to_public_key(const secret_key &, public_key &);
@@ -168,7 +175,7 @@ namespace crypto {
 
   /* Generate a new key pair
    */
-  inline secret_key generate_keys(public_key &pub, secret_key &sec, const secret_key& recovery_key = secret_key(), bool recover = false) {
+  inline rand_seed generate_keys(public_key &pub, secret_key &sec, const rand_seed& recovery_key = rand_seed(), bool recover = false) {
     return crypto_ops::generate_keys(pub, sec, recovery_key, recover);
   }
 

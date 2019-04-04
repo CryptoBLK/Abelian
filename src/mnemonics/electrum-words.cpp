@@ -360,7 +360,7 @@ namespace crypto
      * \param  language_name   Language of the seed as found gets written here.
      * \return                 false if not a multiple of 3 words, or if word is not in the words list
      */
-    bool words_to_bytes(const epee::wipeable_string &words, crypto::secret_key& dst,
+    bool words_to_bytes(const epee::wipeable_string &words, crypto::rand_seed& dst,
       std::string &language_name)
     {
       epee::wipeable_string s;
@@ -374,7 +374,7 @@ namespace crypto
         MERROR("Invalid seed: wrong output size");
         return false;
       }
-      dst = *(const crypto::secret_key*)s.data();
+      dst = *(const crypto::rand_seed*)s.data();
       return true;
     }
 
@@ -408,7 +408,7 @@ namespace crypto
 
       uint32_t word_list_length = word_list.size();
       // 4 bytes -> 3 words.  8 digits base 16 -> 3 digits base 1626
-      for (unsigned int i=0; i < len/4; i++, words.push_back(' '))
+      for (unsigned int i=0; i < len/4; i++, words.push_back(' ')) // Must generate 23 seed phrases + 1 checksum
       {
         uint32_t w[4];
 
@@ -435,7 +435,7 @@ namespace crypto
       return true;
     }
 
-    bool bytes_to_words(const crypto::secret_key& src, epee::wipeable_string& words,
+    bool bytes_to_words(const crypto::rand_seed& src, epee::wipeable_string& words,
       const std::string &language_name)
     {
       return bytes_to_words(src.data, sizeof(src), words, language_name);

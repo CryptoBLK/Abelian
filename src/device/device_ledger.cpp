@@ -798,7 +798,7 @@ namespace hw {
         return true;
     }
 
-    crypto::secret_key  device_ledger::generate_keys(crypto::public_key &pub, crypto::secret_key &sec, const crypto::secret_key& recovery_key, bool recover) {
+    crypto::rand_seed   device_ledger::generate_keys(crypto::public_key &pub, crypto::secret_key &sec, const crypto::rand_seed & recovery_key, bool recover) {
         AUTO_LOCK_CMD();
         if (recover) {
            throw std::runtime_error("device generate key does not support recover");

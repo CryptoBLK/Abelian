@@ -422,7 +422,7 @@ std::pair<std::unique_ptr<tools::wallet2>, tools::password_container> generate_f
 
     GET_FIELD_FROM_JSON_RETURN_ON_ERROR(json, seed, std::string, String, false, std::string());
     std::string old_language;
-    crypto::secret_key recovery_key;
+    crypto::rand_seed recovery_key;
     bool restore_deterministic_wallet = false;
     if (field_seed_found)
     {
@@ -504,7 +504,8 @@ std::pair<std::unique_ptr<tools::wallet2>, tools::password_container> generate_f
       }
       else if (field_viewkey.empty() && !field_spendkey.empty())
       {
-        wallet->generate(field_filename, field_password, spendkey, recover, false, create_address_file);
+          //TODO: Fix this
+        //wallet->generate(field_filename, field_password, spendkey, recover, false, create_address_file);
         password = field_password;
       }
       else
@@ -978,11 +979,11 @@ bool wallet2::get_seed(epee::wipeable_string& electrum_words, const epee::wipeab
   crypto::secret_key key = get_account().get_keys().m_spend_secret_key;
   if (!passphrase.empty())
     key = cryptonote::encrypt_key(key, passphrase);
-  if (!crypto::ElectrumWords::bytes_to_words(key, electrum_words, seed_language))
+  /*if (!crypto::ElectrumWords::bytes_to_words(key, electrum_words, seed_language))
   {
     std::cout << "Failed to create seed from key for language: " << seed_language << std::endl;
     return false;
-  }
+  }*/
 
   return true;
 }
@@ -3660,8 +3661,8 @@ void wallet2::generate(const std::string& wallet_, const epee::wipeable_string& 
     THROW_WALLET_EXCEPTION_IF(boost::filesystem::exists(m_wallet_file, ignored_ec), error::file_exists, m_wallet_file);
     THROW_WALLET_EXCEPTION_IF(boost::filesystem::exists(m_keys_file,   ignored_ec), error::file_exists, m_keys_file);
   }
-
-  m_account.generate(rct::rct2sk(rct::zero()), true, false);
+  // TODO: Fix this
+  //m_account.generate(rct::rct2sk(rct::zero()), true, false);
 
   THROW_WALLET_EXCEPTION_IF(multisig_data.size() < 32, error::invalid_multisig_seed);
   size_t offset = 0;
@@ -3735,8 +3736,8 @@ void wallet2::generate(const std::string& wallet_, const epee::wipeable_string& 
  * \param  create_address_file     Whether to create an address file
  * \return                         The secret key of the generated wallet
  */
-crypto::secret_key wallet2::generate(const std::string& wallet_, const epee::wipeable_string& password,
-  const crypto::secret_key& recovery_param, bool recover, bool two_random, bool create_address_file)
+crypto::rand_seed wallet2::generate(const std::string& wallet_, const epee::wipeable_string& password,
+  const crypto::rand_seed& recovery_param, bool recover, bool two_random, bool create_address_file)
 {
   clear();
   prepare_file_names(wallet_);
@@ -3748,7 +3749,7 @@ crypto::secret_key wallet2::generate(const std::string& wallet_, const epee::wip
     THROW_WALLET_EXCEPTION_IF(boost::filesystem::exists(m_keys_file,   ignored_ec), error::file_exists, m_keys_file);
   }
 
-  crypto::secret_key retval = m_account.generate(recovery_param, recover, two_random);
+  crypto::rand_seed retval = m_account.generate(recovery_param, recover, two_random);
 
   m_account_public_address = m_account.get_keys().m_account_address;
   m_watch_only = false;
