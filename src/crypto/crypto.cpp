@@ -119,7 +119,7 @@ namespace crypto {
     sc_reduce32(bytes);
   }
   /* generate a random 32-byte (256-bit) integer and copy it to res */
-  static inline void random_scalar(ec_scalar &res) {
+  static inline void random_scalar(pq_seed &res) {
       random32_unbiased((unsigned char*)res.data);
   }
 
@@ -133,21 +133,37 @@ namespace crypto {
    * TODO: allow specifying random value (for wallet recovery)
    * 
    */
-  secret_key crypto_ops::generate_keys(public_key &pub, secret_key &sec, const secret_key& recovery_key, bool recover) {
-    secret_key rng;
-    secret_key seed;
+  rand_seed crypto_ops::generate_keys(public_key &pub, secret_key &sec, const rand_seed& recovery_key, bool recover) {
+
+      rand_seed rng;
 
     unsigned char pk[CRYPTO_PUBLICKEYBYTES];
     unsigned char sk[CRYPTO_SECRETKEYBYTES];
 
-    random_scalar(seed);
 
-    crypto::crypto_sign_keypair(pk, sk, &seed);
+    if (recover)
+    {
+        rng = recovery_key;
+    }
+    else
+    {
+        random_scalar(rng);
+    }
 
-    std::memcpy(&rng, sk, CRYPTO_SECRETKEYBYTES);
+    crypto::crypto_sign_keypair(pk, sk, (unsigned char *)&rng);
+
+    std::memcpy(&sec, sk, CRYPTO_SECRETKEYBYTES);
     std::memcpy(&pub, pk, CRYPTO_PUBLICKEYBYTES);
 
-    sec = rng;
+    // Got the random 32 byte key.
+
+    // put it in dilithium keypair
+
+    // Need to find a way to generate public key.
+    //sc_reduce32(&unwrap(sec));  // reduce in case second round of keys (sendkeys)
+
+    //ge_scalarmult_base(&point, &unwrap(sec));
+    //ge_p3_tobytes(&pub, &point);
 
     return rng;
   }
@@ -185,7 +201,7 @@ namespace crypto {
     * Removing the implementation since it just checks for key correctness,
     * will have another checking for Dilithium.
     */
-
+//TODO: Please look into this
     return true;
   }
 
@@ -199,6 +215,7 @@ namespace crypto {
     tools::write_varint(end, output_index);
     assert(end <= buf.output_index + sizeof buf.output_index);
     hash_to_scalar(&buf, end - reinterpret_cast<char *>(&buf), res);
+    //TODO: Please look into this
   }
 
   bool crypto_ops::derive_public_key(const key_derivation &derivation, size_t output_index,
@@ -300,7 +317,7 @@ namespace crypto {
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
     ge_p2 tmp2;
     ge_p3 tmp3;
-    ec_scalar c;
+    ec_scalar c;// TODO: correct change of type
     s_comm buf;
     assert(check_key(pub));
     buf.h = prefix_hash;
@@ -308,16 +325,16 @@ namespace crypto {
     if (ge_frombytes_vartime(&tmp3, &pub) != 0) {
       return false;
     }
-    if (sc_check(&sig.c) != 0 || sc_check(&sig.r) != 0 || !sc_isnonzero(&sig.c)) {
+    if (sc_check(&sig.c) != 0 || sc_check(&sig.r) != 0 || !sc_isnonzero(&sig.c)) {// TODO: correct conversion?
       return false;
     }
-    ge_double_scalarmult_base_vartime(&tmp2, &sig.c, &tmp3, &sig.r);
+    ge_double_scalarmult_base_vartime(&tmp2, &sig.c, &tmp3, &sig.r);// TODO: correct conversion?
     ge_tobytes(&buf.comm, &tmp2);
     static const ec_point infinity = {{ 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
     if (memcmp(&buf.comm, &infinity, 32) == 0)
       return false;
     hash_to_scalar(&buf, sizeof(s_comm), c);
-    sc_sub(&c, &c, &sig.c);
+    sc_sub(&c, &c, &sig.c);// TODO: correct conversion?
     return sc_isnonzero(&c) == 0;
   }
 
@@ -359,7 +376,8 @@ namespace crypto {
 #endif
 
     // pick random k
-    ec_scalar k;
+    // TODO: Change the random key to be 32 bytes of randomness data structure `rand_seed`
+    rand_seed k;
     random_scalar(k);
     
     s_comm_2 buf;
@@ -370,27 +388,27 @@ namespace crypto {
     {
       // compute X = k*B
       ge_p2 X_p2;
-      ge_scalarmult(&X_p2, &k, &B_p3);
+      ge_scalarmult(&X_p2, (unsigned char *)&k, &B_p3); // TODO: correct conversion?
       ge_tobytes(&buf.X, &X_p2);
     }
     else
     {
       // compute X = k*G
       ge_p3 X_p3;
-      ge_scalarmult_base(&X_p3, &k);
+      ge_scalarmult_base(&X_p3, (unsigned char *)&k);
       ge_p3_tobytes(&buf.X, &X_p3);
     }
     
     // compute Y = k*A
     ge_p2 Y_p2;
-    ge_scalarmult(&Y_p2, &k, &A_p3);
+    ge_scalarmult(&Y_p2, (unsigned char *)&k, &A_p3);
     ge_tobytes(&buf.Y, &Y_p2);
 
     // sig.c = Hs(Msg || D || X || Y)
     hash_to_scalar(&buf, sizeof(buf), sig.c);
 
     // sig.r = k - sig.c*r
-    sc_mulsub(&sig.r, &sig.c, &unwrap(r), &k);
+    sc_mulsub(&sig.r, &sig.c, &unwrap(r), (unsigned char *)&k);// TODO: correct conversion?
   }
 
   bool crypto_ops::check_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &D, const signature &sig) {
@@ -403,13 +421,13 @@ namespace crypto {
     if (ge_frombytes_vartime(&A_p3, &A) != 0) return false;
     if (B && ge_frombytes_vartime(&B_p3, &*B) != 0) return false;
     if (ge_frombytes_vartime(&D_p3, &D) != 0) return false;
-    if (sc_check(&sig.c) != 0 || sc_check(&sig.r) != 0) return false;
+    if (sc_check(&sig.c) != 0 || sc_check(&sig.r) != 0) return false; // TODO: correct conversion
 
     // compute sig.c*R
     ge_p3 cR_p3;
     {
       ge_p2 cR_p2;
-      ge_scalarmult(&cR_p2, &sig.c, &R_p3);
+      ge_scalarmult(&cR_p2, &sig.c, &R_p3); // TODO: correct conversion?
       public_key cR;
       ge_tobytes(&cR, &cR_p2);
       if (ge_frombytes_vartime(&cR_p3, &cR) != 0) return false;
@@ -420,7 +438,7 @@ namespace crypto {
     {
       // compute X = sig.c*R + sig.r*B
       ge_p2 rB_p2;
-      ge_scalarmult(&rB_p2, &sig.r, &B_p3);
+      ge_scalarmult(&rB_p2, &sig.r, &B_p3); // TODO: correct conversion?
       public_key rB;
       ge_tobytes(&rB, &rB_p2);
       ge_p3 rB_p3;
@@ -433,7 +451,7 @@ namespace crypto {
     {
       // compute X = sig.c*R + sig.r*G
       ge_p3 rG_p3;
-      ge_scalarmult_base(&rG_p3, &sig.r);
+      ge_scalarmult_base(&rG_p3, &sig.r); // TODO: correct conversion?
       ge_cached rG_cached;
       ge_p3_to_cached(&rG_cached, &rG_p3);
       ge_add(&X_p1p1, &cR_p3, &rG_cached);
@@ -443,11 +461,11 @@ namespace crypto {
 
     // compute sig.c*D
     ge_p2 cD_p2;
-    ge_scalarmult(&cD_p2, &sig.c, &D_p3);
+    ge_scalarmult(&cD_p2, &sig.c, &D_p3); // TODO: correct conversion?
 
     // compute sig.r*A
     ge_p2 rA_p2;
-    ge_scalarmult(&rA_p2, &sig.r, &A_p3);
+    ge_scalarmult(&rA_p2, &sig.r, &A_p3);// TODO: correct conversion?
 
     // compute Y = sig.c*D + sig.r*A
     public_key cD;
@@ -471,11 +489,11 @@ namespace crypto {
     buf.D = D;
     ge_tobytes(&buf.X, &X_p2);
     ge_tobytes(&buf.Y, &Y_p2);
-    ec_scalar c2;
+    ec_scalar c2; // TODO: correct change of type
     hash_to_scalar(&buf, sizeof(s_comm_2), c2);
 
     // test if c2 == sig.c
-    sc_sub(&c2, &c2, &sig.c);
+    sc_sub(&c2, &c2, &sig.c); // TODO: correct conversion?
     return sc_isnonzero(&c2) == 0;
   }
 
@@ -520,7 +538,11 @@ POP_WARNINGS
     size_t i;
     ge_p3 image_unp;
     ge_dsmp image_pre;
-    ec_scalar sum, k, h;
+    ec_scalar sum, h;
+
+    // TODO: Other keys that need to be converted from ec_scalar to rand_seed
+    rand_seed k;
+
     boost::shared_ptr<rs_comm> buf(reinterpret_cast<rs_comm *>(malloc(rs_comm_size(pubs_count))), free);
     if (!buf)
       local_abort("malloc failure");
@@ -552,28 +574,28 @@ POP_WARNINGS
       ge_p3 tmp3;
       if (i == sec_index) {
         random_scalar(k);
-        ge_scalarmult_base(&tmp3, &k);
+        ge_scalarmult_base(&tmp3, (unsigned char *)&k); // TODO: correct conversion?
         ge_p3_tobytes(&buf->ab[i].a, &tmp3);
         hash_to_ec(*pubs[i], tmp3);
-        ge_scalarmult(&tmp2, &k, &tmp3);
+        ge_scalarmult(&tmp2, (unsigned char *)&k, &tmp3); // TODO: correct conversion?
         ge_tobytes(&buf->ab[i].b, &tmp2);
       } else {
-        random_scalar(sig[i].c);
-        random_scalar(sig[i].r);
+        //random_scalar(sig[i].c);
+        //random_scalar(sig[i].r);
         if (ge_frombytes_vartime(&tmp3, &*pubs[i]) != 0) {
           local_abort("invalid pubkey");
         }
-        ge_double_scalarmult_base_vartime(&tmp2, &sig[i].c, &tmp3, &sig[i].r);
+        ge_double_scalarmult_base_vartime(&tmp2, &sig[i].c, &tmp3, &sig[i].r);// TODO: correct conversion?
         ge_tobytes(&buf->ab[i].a, &tmp2);
         hash_to_ec(*pubs[i], tmp3);
-        ge_double_scalarmult_precomp_vartime(&tmp2, &sig[i].r, &tmp3, &sig[i].c, image_pre);
+        ge_double_scalarmult_precomp_vartime(&tmp2, &sig[i].r, &tmp3, &sig[i].c, image_pre);// TODO: correct conversion?
         ge_tobytes(&buf->ab[i].b, &tmp2);
-        sc_add(&sum, &sum, &sig[i].c);
+        sc_add(&sum, &sum, &sig[i].c); // TODO: correct conversion?
       }
     }
     hash_to_scalar(buf.get(), rs_comm_size(pubs_count), h);
-    sc_sub(&sig[sec_index].c, &h, &sum);
-    sc_mulsub(&sig[sec_index].r, &sig[sec_index].c, &unwrap(sec), &k);
+    sc_sub(&sig[sec_index].c, &h, &sum);// TODO: correct conversion?
+    sc_mulsub(&sig[sec_index].r, &sig[sec_index].c, &unwrap(sec), (unsigned char *)&k); // TODO: correct conversion?
   }
 
   bool crypto_ops::check_ring_signature(const hash &prefix_hash, const key_image &image,
@@ -600,18 +622,18 @@ POP_WARNINGS
     for (i = 0; i < pubs_count; i++) {
       ge_p2 tmp2;
       ge_p3 tmp3;
-      if (sc_check(&sig[i].c) != 0 || sc_check(&sig[i].r) != 0) {
+      if (sc_check(&sig[i].c) != 0 || sc_check(&sig[i].r) != 0) {// TODO: correct conversion?
         return false;
       }
       if (ge_frombytes_vartime(&tmp3, &*pubs[i]) != 0) {
         return false;
       }
-      ge_double_scalarmult_base_vartime(&tmp2, &sig[i].c, &tmp3, &sig[i].r);
+      ge_double_scalarmult_base_vartime(&tmp2, &sig[i].c, &tmp3, &sig[i].r);// TODO: correct conversion?
       ge_tobytes(&buf->ab[i].a, &tmp2);
       hash_to_ec(*pubs[i], tmp3);
-      ge_double_scalarmult_precomp_vartime(&tmp2, &sig[i].r, &tmp3, &sig[i].c, image_pre);
+      ge_double_scalarmult_precomp_vartime(&tmp2, &sig[i].r, &tmp3, &sig[i].c, image_pre);// TODO: correct conversion?
       ge_tobytes(&buf->ab[i].b, &tmp2);
-      sc_add(&sum, &sum, &sig[i].c);
+      sc_add(&sum, &sum, &sig[i].c);// TODO: correct conversion?
     }
     hash_to_scalar(buf.get(), rs_comm_size(pubs_count), h);
     sc_sub(&h, &h, &sum);

@@ -3025,14 +3025,15 @@ namespace tools
     if (r)
       wal->set_refresh_from_block_height(hres.height);
     crypto::secret_key dummy_key;
-    try {
+    /*try {
       wal->generate(wallet_file, req.password, dummy_key, false, false);
     }
     catch (const std::exception& e)
     {
       handle_rpc_exception(std::current_exception(), er, WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR);
       return false;
-    }
+    }*/
+    // TODO: Fix this after build has passed.
     if (!wal)
     {
       er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
