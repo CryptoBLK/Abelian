@@ -185,7 +185,7 @@ namespace crypto {
   }
 
   bool crypto_ops::generate_key_derivation(const public_key &key1, const secret_key &key2, key_derivation &derivation) {
-   /* ge_p3 point;
+    /*ge_p3 point;
     ge_p2 point2;
     ge_p1p1 point3;
     assert(sc_check(&key2) == 0);
@@ -195,14 +195,13 @@ namespace crypto {
     ge_scalarmult(&point2, &unwrap(key2), &point);
     ge_mul8(&point3, &point2);
     ge_p1p1_to_p2(&point2, &point3);
-    ge_tobytes(&derivation, &point2);
-    */
+    ge_tobytes(&derivation, &point2);*/
 
-   /**
-    * Removing the implementation since it just checks for key correctness,
-    * will have another checking for Dilithium.
-    */
-//TODO: Please look into this
+    // TODO: No Dilithium implementation yet, so derivation = PVk
+    unsigned char pk[CRYPTO_PUBLICKEYBYTES];
+    std::memcpy(pk, &key1, CRYPTO_PUBLICKEYBYTES);
+    std::memcpy(&derivation, pk, CRYPTO_PUBLICKEYBYTES);
+
     return true;
   }
 
@@ -216,12 +215,12 @@ namespace crypto {
     tools::write_varint(end, output_index);
     assert(end <= buf.output_index + sizeof buf.output_index);
     hash_to_scalar(&buf, end - reinterpret_cast<char *>(&buf), res);
-    //TODO: Please look into this
+    //TODO: Hash function for the one time public key - output_index to ensure key uniqueness
   }
 
   bool crypto_ops::derive_public_key(const key_derivation &derivation, size_t output_index,
     const public_key &base, public_key &derived_key) {
-    ec_scalar scalar;
+    /*ec_scalar scalar;
     ge_p3 point1;
     ge_p3 point2;
     ge_cached point3;
@@ -235,20 +234,31 @@ namespace crypto {
     ge_p3_to_cached(&point3, &point2);
     ge_add(&point4, &point1, &point3);
     ge_p1p1_to_p2(&point5, &point4);
-    ge_tobytes(&derived_key, &point5);
+    ge_tobytes(&derived_key, &point5);*/
+
+    // TODO: No Dilithium implementation yet, so derived_key = PSk
+    unsigned char publicSpendKey[CRYPTO_PUBLICKEYBYTES];
+    std::memcpy(publicSpendKey, &base, CRYPTO_PUBLICKEYBYTES);
+    std::memcpy(&derived_key, publicSpendKey, CRYPTO_PUBLICKEYBYTES);
+
     return true;
   }
 
   void crypto_ops::derive_secret_key(const key_derivation &derivation, size_t output_index,
     const secret_key &base, secret_key &derived_key) {
-    ec_scalar scalar;
-    assert(sc_check(&base) == 0);
-    derivation_to_scalar(derivation, output_index, scalar);
-    sc_add(&unwrap(derived_key), &unwrap(base), &scalar);
+    //ec_scalar scalar;
+    //assert(sc_check(&base) == 0);
+    //derivation_to_scalar(derivation, output_index, scalar);
+    //sc_add(&unwrap(derived_key), &unwrap(base), &scalar);
+
+    // TODO: No Dilithium implementation yet, so derived_key = sSk
+    unsigned char secretSpendKey[CRYPTO_SECRETKEYBYTES];
+    std::memcpy(secretSpendKey, &base, CRYPTO_SECRETKEYBYTES);
+    std::memcpy(&derived_key, secretSpendKey, CRYPTO_SECRETKEYBYTES);
   }
 
   bool crypto_ops::derive_subaddress_public_key(const public_key &out_key, const key_derivation &derivation, std::size_t output_index, public_key &derived_key) {
-    ec_scalar scalar;
+    /*ec_scalar scalar;
     ge_p3 point1;
     ge_p3 point2;
     ge_cached point3;
@@ -262,7 +272,13 @@ namespace crypto {
     ge_p3_to_cached(&point3, &point2);
     ge_sub(&point4, &point1, &point3);
     ge_p1p1_to_p2(&point5, &point4);
-    ge_tobytes(&derived_key, &point5);
+    ge_tobytes(&derived_key, &point5);*/
+
+    // TODO: No Dilithium implementation yet, so derived_key = Poutk
+    unsigned char publicOutKey[CRYPTO_PUBLICKEYBYTES];
+    std::memcpy(publicOutKey, &out_key, CRYPTO_PUBLICKEYBYTES);
+    std::memcpy(&derived_key, publicOutKey, CRYPTO_PUBLICKEYBYTES);
+
     return true;
   }
 
@@ -509,12 +525,13 @@ namespace crypto {
   }
 
   void crypto_ops::generate_key_image(const public_key &pub, const secret_key &sec, key_image &image) {
-    ge_p3 point;
+    /*ge_p3 point;
     ge_p2 point2;
     assert(sc_check(&sec) == 0);
     hash_to_ec(pub, point);
     ge_scalarmult(&point2, &unwrap(sec), &point);
-    ge_tobytes(&image, &point2);
+    ge_tobytes(&image, &point2);*/
+    std::memcpy(&image, &pub, CRYPTO_PUBLICKEYBYTES);
   }
 
 PUSH_WARNINGS
