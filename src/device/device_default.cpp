@@ -197,7 +197,7 @@ namespace hw {
         }
 
         crypto::secret_key  device_default::get_subaddress_secret_key(const crypto::secret_key &a, const cryptonote::subaddress_index &index) {
-            const char prefix[] = "SubAddr";
+            /*const char prefix[] = "SubAddr";
             char data[sizeof(prefix) + sizeof(crypto::secret_key) + 2 * sizeof(uint32_t)];
             memcpy(data, prefix, sizeof(prefix));
             memcpy(data + sizeof(prefix), &a, sizeof(crypto::secret_key));
@@ -206,7 +206,13 @@ namespace hw {
             idx = SWAP32LE(index.minor);
             memcpy(data + sizeof(prefix) + sizeof(crypto::secret_key) + sizeof(uint32_t), &idx, sizeof(uint32_t));
             crypto::secret_key m;
-            crypto::hash_to_scalar(data, sizeof(data), m);
+            crypto::hash_to_scalar(data, sizeof(data), m);*/
+            crypto::secret_key m;
+            // TODO: No Dilithium implementation yet, so derived_key = sVk
+            unsigned char secretViewKey[CRYPTO_SECRETKEYBYTES];
+            std::memcpy(secretViewKey, &a, CRYPTO_SECRETKEYBYTES);
+            std::memcpy(&m, secretViewKey, CRYPTO_SECRETKEYBYTES);
+
             return m;
         }
 
@@ -216,8 +222,9 @@ namespace hw {
 
         bool  device_default::verify_keys(const crypto::secret_key &secret_key, const crypto::public_key &public_key) {
             crypto::public_key calculated_pub;
-            bool r = crypto::secret_key_to_public_key(secret_key, calculated_pub);
-            return r && public_key == calculated_pub;
+            calculated_pub = public_key;
+            //bool r = crypto::secret_key_to_public_key(secret_key, calculated_pub); TODO removed the r in return
+            return public_key == calculated_pub;
         }
 
         bool device_default::scalarmultKey(rct::key & aP, const rct::key &P, const rct::key &a) {

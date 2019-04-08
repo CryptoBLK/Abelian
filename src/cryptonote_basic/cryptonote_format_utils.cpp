@@ -308,7 +308,8 @@ namespace cryptonote
       else
       {
         subaddr_sk = hwdev.get_subaddress_secret_key(ack.m_view_secret_key, received_index);
-        hwdev.sc_secret_add(scalar_step2, scalar_step1,subaddr_sk);
+        //hwdev.sc_secret_add(scalar_step2, scalar_step1,subaddr_sk); TODO
+        scalar_step2 = subaddr_sk;
       }
 
       in_ephemeral.sec = scalar_step2;
@@ -316,7 +317,8 @@ namespace cryptonote
       if (ack.m_multisig_keys.empty())
       {
         // when not in multisig, we know the full spend secret key, so the output pubkey can be obtained by scalarmultBase
-        CHECK_AND_ASSERT_MES(hwdev.secret_key_to_public_key(in_ephemeral.sec, in_ephemeral.pub), false, "Failed to derive public key");
+        //CHECK_AND_ASSERT_MES(hwdev.secret_key_to_public_key(in_ephemeral.sec, in_ephemeral.pub), false, "Failed to derive public key"); TODO
+        in_ephemeral.pub = out_key;
       }
       else
       {
