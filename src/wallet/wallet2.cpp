@@ -956,10 +956,11 @@ bool wallet2::init(std::string daemon_address, boost::optional<epee::net_utils::
 //----------------------------------------------------------------------------------------------------
 bool wallet2::is_deterministic() const
 {
-  crypto::secret_key second;
-  keccak((uint8_t *)&get_account().get_keys().m_spend_secret_key, sizeof(crypto::secret_key), (uint8_t *)&second, sizeof(crypto::secret_key));
-  sc_reduce32((uint8_t *)&second);
-  return memcmp(second.data,get_account().get_keys().m_view_secret_key.data, sizeof(crypto::secret_key)) == 0;
+  crypto::rand_seed second;
+  keccak((uint8_t *)&get_account().get_keys().m_spend_secret_key, sizeof(crypto::secret_key), (uint8_t *)&second, sizeof(crypto::rand_seed));
+  //sc_reduce32((uint8_t *)&second);
+  //return memcmp(second.data, get_account().get_keys().m_view_secret_key.data, sizeof(crypto::secret_key)) == 0;
+  return true;
 }
 //----------------------------------------------------------------------------------------------------
 bool wallet2::get_seed(epee::wipeable_string& electrum_words, const epee::wipeable_string &passphrase) const
@@ -976,14 +977,15 @@ bool wallet2::get_seed(epee::wipeable_string& electrum_words, const epee::wipeab
     return false;
   }
 
-  crypto::secret_key key = get_account().get_keys().m_spend_secret_key;
+  //crypto::secret_key key = get_account().get_keys().m_spend_secret_key;
+  crypto::rand_seed rand_key = get_account().get_keys().m_random_generate_key;
   if (!passphrase.empty())
-    key = cryptonote::encrypt_key(key, passphrase);
-  /*if (!crypto::ElectrumWords::bytes_to_words(key, electrum_words, seed_language))
+      rand_key = cryptonote::encrypt_key(rand_key, passphrase);
+  if (!crypto::ElectrumWords::bytes_to_words(rand_key, electrum_words, seed_language))
   {
     std::cout << "Failed to create seed from key for language: " << seed_language << std::endl;
     return false;
-  }*/
+  }
 
   return true;
 }
@@ -3750,6 +3752,9 @@ crypto::rand_seed wallet2::generate(const std::string& wallet_, const epee::wipe
   }
 
   crypto::rand_seed retval = m_account.generate(recovery_param, recover, two_random);
+
+  // Dilithium random 32 byte seed
+  m_account.save_randomness(retval);
 
   m_account_public_address = m_account.get_keys().m_account_address;
   m_watch_only = false;

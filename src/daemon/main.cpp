@@ -78,6 +78,7 @@ int main(int argc, char const * argv[])
       // Misc Options
 
       command_line::add_arg(visible_options, command_line::arg_help);
+      command_line::add_arg(visible_options, command_line::arg_print_genesis_tx);
       command_line::add_arg(visible_options, command_line::arg_version);
       command_line::add_arg(visible_options, daemon_args::arg_os_version);
       command_line::add_arg(visible_options, daemon_args::arg_config_file);
@@ -170,6 +171,20 @@ int main(int argc, char const * argv[])
     {
       std::cerr << "Can't specify more than one of --tesnet and --stagenet and --regtest" << ENDL;
       return 1;
+    }
+
+    // Generate genesis
+    if (command_line::get_arg(vm, command_line::arg_print_genesis_tx))
+    {
+        // Bad code will fix later.
+        if (testnet) {
+            cryptonote::print_genesis_tx_hex(1);
+        }
+        else{
+            cryptonote::print_genesis_tx_hex(0);
+        }
+
+        return 0;
     }
 
     std::string db_type = command_line::get_arg(vm, cryptonote::arg_db_type);

@@ -75,5 +75,6 @@ namespace command_line
   }
 
   const arg_descriptor<bool> arg_help = {"help", "Produce help message"};
+  const command_line::arg_descriptor<bool>        arg_print_genesis_tx = {"print-genesis-tx", "Prints genesis' block tx hex to insert it to config and exits"};
   const arg_descriptor<bool> arg_version = {"version", "Output version information"};
 }
