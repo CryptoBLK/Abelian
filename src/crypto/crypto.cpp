@@ -135,7 +135,7 @@ namespace crypto {
    */
   rand_seed crypto_ops::generate_keys(public_key &pub, secret_key &sec, const rand_seed& recovery_key, bool recover) {
 
-      rand_seed rng;
+    rand_seed rng;
 
     unsigned char pk[CRYPTO_PUBLICKEYBYTES];
     unsigned char sk[CRYPTO_SECRETKEYBYTES];
@@ -155,16 +155,7 @@ namespace crypto {
     std::memcpy(&sec, sk, CRYPTO_SECRETKEYBYTES);
     std::memcpy(&pub, pk, CRYPTO_PUBLICKEYBYTES);
 
-    // Got the random 32 byte key.
-
-    // put it in dilithium keypair
-
-    // Need to find a way to generate public key.
-    //sc_reduce32(&unwrap(sec));  // reduce in case second round of keys (sendkeys)
-
-    //ge_scalarmult_base(&point, &unwrap(sec));
-    //ge_p3_tobytes(&pub, &point);
-
+    // Returns the random 32 byte seed
     return rng;
   }
 

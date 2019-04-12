@@ -546,6 +546,18 @@ namespace
       ++ptr;
     }
   }
+
+  void print_random_key(const crypto::rand_seed &k)
+  {
+      static constexpr const char hex[] = u8"0123456789abcdef";
+      const uint8_t *ptr = (const uint8_t*)k.data;
+      for (size_t i = 0, sz = sizeof(k); i < sz; ++i)
+      {
+          putchar(hex[*ptr >> 4]);
+          putchar(hex[*ptr & 15]);
+          ++ptr;
+      }
+  }
 }
 
 bool parse_priority(const std::string& arg, uint32_t& priority)
@@ -4193,6 +4205,9 @@ boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::pr
     PAUSE_READLINE();
     std::cout << tr("View key: ");
     print_secret_key(m_wallet->get_account().get_keys().m_view_secret_key);
+    putchar('\n');
+    std::cout << tr("Random seed: ");
+    print_random_key(m_wallet->get_account().get_keys().m_random_generate_key);
     putchar('\n');
   }
   catch (const std::exception& e)

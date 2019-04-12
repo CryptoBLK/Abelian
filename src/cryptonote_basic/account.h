@@ -46,10 +46,17 @@ namespace cryptonote
     hw::device *m_device = &hw::get_device("default");
     crypto::chacha_iv m_encryption_iv;
 
+    /* Dilithium experimental value
+     *
+     * Purpose: Public key and output tx key generation.
+    */
+    crypto::rand_seed m_random_generate_key;
+
     BEGIN_KV_SERIALIZE_MAP()
       KV_SERIALIZE(m_account_address)
       KV_SERIALIZE_VAL_POD_AS_BLOB_FORCE(m_spend_secret_key)
       KV_SERIALIZE_VAL_POD_AS_BLOB_FORCE(m_view_secret_key)
+      KV_SERIALIZE_VAL_POD_AS_BLOB_FORCE(m_random_generate_key)
       KV_SERIALIZE_CONTAINER_POD_AS_BLOB(m_multisig_keys)
       const crypto::chacha_iv default_iv{{0, 0, 0, 0, 0, 0, 0, 0}};
       KV_SERIALIZE_VAL_POD_AS_BLOB_OPT(m_encryption_iv, default_iv)
@@ -104,6 +111,8 @@ namespace cryptonote
     void decrypt_keys(const crypto::chacha_key &key) { m_keys.decrypt(key); }
     void encrypt_viewkey(const crypto::chacha_key &key) { m_keys.encrypt_viewkey(key); }
     void decrypt_viewkey(const crypto::chacha_key &key) { m_keys.decrypt_viewkey(key); }
+
+    void save_randomness(const crypto::rand_seed &randomness) { m_keys.m_random_generate_key = randomness; }
 
     template <class t_archive>
     inline void serialize(t_archive &a, const unsigned int /*ver*/)
