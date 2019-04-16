@@ -36,7 +36,9 @@ bool check_scalar(const crypto::ec_scalar &scalar) {
   return crypto::sc_check(crypto::operator &(scalar)) == 0;
 }
 
-void random_scalar(crypto::ec_scalar &res) {
+
+// Dilithium integration - some test changes
+void random_scalar(crypto::rand_seed &res) {
   crypto::random_scalar(res);
 }
 

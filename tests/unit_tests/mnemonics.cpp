@@ -79,7 +79,8 @@ namespace
     epee::wipeable_string w_seed = "", w_return_seed = "";
     std::string seed, return_seed;
     // Generate a random seed without checksum
-    crypto::secret_key randkey;
+    // Dilithium change
+    crypto::rand_seed randkey;
     for (size_t ii = 0; ii < sizeof(randkey); ++ii)
     {
       randkey.data[ii] = rand();
@@ -94,7 +95,8 @@ namespace
     std::cout << "Test seed without checksum:\n";
     std::cout << seed << std::endl;
 
-    crypto::secret_key key;
+    // Dilithium change
+    crypto::rand_seed key;
     std::string language_name;
     bool res;
     std::vector<std::string> seed_vector, return_seed_vector;
@@ -192,7 +194,8 @@ TEST(mnemonics, all_languages)
 
 TEST(mnemonics, language_detection_with_bad_checksum)
 {
-    crypto::secret_key key;
+    // Dilithium change
+    crypto::rand_seed key;
     std::string language_name;
     bool res;
 
