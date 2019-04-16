@@ -62,7 +62,8 @@ class WalletSubaddress : public ::testing::Test
 
     tools::wallet2 w1;
     const std::string password = "testpass";
-    crypto::secret_key recovery_key = crypto::secret_key();
+    // Dilithium change
+    crypto::rand_seed recovery_key = crypto::rand_seed();
     const std::string test_label = "subaddress test label";
 
     uint32_t major_index = 0;

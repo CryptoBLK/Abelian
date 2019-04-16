@@ -49,12 +49,41 @@ bool operator !=(const ec_scalar &a, const ec_scalar &b) {
   return 0 != memcmp(&a, &b, sizeof(ec_scalar));
 }
 
+// Dilithium changes
+bool operator !=(const rand_seed &a, const rand_seed &b) {
+    return 0 != memcmp(&a, &b, sizeof(rand_seed));
+}
+
 bool operator !=(const ec_point &a, const ec_point &b) {
   return 0 != memcmp(&a, &b, sizeof(ec_point));
 }
 
 bool operator !=(const key_derivation &a, const key_derivation &b) {
   return 0 != memcmp(&a, &b, sizeof(key_derivation));
+}
+
+void print_key(const crypto::secret_key &k)
+{
+    static constexpr const char hex[] = u8"0123456789abcdef";
+    const uint8_t *ptr = (const uint8_t*)k.data;
+    for (size_t i = 0, sz = sizeof(k); i < sz; ++i)
+    {
+        putchar(hex[*ptr >> 4]);
+        putchar(hex[*ptr & 15]);
+        ++ptr;
+    }
+}
+
+void print_key(const crypto::public_key &k)
+{
+    static constexpr const char hex[] = u8"0123456789abcdef";
+    const uint8_t *ptr = (const uint8_t*)k.data;
+    for (size_t i = 0, sz = sizeof(k); i < sz; ++i)
+    {
+        putchar(hex[*ptr >> 4]);
+        putchar(hex[*ptr & 15]);
+        ++ptr;
+    }
 }
 
 DISABLE_GCC_WARNING(maybe-uninitialized)
@@ -78,7 +107,8 @@ int main(int argc, char *argv[]) {
       break;
     }
     input.exceptions(ios_base::badbit | ios_base::failbit | ios_base::eofbit);
-    if (cmd == "check_scalar") {
+      std::cout << cmd << std::endl;
+    /*if (cmd == "check_scalar") {
       ec_scalar scalar;
       bool expected, actual;
       get(input, scalar, expected);
@@ -86,14 +116,15 @@ int main(int argc, char *argv[]) {
       if (expected != actual) {
         goto error;
       }
-    } else if (cmd == "random_scalar") {
-      ec_scalar expected, actual;
+    } else*/ if (cmd == "random_scalar") {
+      // Dilithium changes
+      rand_seed expected, actual;
       get(input, expected);
       random_scalar(actual);
       if (expected != actual) {
         goto error;
       }
-    } else if (cmd == "hash_to_scalar") {
+    } /*else if (cmd == "hash_to_scalar") {
       vector<char> data;
       ec_scalar expected, actual;
       get(input, data, expected);
@@ -101,14 +132,25 @@ int main(int argc, char *argv[]) {
       if (expected != actual) {
         goto error;
       }
-    } else if (cmd == "generate_keys") {
-      public_key expected1, actual1;
-      secret_key expected2, actual2;
-      get(input, expected1, expected2);
-      generate_keys(actual1, actual2);
-      if (expected1 != actual1 || expected2 != actual2) {
-        goto error;
-      }
+    }*/ else if (cmd == "generate_keys") {
+          public_key expected1, actual1;
+          secret_key expected2, actual2;
+          try {
+              get(input, expected1, expected2);
+              generate_keys(actual1, actual2);
+              if (expected1 != actual1 || expected2 != actual2) {
+                  goto error;
+              }
+          }catch (exception &e)
+          {
+              cerr << "Wrong result on test " << test << " " << &e << endl;
+              cerr << "Actual values: \npk=";
+              print_key(actual1);
+              cerr << " \nsk=";
+              print_key(actual2);
+              cerr <<endl;
+              error = true;
+          }
     } else if (cmd == "check_key") {
       public_key key;
       bool expected, actual;

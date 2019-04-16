@@ -48,7 +48,8 @@ public:
     if (!single_tx_test_base::init())
       return false;
     wallet.set_subaddress_lookahead(1, 1);
-    crypto::secret_key spendkey = rct::rct2sk(rct::skGen());
+    // Dilithium changes - interesting on why they use spend_key as means for generating the seed.
+    crypto::rand_seed spendkey = rct::rct2rk(rct::skGen());
     wallet.generate("", "", spendkey, true, false);
     wallet.set_subaddress_lookahead(major, minor);
     return true;
