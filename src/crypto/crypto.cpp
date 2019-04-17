@@ -322,7 +322,7 @@ namespace crypto {
   }
 // Dilithium Signature - crypto_open
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
-    ge_p2 tmp2;
+    /*ge_p2 tmp2;
     ge_p3 tmp3;
     ec_scalar c;// TODO: correct change of type
     s_comm buf;
@@ -342,7 +342,9 @@ namespace crypto {
       return false;
     hash_to_scalar(&buf, sizeof(s_comm), c);
     sc_sub(&c, &c, &sig.c);// TODO: correct conversion?
-    return sc_isnonzero(&c) == 0;
+    return sc_isnonzero(&c) == 0;*/
+    unsigned long long messageLen;
+    return crypto::crypto_sign_open((unsigned char *)&prefix_hash, &messageLen, (unsigned char *)&sig, sizeof(sig), &pub);
   }
 
   void crypto_ops::generate_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &D, const secret_key &r, signature &sig) {
