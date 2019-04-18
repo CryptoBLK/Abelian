@@ -3020,7 +3020,6 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
           sc_reduce32((unsigned char*)key.data);
           multisig_keys = m_wallet->decrypt<epee::wipeable_string>(std::string(multisig_keys.data(), multisig_keys.size()), key, true);
         }
-        // TODO: Resolve this when finished building with 32 byte data types for seed.
         else
           m_recovery_key = cryptonote::decrypt_key(m_recovery_key, seed_pass);
       }

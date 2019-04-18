@@ -43,10 +43,15 @@ using namespace epee;
 #include "ringct/rctSigs.h"
 #include "multisig/multisig.h"
 
+
+
 using namespace crypto;
 
 namespace cryptonote
 {
+    extern "C" {
+    #include "dilithium/randombytes.h"
+    }
   //---------------------------------------------------------------
   void classify_addresses(const std::vector<tx_destination_entry> &destinations, const boost::optional<cryptonote::account_public_address>& change_addr, size_t &num_stdaddresses, size_t &num_subaddresses, account_public_address &single_dest_subaddress)
   {
@@ -149,9 +154,13 @@ namespace cryptonote
       txout_to_key tk;
       tk.key = out_eph_public_key;
 
+      txout_to_randid rng;
+      randombytes((unsigned char *)&rng.rng, 32U);
+
       tx_out out;
       summary_amounts += out.amount = out_amounts[no];
       out.target = tk;
+      out.random = rng;
       tx.vout.push_back(out);
     }
 
