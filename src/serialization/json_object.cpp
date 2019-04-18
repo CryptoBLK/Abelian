@@ -490,6 +490,25 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_key& txout)
   GET_FROM_JSON_OBJECT(val, txout.key, key);
 }
 
+// Serialization changes
+void toJsonValue(rapidjson::Document& doc, const cryptonote::txout_to_randid& txout, rapidjson::Value& val)
+{
+    val.SetObject();
+
+    INSERT_INTO_JSON_OBJECT(val, doc, rng, txout.rng)
+}
+
+
+void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_randid& txout)
+{
+    if (!val.IsObject())
+    {
+        throw WRONG_TYPE("json object");
+    }
+
+    GET_FROM_JSON_OBJECT(val, txout.rng, rng)
+}
+
 void toJsonValue(rapidjson::Document& doc, const cryptonote::tx_out& txout, rapidjson::Value& val)
 {
   val.SetObject();
@@ -506,6 +525,10 @@ void toJsonValue(rapidjson::Document& doc, const cryptonote::tx_out& txout, rapi
     void operator()(cryptonote::txout_to_key const& output) const
     {
       INSERT_INTO_JSON_OBJECT(val, doc, to_key, output);
+    }
+    void operator()(cryptonote::txout_to_randid const& output) const
+    {
+        INSERT_INTO_JSON_OBJECT(val, doc, to_randid, output); // Serialization changes.
     }
     void operator()(cryptonote::txout_to_script const& output) const
     {
@@ -543,6 +566,12 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::tx_out& txout)
       cryptonote::txout_to_key tmpVal;
       fromJsonValue(elem.value, tmpVal);
       txout.target = std::move(tmpVal);
+    }
+    else if(elem.name == "to_randid")
+    {
+        cryptonote::txout_to_randid tmpVal;
+        fromJsonValue(elem.value, tmpVal);
+        txout.target = std::move(tmpVal);
     }
     else if (elem.name == "to_script")
     {

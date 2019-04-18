@@ -75,9 +75,16 @@ namespace cryptonote
 
   struct txout_to_key
   {
-    txout_to_key() { }
-    txout_to_key(const crypto::public_key &_key) : key(_key) { }
+    explicit txout_to_key() { }
+    explicit txout_to_key(const crypto::public_key &_key) : key(_key) { }
     crypto::public_key key;
+  };
+
+  struct txout_to_randid
+  {
+      explicit txout_to_randid() { }
+      explicit txout_to_randid(const crypto::pq_seed &_randID) : rng(_randID){ }
+      crypto::pq_seed rng;
   };
 
 
@@ -124,7 +131,7 @@ namespace cryptonote
   {
     uint64_t amount;
     std::vector<uint64_t> key_offsets;
-    crypto::key_image k_image;      // double spending protection
+    crypto::key_image k_image;      // double spending protection TODO
 
     BEGIN_SERIALIZE_OBJECT()
       VARINT_FIELD(amount)
@@ -136,17 +143,21 @@ namespace cryptonote
 
   typedef boost::variant<txin_gen, txin_to_script, txin_to_scripthash, txin_to_key> txin_v;
 
-  typedef boost::variant<txout_to_script, txout_to_scripthash, txout_to_key> txout_target_v;
+  typedef boost::variant<txout_to_script, txout_to_scripthash, txout_to_key, txout_to_randid> txout_target_v;
+
+  typedef boost::variant<txout_to_randid> txout_rand;
 
   //typedef std::pair<uint64_t, txout> out_t;
   struct tx_out
   {
     uint64_t amount;
     txout_target_v target;
+    txout_rand random;
 
     BEGIN_SERIALIZE_OBJECT()
       VARINT_FIELD(amount)
       FIELD(target)
+      FIELD(random)
     END_SERIALIZE()
 
 
@@ -163,7 +174,8 @@ namespace cryptonote
     // tx information
     size_t   version;
     uint64_t unlock_time;  //number of block (or time), used as a limitation like: spend this tx not early then block/time
-
+// Create a random ID
+// Miner's tx and receive the reward
     std::vector<txin_v> vin;
     std::vector<tx_out> vout;
     //extra
@@ -490,6 +502,7 @@ namespace std {
 }
 
 BLOB_SERIALIZER(cryptonote::txout_to_key);
+BLOB_SERIALIZER(cryptonote::txout_to_randid);
 BLOB_SERIALIZER(cryptonote::txout_to_scripthash);
 
 VARIANT_TAG(binary_archive, cryptonote::txin_gen, 0xff);
@@ -499,6 +512,7 @@ VARIANT_TAG(binary_archive, cryptonote::txin_to_key, 0x2);
 VARIANT_TAG(binary_archive, cryptonote::txout_to_script, 0x0);
 VARIANT_TAG(binary_archive, cryptonote::txout_to_scripthash, 0x1);
 VARIANT_TAG(binary_archive, cryptonote::txout_to_key, 0x2);
+VARIANT_TAG(binary_archive, cryptonote::txout_to_randid, 0x3);
 VARIANT_TAG(binary_archive, cryptonote::transaction, 0xcc);
 VARIANT_TAG(binary_archive, cryptonote::block, 0xbb);
 
@@ -509,6 +523,7 @@ VARIANT_TAG(json_archive, cryptonote::txin_to_key, "key");
 VARIANT_TAG(json_archive, cryptonote::txout_to_script, "script");
 VARIANT_TAG(json_archive, cryptonote::txout_to_scripthash, "scripthash");
 VARIANT_TAG(json_archive, cryptonote::txout_to_key, "key");
+VARIANT_TAG(json_archive, cryptonote::txout_to_randid, "rng");
 VARIANT_TAG(json_archive, cryptonote::transaction, "tx");
 VARIANT_TAG(json_archive, cryptonote::block, "block");
 
@@ -519,5 +534,6 @@ VARIANT_TAG(debug_archive, cryptonote::txin_to_key, "key");
 VARIANT_TAG(debug_archive, cryptonote::txout_to_script, "script");
 VARIANT_TAG(debug_archive, cryptonote::txout_to_scripthash, "scripthash");
 VARIANT_TAG(debug_archive, cryptonote::txout_to_key, "key");
+VARIANT_TAG(debug_archive, cryptonote::txout_to_randid, "rng");
 VARIANT_TAG(debug_archive, cryptonote::transaction, "tx");
 VARIANT_TAG(debug_archive, cryptonote::block, "block");

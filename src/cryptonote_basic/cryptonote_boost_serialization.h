@@ -54,6 +54,11 @@ namespace boost
 
   //---------------------------------------------------
   template <class Archive>
+  inline void serialize(Archive &a, crypto::pq_seed &x, const boost::serialization::version_type ver) // Serialization changes.
+  {
+      a & reinterpret_cast<char (&)[sizeof(crypto::pq_seed)]>(x);
+  }
+  template <class Archive>
   inline void serialize(Archive &a, crypto::public_key &x, const boost::serialization::version_type ver)
   {
     a & reinterpret_cast<char (&)[sizeof(crypto::public_key)]>(x);
@@ -105,6 +110,12 @@ namespace boost
   }
 
   template <class Archive>
+  inline void serialize(Archive &a, cryptonote::txout_to_randid &x, const boost::serialization::version_type ver) //Serialization changes
+  {
+      a & x.rng;
+  }
+
+  template <class Archive>
   inline void serialize(Archive &a, cryptonote::txout_to_scripthash &x, const boost::serialization::version_type ver)
   {
     a & x.hash;
@@ -146,6 +157,7 @@ namespace boost
   {
     a & x.amount;
     a & x.target;
+    a & x.random;
   }
 
 
