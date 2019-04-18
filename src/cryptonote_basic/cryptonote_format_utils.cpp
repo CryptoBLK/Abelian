@@ -637,8 +637,8 @@ namespace cryptonote
         CHECK_AND_NO_ASSERT_MES(0 < out.amount, false, "zero amount output in transaction id=" << get_transaction_hash(tx));
       }
 
-      if(!check_key(boost::get<txout_to_key>(out.target).key))
-        return false;
+      //if(!check_key(boost::get<txout_to_key>(out.target).key))
+      //  return false;
     }
     return true;
   }
@@ -731,6 +731,8 @@ namespace cryptonote
         return subaddress_receive_info{ found->second, additional_derivations[output_index] };
     }
     return boost::none;
+    //return subaddress_receive_info{ subaddresses.begin()->second, derivation };
+
   }
   //---------------------------------------------------------------
   bool lookup_acc_outs(const account_keys& acc, const transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered)

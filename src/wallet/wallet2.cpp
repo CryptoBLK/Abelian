@@ -1583,61 +1583,64 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
             error::wallet_internal_error, std::string("Unexpected transfer index from public key: ")
             + "got " + (kit == m_pub_keys.end() ? "<none>" : boost::lexical_cast<std::string>(kit->second))
             + ", m_transfers.size() is " + boost::lexical_cast<std::string>(m_transfers.size()));
-        if (kit == m_pub_keys.end())
+	    // If "kit" -> transaction public key is not found, accept transaction
+	    // if not tx -> garbage
+        //if (kit == m_pub_keys.end() || m_transfers[kit->second].amount() >= tx_scan_info[o].amount)//Removed this on second condition
+        if (boost::get<txout_to_key>(tx.vout[o].target).key == m_account.get_keys().m_account_address.m_spend_public_key)
         {
           uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
           if (!pool)
           {
-	    m_transfers.push_back(boost::value_initialized<transfer_details>());
-	    transfer_details& td = m_transfers.back();
-	    td.m_block_height = height;
-	    td.m_internal_output_index = o;
-	    td.m_global_output_index = o_indices[o];
-	    td.m_tx = (const cryptonote::transaction_prefix&)tx;
-	    td.m_txid = txid;
-            td.m_key_image = tx_scan_info[o].ki;
-            td.m_key_image_known = !m_watch_only && !m_multisig;
-            td.m_key_image_partial = m_multisig;
-            td.m_amount = amount;
-            td.m_pk_index = pk_index - 1;
-            td.m_subaddr_index = tx_scan_info[o].received->index;
-            expand_subaddresses(tx_scan_info[o].received->index);
-            if (tx.vout[o].amount == 0)
-            {
-              td.m_mask = tx_scan_info[o].mask;
-              td.m_rct = true;
-            }
-            else if (miner_tx && tx.version == 2)
-            {
-              td.m_mask = rct::identity();
-              td.m_rct = true;
-            }
-            else
-            {
-              td.m_mask = rct::identity();
-              td.m_rct = false;
-            }
-	    set_unspent(m_transfers.size()-1);
-            if (!m_multisig && !m_watch_only)
-	      m_key_images[td.m_key_image] = m_transfers.size()-1;
-	    m_pub_keys[tx_scan_info[o].in_ephemeral.pub] = m_transfers.size()-1;
-            if (m_multisig)
-            {
-              THROW_WALLET_EXCEPTION_IF(!m_multisig_rescan_k && m_multisig_rescan_info,
-                  error::wallet_internal_error, "NULL m_multisig_rescan_k");
-              if (m_multisig_rescan_info && m_multisig_rescan_info->front().size() >= m_transfers.size())
-                update_multisig_rescan_info(*m_multisig_rescan_k, *m_multisig_rescan_info, m_transfers.size() - 1);
-            }
-	    LOG_PRINT_L0("Received money: " << print_money(td.amount()) << ", with tx: " << txid);
-	    if (0 != m_callback)
-	      m_callback->on_money_received(height, txid, tx, td.m_amount, td.m_subaddr_index);
+              m_transfers.push_back(boost::value_initialized<transfer_details>());
+              transfer_details& td = m_transfers.back();
+              td.m_block_height = height;
+              td.m_internal_output_index = o;
+              td.m_global_output_index = o_indices[o];
+              td.m_tx = (const cryptonote::transaction_prefix&)tx;
+              td.m_txid = txid;
+              td.m_key_image = tx_scan_info[o].ki;
+              td.m_key_image_known = !m_watch_only && !m_multisig;
+              td.m_key_image_partial = m_multisig;
+              td.m_amount = amount;
+              td.m_pk_index = pk_index - 1;
+              td.m_subaddr_index = tx_scan_info[o].received->index;
+              expand_subaddresses(tx_scan_info[o].received->index);
+              if (tx.vout[o].amount == 0)
+              {
+                  td.m_mask = tx_scan_info[o].mask;
+                  td.m_rct = true;
+              }
+              else if (miner_tx && tx.version == 2)
+              {
+                  td.m_mask = rct::identity();
+                  td.m_rct = true;
+              }
+              else
+              {
+                  td.m_mask = rct::identity();
+                  td.m_rct = false;
+              }
+              set_unspent(m_transfers.size()-1);
+              if (!m_multisig && !m_watch_only)
+                  m_key_images[td.m_key_image] = m_transfers.size()-1;
+              m_pub_keys[tx_scan_info[o].in_ephemeral.pub] = m_transfers.size()-1;
+              if (m_multisig)
+              {
+                THROW_WALLET_EXCEPTION_IF(!m_multisig_rescan_k && m_multisig_rescan_info,
+                        error::wallet_internal_error, "NULL m_multisig_rescan_k");
+                if (m_multisig_rescan_info && m_multisig_rescan_info->front().size() >= m_transfers.size())
+                    update_multisig_rescan_info(*m_multisig_rescan_k, *m_multisig_rescan_info, m_transfers.size() - 1);
+              }
+              LOG_PRINT_L0("Received money: " << print_money(td.amount()) << ", with tx: " << txid);
+              if (0 != m_callback)
+                  m_callback->on_money_received(height, txid, tx, td.m_amount, td.m_subaddr_index);
           }
           total_received_1 += amount;
           notify = true;
         }
-	else if (m_transfers[kit->second].m_spent || m_transfers[kit->second].amount() >= tx_scan_info[o].amount)
+	 else if (m_transfers[kit->second].m_spent)
         {
-	  LOG_ERROR("Public key " << epee::string_tools::pod_to_hex(kit->first)
+	      LOG_ERROR("Public key " << epee::string_tools::pod_to_hex(kit->first)
               << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
               << (m_transfers[kit->second].m_spent ? "spent" : "unspent") << " "
               << print_money(m_transfers[kit->second].amount()) << " in tx " << m_transfers[kit->second].m_txid << ", received output ignored");
@@ -8803,7 +8806,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_all(uint64_t below
 {
   std::vector<size_t> unused_transfers_indices;
   std::vector<size_t> unused_dust_indices;
-  const bool use_rct = use_fork_rules(4, 0);
+  const bool use_rct = false;//use_fork_rules(4, 0);
 
   THROW_WALLET_EXCEPTION_IF(unlocked_balance(subaddr_account) == 0, error::wallet_internal_error, "No unlocked balance in the entire wallet");
 
@@ -8857,7 +8860,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_single(const crypt
 {
   std::vector<size_t> unused_transfers_indices;
   std::vector<size_t> unused_dust_indices;
-  const bool use_rct = use_fork_rules(4, 0);
+  const bool use_rct = false;//use_fork_rules(4, 0);
   // find output with the given key image
   for (size_t i = 0; i < m_transfers.size(); ++i)
   {
@@ -8899,7 +8902,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_from(const crypton
   std::vector<std::vector<get_outs_entry>> outs;
 
   const bool use_per_byte_fee = use_fork_rules(HF_VERSION_PER_BYTE_FEE);
-  const bool use_rct = fake_outs_count > 0 && use_fork_rules(4, 0);
+  const bool use_rct = false;//fake_outs_count > 0 && use_fork_rules(4, 0);
   const bool bulletproof = use_fork_rules(get_bulletproof_fork(), 0);
   const rct::RCTConfig rct_config {
     bulletproof ? rct::RangeProofPaddedBulletproof : rct::RangeProofBorromean,
@@ -9558,8 +9561,13 @@ bool wallet2::check_spend_proof(const crypto::hash &txid, const std::string &mes
     for (const COMMAND_RPC_GET_OUTPUTS_BIN::outkey &out : res.outs)
       p_output_keys.push_back(&out.key);
 
+  // Dilithium - sig verification
+  crypto::public_key k_i;
+  std::memcpy(&k_i, &in_key->k_image, CRYPTO_PUBLICKEYBYTES);
+  auto ok = crypto::check_signature(sig_prefix_hash, k_i, *sig_iter->data());
+
     // check this ring
-    if (!crypto::check_ring_signature(sig_prefix_hash, in_key->k_image, p_output_keys, sig_iter->data()))
+    if (!ok)//(!crypto::check_ring_signature(sig_prefix_hash, in_key->k_image, p_output_keys, sig_iter->data()))
       return false;
     ++sig_iter;
   }
@@ -10130,7 +10138,10 @@ bool wallet2::check_reserve_proof(const cryptonote::account_public_address &addr
 
     // check signature for key image
     const std::vector<const crypto::public_key*> pubs = { &out_key->key };
-    ok = crypto::check_ring_signature(prefix_hash, proof.key_image, &pubs[0], 1, &proof.key_image_sig);
+    // Dilithium - sig verification
+    crypto::public_key k_i;
+    std::memcpy(&k_i, &proof.key_image, CRYPTO_PUBLICKEYBYTES);
+    ok = crypto::check_signature(prefix_hash, k_i, proof.key_image_sig);//check_ring_signature(prefix_hash, proof.key_image, &pubs[0], 1, &proof.key_image_sig);
     if (!ok)
       return false;
 
