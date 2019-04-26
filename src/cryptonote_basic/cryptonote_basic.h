@@ -144,7 +144,7 @@ namespace cryptonote
 
   typedef boost::variant<txin_gen, txin_to_script, txin_to_scripthash, txin_to_key> txin_v;
 
-  typedef boost::variant<txout_to_script, txout_to_scripthash, txout_to_key, txout_to_randid> txout_target_v;
+  typedef boost::variant<txout_to_script, txout_to_scripthash, txout_to_key> txout_target_v;
 
   typedef boost::variant<txout_to_randid> txout_rand;
 

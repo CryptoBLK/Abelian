@@ -101,7 +101,8 @@ namespace crypto {
   };
 
   POD_CLASS signature {
-    ec_scalar c, r; // TODO: changed to 32 byte rand for creating and checking ring sigs
+    //ec_scalar c, r; // TODO: changed to 32 byte rand for creating and checking ring sigs
+    char data[CRYPTO_BYTES + 32]; //32 is prefix hash length
     friend class crypto_ops;
   };
 #pragma pack(pop)
@@ -293,4 +294,5 @@ namespace crypto {
 CRYPTO_MAKE_HASHABLE(public_key)
 CRYPTO_MAKE_HASHABLE_CONSTANT_TIME(secret_key)
 CRYPTO_MAKE_HASHABLE(key_image)
+CRYPTO_MAKE_HASHABLE(pq_seed)
 CRYPTO_MAKE_COMPARABLE(signature)

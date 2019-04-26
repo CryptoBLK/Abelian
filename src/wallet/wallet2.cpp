@@ -1332,6 +1332,9 @@ void wallet2::scan_output(const cryptonote::transaction &tx, bool miner_tx, cons
         error::wallet_internal_error, "key_image generated ephemeral public key not matched with output_key");
   }
 
+  // Add random number generator from tx
+  tx_scan_info.random = boost::get<cryptonote::txout_to_randid>(tx.vout[i].random).rng;
+
   THROW_WALLET_EXCEPTION_IF(std::find(outs.begin(), outs.end(), i) != outs.end(), error::wallet_internal_error, "Same output cannot be added twice");
   outs.push_back(i);
   if (tx_scan_info.money_transfered == 0 && !miner_tx)
@@ -1579,14 +1582,17 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
 				  std::to_string(o) + ", total_outs=" + std::to_string(tx.vout.size()));
 
         auto kit = m_pub_keys.find(tx_scan_info[o].in_ephemeral.pub);
+        auto rng = m_tx_rng.find(tx_scan_info[o].random); // Workaround for checking instead of the key image.
 	THROW_WALLET_EXCEPTION_IF(kit != m_pub_keys.end() && kit->second >= m_transfers.size(),
             error::wallet_internal_error, std::string("Unexpected transfer index from public key: ")
             + "got " + (kit == m_pub_keys.end() ? "<none>" : boost::lexical_cast<std::string>(kit->second))
             + ", m_transfers.size() is " + boost::lexical_cast<std::string>(m_transfers.size()));
 	    // If "kit" -> transaction public key is not found, accept transaction
 	    // if not tx -> garbage
-        //if (kit == m_pub_keys.end() || m_transfers[kit->second].amount() >= tx_scan_info[o].amount)//Removed this on second condition
-        if (boost::get<txout_to_key>(tx.vout[o].target).key == m_account.get_keys().m_account_address.m_spend_public_key)
+        //if (kit == m_pub_keys.end())//Removed this on second condition
+        //Check for the random tx ID, if id is not in container add it.
+        //if (boost::get<txout_to_key>(tx.vout[o].target).key == m_account.get_keys().m_account_address.m_spend_public_key)
+        if(rng == m_tx_rng.end()) // random tx rng workaround
         {
           uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
           if (!pool)
@@ -1624,6 +1630,8 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
               if (!m_multisig && !m_watch_only)
                   m_key_images[td.m_key_image] = m_transfers.size()-1;
               m_pub_keys[tx_scan_info[o].in_ephemeral.pub] = m_transfers.size()-1;
+              // Experiemental workaround, add the RNG after reward.
+              m_tx_rng[tx_scan_info[o].random] = m_transfers.size()-1;
               if (m_multisig)
               {
                 THROW_WALLET_EXCEPTION_IF(!m_multisig_rescan_k && m_multisig_rescan_info,
@@ -1638,7 +1646,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
           total_received_1 += amount;
           notify = true;
         }
-	 else if (m_transfers[kit->second].m_spent)
+	 else if (m_transfers[kit->second].m_spent || m_transfers[kit->second].amount() >= tx_scan_info[o].amount)
         {
 	      LOG_ERROR("Public key " << epee::string_tools::pod_to_hex(kit->first)
               << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
@@ -7370,6 +7378,7 @@ void wallet2::transfer_selected(const std::vector<cryptonote::tx_destination_ent
   bool r = cryptonote::construct_tx_and_get_tx_key(m_account.get_keys(), m_subaddresses, sources, splitted_dsts, change_dts.addr, extra, tx, unlock_time, tx_key, additional_tx_keys, false, {}, m_multisig ? &msout : NULL);
   LOG_PRINT_L2("constructed tx, r="<<r);
   THROW_WALLET_EXCEPTION_IF(!r, error::tx_not_constructed, sources, splitted_dsts, unlock_time, m_nettype);
+  // TODO: Transaction Limit should be changed to prevent from having an exception about splitting transactions because of size
   THROW_WALLET_EXCEPTION_IF(upper_transaction_weight_limit <= get_transaction_weight(tx), error::tx_too_big, tx, upper_transaction_weight_limit);
 
   std::string key_images;
@@ -8806,7 +8815,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_all(uint64_t below
 {
   std::vector<size_t> unused_transfers_indices;
   std::vector<size_t> unused_dust_indices;
-  const bool use_rct = false;//use_fork_rules(4, 0);
+  const bool use_rct = use_fork_rules(4, 0);
 
   THROW_WALLET_EXCEPTION_IF(unlocked_balance(subaddr_account) == 0, error::wallet_internal_error, "No unlocked balance in the entire wallet");
 
@@ -8860,7 +8869,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_single(const crypt
 {
   std::vector<size_t> unused_transfers_indices;
   std::vector<size_t> unused_dust_indices;
-  const bool use_rct = false;//use_fork_rules(4, 0);
+  const bool use_rct = use_fork_rules(4, 0);
   // find output with the given key image
   for (size_t i = 0; i < m_transfers.size(); ++i)
   {
@@ -8902,7 +8911,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_from(const crypton
   std::vector<std::vector<get_outs_entry>> outs;
 
   const bool use_per_byte_fee = use_fork_rules(HF_VERSION_PER_BYTE_FEE);
-  const bool use_rct = false;//fake_outs_count > 0 && use_fork_rules(4, 0);
+  const bool use_rct = fake_outs_count > 0 && use_fork_rules(4, 0);
   const bool bulletproof = use_fork_rules(get_bulletproof_fork(), 0);
   const rct::RCTConfig rct_config {
     bulletproof ? rct::RangeProofPaddedBulletproof : rct::RangeProofBorromean,
@@ -9118,10 +9127,13 @@ uint64_t wallet2::get_upper_transaction_weight_limit() const
   if (m_upper_transaction_weight_limit > 0)
     return m_upper_transaction_weight_limit;
   uint64_t full_reward_zone = use_fork_rules(5, 10) ? CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V5 : use_fork_rules(2, 10) ? CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2 : CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1;
+  // TODO: Calculate bigger tx size here.
+  LOG_PRINT_L1("Calculated transaction size: " <<  full_reward_zone - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE << " Rewards Calculated:" << full_reward_zone);
   if (use_fork_rules(8, 10))
     return full_reward_zone / 2 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
   else
     return full_reward_zone - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
+  
 }
 //----------------------------------------------------------------------------------------------------
 std::vector<size_t> wallet2::select_available_outputs(const std::function<bool(const transfer_details &td)> &f) const
@@ -9701,11 +9713,12 @@ std::string wallet2::get_tx_proof(const crypto::hash &txid, const cryptonote::ac
     const size_t num_sigs = 1 + additional_tx_keys.size();
     shared_secret.resize(num_sigs);
     sig.resize(num_sigs);
-
+    LOG_PRINT_L0("RCT2PK 1");
     shared_secret[0] = rct::rct2pk(rct::scalarmultKey(rct::pk2rct(address.m_view_public_key), rct::sk2rct(tx_key)));
     crypto::public_key tx_pub_key;
     if (is_subaddress)
     {
+      LOG_PRINT_L0("RCT2PK 2");    
       tx_pub_key = rct2pk(rct::scalarmultKey(rct::pk2rct(address.m_spend_public_key), rct::sk2rct(tx_key)));
       crypto::generate_tx_proof(prefix_hash, tx_pub_key, address.m_view_public_key, address.m_spend_public_key, shared_secret[0], tx_key, sig[0]);
     }
@@ -9716,9 +9729,11 @@ std::string wallet2::get_tx_proof(const crypto::hash &txid, const cryptonote::ac
     }
     for (size_t i = 1; i < num_sigs; ++i)
     {
+      LOG_PRINT_L0("RCT2PK 3");   
       shared_secret[i] = rct::rct2pk(rct::scalarmultKey(rct::pk2rct(address.m_view_public_key), rct::sk2rct(additional_tx_keys[i - 1])));
       if (is_subaddress)
       {
+        LOG_PRINT_L0("RCT2PK 4");
         tx_pub_key = rct2pk(rct::scalarmultKey(rct::pk2rct(address.m_spend_public_key), rct::sk2rct(additional_tx_keys[i - 1])));
         crypto::generate_tx_proof(prefix_hash, tx_pub_key, address.m_view_public_key, address.m_spend_public_key, shared_secret[i], additional_tx_keys[i - 1], sig[i]);
       }
@@ -9766,6 +9781,7 @@ std::string wallet2::get_tx_proof(const crypto::hash &txid, const cryptonote::ac
     sig.resize(num_sigs);
 
     const crypto::secret_key& a = m_account.get_keys().m_view_secret_key;
+    LOG_PRINT_L0("RCT2PK else");
     shared_secret[0] = rct::rct2pk(rct::scalarmultKey(rct::pk2rct(tx_pub_key), rct::sk2rct(a)));
     if (is_subaddress)
     {
@@ -9777,6 +9793,7 @@ std::string wallet2::get_tx_proof(const crypto::hash &txid, const cryptonote::ac
     }
     for (size_t i = 1; i < num_sigs; ++i)
     {
+      LOG_PRINT_L0("RCT2PK for");
       shared_secret[i] = rct::rct2pk(rct::scalarmultKey(rct::pk2rct(additional_tx_pub_keys[i - 1]), rct::sk2rct(a)));
       if (is_subaddress)
       {
@@ -9992,6 +10009,7 @@ std::string wallet2::get_reserve_proof(const boost::optional<std::pair<uint32_t,
     const crypto::public_key *tx_pub_key_used = &tx_pub_key;
     for (int i = 0; i < 2; ++i)
     {
+      LOG_PRINT_L0("RCT2PK 5");
       proof.shared_secret = rct::rct2pk(rct::scalarmultKey(rct::pk2rct(*tx_pub_key_used), rct::sk2rct(m_account.get_keys().m_view_secret_key)));
       crypto::key_derivation derivation;
       THROW_WALLET_EXCEPTION_IF(!crypto::generate_key_derivation(proof.shared_secret, rct::rct2sk(rct::I), derivation),
@@ -10594,6 +10612,7 @@ uint64_t wallet2::import_key_images(const std::vector<std::pair<crypto::key_imag
 
     std::vector<const crypto::public_key*> pkeys;
     pkeys.push_back(&pkey);
+    LOG_PRINT_L0("RCT2PK import_key_imahes");
     THROW_WALLET_EXCEPTION_IF(!(rct::scalarmultKey(rct::ki2rct(key_image), rct::curveOrder()) == rct::identity()),
         error::wallet_internal_error, "Key image out of validity domain: input " + boost::lexical_cast<std::string>(n) + "/"
         + boost::lexical_cast<std::string>(signed_key_images.size()) + ", key image " + epee::string_tools::pod_to_hex(key_image));
