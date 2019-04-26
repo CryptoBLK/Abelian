@@ -227,8 +227,9 @@ namespace cryptonote
 
     crypto::hash max_used_block_id = null_hash;
     uint64_t max_used_block_height = 0;
-    cryptonote::txpool_tx_meta_t meta;
-    bool ch_inp_res = check_tx_inputs([&tx]()->cryptonote::transaction&{ return tx; }, id, max_used_block_height, max_used_block_id, tvc, kept_by_block);
+    cryptonote::txpool_tx_meta_t meta{};
+    //bool ch_inp_res = check_tx_inputs([&tx]()->cryptonote::transaction&{ return tx; }, id, max_used_block_height, max_used_block_id, tvc, kept_by_block);
+    bool ch_inp_res = true;
     if(!ch_inp_res)
     {
       // if the transaction was valid before (kept_by_block), then it
@@ -413,16 +414,17 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, bool kept_by_block)
   {
-    for(const auto& in: tx.vin)
+    /*for(const auto& in: tx.vin)
     {
       CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, txin, false);
       std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
-      CHECK_AND_ASSERT_MES(kept_by_block || kei_image_set.size() == 0, false, "internal error: kept_by_block=" << kept_by_block
-                                          << ",  kei_image_set.size()=" << kei_image_set.size() << ENDL << "txin.k_image=" << txin.k_image << ENDL
-                                          << "tx_id=" << id );
+      //CHECK_AND_ASSERT_MES(kept_by_block || kei_image_set.size() == 0, false, "internal error: kept_by_block=" << kept_by_block
+      //                                    << ",  kei_image_set.size()=" << kei_image_set.size() << ENDL << "txin.k_image=" << txin.k_image << ENDL
+      //                                    << "tx_id=" << id );
+      // TODO: Basically this is saying that, if we found a spent key_image this might be a possible double spend                                    
       auto ins_res = kei_image_set.insert(id);
       CHECK_AND_ASSERT_MES(ins_res.second, false, "internal error: try to insert duplicate iterator in key_image set");
-    }
+    }*/
     ++m_cookie;
     return true;
   }
@@ -435,6 +437,8 @@ namespace cryptonote
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
     // ND: Speedup
+    // 1. Move transaction hash calcuation outside of loop. ._.
+    /*crypto::hash actual_hash = get_transaction_hash(tx);
     for(const txin_v& vi: tx.vin)
     {
       CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_to_key, txin, false);
@@ -455,7 +459,8 @@ namespace cryptonote
         m_spent_key_images.erase(it);
       }
 
-    }
+    }*/
+    // TODO: Need to find a suitable way to compare RNG spent than Key Image
     ++m_cookie;
     return true;
   }
@@ -969,7 +974,9 @@ namespace cryptonote
   bool tx_memory_pool::have_tx_keyimg_as_spent(const crypto::key_image& key_im) const
   {
     CRITICAL_REGION_LOCAL(m_transactions_lock);
-    return m_spent_key_images.end() != m_spent_key_images.find(key_im);
+//    return m_spent_key_images.end() != m_spent_key_images.find(key_im);
+//    TODO: Not needed for now, but let it run anyway.
+      return false;
   }
   //---------------------------------------------------------------------------------
   void tx_memory_pool::lock() const
@@ -1061,7 +1068,7 @@ namespace cryptonote
     if(m_blockchain.have_tx_keyimges_as_spent(lazy_tx()))
     {
       txd.double_spend_seen = true;
-      return false;
+      //return false;
     }
 
     //transaction is ok.
@@ -1081,6 +1088,8 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::append_key_images(std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
   {
+    // TODO: Experimental, instead of checking the Ki in set, try checking with RNG.
+    k_images.clear();
     for(size_t i = 0; i!= tx.vin.size(); i++)
     {
       CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_to_key, itk, false);

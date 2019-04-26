@@ -168,7 +168,8 @@ namespace cryptonote
           CHECK_AND_ASSERT_MES(n_amounts == rv.outPk.size(), false, "Internal error filling out V");
           rv.p.bulletproofs[0].V.resize(n_amounts);
           for (size_t i = 0; i < n_amounts; ++i)
-            rv.p.bulletproofs[0].V[i] = rct::scalarmultKey(rv.outPk[i].mask, rct::INV_EIGHT);
+              rv.p.bulletproofs[0].V[i] = rct::scalarmultKey(rv.outPk[i].mask, rct::INV_EIGHT);
+              LOG_PRINT_L0("RCT2PK expand");
         }
       }
     }
@@ -313,12 +314,14 @@ namespace cryptonote
       }
 
       in_ephemeral.sec = scalar_step2;
+      LOG_PRINT_L1("::generate_key_image_helper_precomp in_ephermal.sec = " << in_ephemeral.sec);
 
       if (ack.m_multisig_keys.empty())
       {
         // when not in multisig, we know the full spend secret key, so the output pubkey can be obtained by scalarmultBase
         //CHECK_AND_ASSERT_MES(hwdev.secret_key_to_public_key(in_ephemeral.sec, in_ephemeral.pub), false, "Failed to derive public key"); TODO
         in_ephemeral.pub = out_key;
+	LOG_PRINT_L1("::generate_key_image_helper_precomp in_ephermal.pub = " << in_ephemeral.sec);
       }
       else
       {
@@ -851,6 +854,7 @@ namespace cryptonote
     crypto::public_key subaddress_spendkey;
     hwdev.derive_subaddress_public_key(out_key, derivation, output_index, subaddress_spendkey);
     auto found = subaddresses.find(subaddress_spendkey);
+    // if subaddress spendkey is found in the list of subbaddresses
     if (found != subaddresses.end())
       return subaddress_receive_info{ found->second, derivation };
     // try additional tx pubkeys if available

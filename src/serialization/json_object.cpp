@@ -567,12 +567,12 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::tx_out& txout)
       fromJsonValue(elem.value, tmpVal);
       txout.target = std::move(tmpVal);
     }
-    else if(elem.name == "to_randid")
+    /*else if(elem.name == "to_randid")
     {
         cryptonote::txout_to_randid tmpVal;
         fromJsonValue(elem.value, tmpVal);
         txout.target = std::move(tmpVal);
-    }
+    }*/
     else if (elem.name == "to_script")
     {
       cryptonote::txout_to_script tmpVal;

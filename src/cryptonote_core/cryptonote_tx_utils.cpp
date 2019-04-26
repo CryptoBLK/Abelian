@@ -93,7 +93,7 @@ namespace cryptonote
     if (!sort_tx_extra(tx.extra, tx.extra))
       return false;
 
-    txin_gen in;
+    txin_gen in{};
     in.height = height;
 
     uint64_t block_reward;
@@ -330,13 +330,17 @@ namespace cryptonote
       in_contexts.push_back(input_generation_context_data());
       keypair& in_ephemeral = in_contexts.back().in_ephemeral;
       crypto::key_image img;
-      const auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second.dest);
-      if(!generate_key_image_helper(sender_account_keys, subaddresses, out_key, src_entr.real_out_tx_key, src_entr.real_out_additional_tx_keys, src_entr.real_output_in_tx_index, in_ephemeral,img, hwdev))
-      {
-        LOG_ERROR("Key image generation failed!");
-        return false;
-      }
 
+      //Dilithium change
+      std::memcpy(&img, &sender_account_keys.m_account_address.m_spend_public_key, CRYPTO_PUBLICKEYBYTES);
+      //const auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second.dest);
+      //if(!generate_key_image_helper(sender_account_keys, subaddresses, out_key, src_entr.real_out_tx_key, src_entr.real_out_additional_tx_keys, src_entr.real_output_in_tx_index, in_ephemeral,img, hwdev))
+      //{
+      //  LOG_ERROR("Key image generation failed!");
+      //  return false;
+      //}
+
+      std::memcpy(&in_ephemeral.pub, &src_entr.outputs[src_entr.real_output].second.dest, CRYPTO_PUBLICKEYBYTES);
       //check that derivated key is equal with real output key (if non multisig)
       if(!msout && !(in_ephemeral.pub == src_entr.outputs[src_entr.real_output].second.dest) )
       {
@@ -388,6 +392,7 @@ namespace cryptonote
     classify_addresses(destinations, change_addr, num_stdaddresses, num_subaddresses, single_dest_subaddress);
 
     // if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=s*D
+    // TODO: Will probably be look on where this heads to
     if (num_stdaddresses == 0 && num_subaddresses == 1)
     {
       txkey_pub = rct::rct2pk(hwdev.scalarmultKey(rct::pk2rct(single_dest_subaddress.m_spend_public_key), rct::sk2rct(tx_key)));
@@ -491,7 +496,17 @@ namespace cryptonote
         std::vector<crypto::signature>& sigs = tx.signatures.back();
         sigs.resize(src_entr.outputs.size());
         if (!zero_secret_key)
-          crypto::generate_ring_signature(tx_prefix_hash, boost::get<txin_to_key>(tx.vin[i]).k_image, keys_ptrs, in_contexts[i].in_ephemeral.sec, src_entr.real_output, sigs.data());
+        {
+            //crypto::generate_ring_signature(tx_prefix_hash, boost::get<txin_to_key>(tx.vin[i]).k_image, keys_ptrs, in_contexts[i].in_ephemeral.sec, src_entr.real_output, sigs.data());
+            //unsigned char keyImage[CRYPTO_PUBLICKEYBYTES];
+            // Dilithium - signature
+            crypto::public_key k_i;
+            crypto::secret_key sec;
+            std::memcpy(&k_i, &boost::get<txin_to_key>(tx.vin[i]).k_image, CRYPTO_PUBLICKEYBYTES);
+            std::memcpy(&sec, &sender_account_keys.m_spend_secret_key.data[i], CRYPTO_SECRETKEYBYTES);
+	    LOG_PRINT_L1("Signatures: " << sigs.size() <<" = "<<tx.signatures.size() <<" Output :" <<src_entr.outputs.size());
+            crypto::generate_signature(tx_prefix_hash, k_i, sec, *sigs.data());//sender_account_keys.m_spend_secret_key, *sigs.data());
+        }
         ss_ring_s << "signatures:" << ENDL;
         std::for_each(sigs.begin(), sigs.end(), [&](const crypto::signature& s){ss_ring_s << s << ENDL;});
         ss_ring_s << "prefix_hash:" << tx_prefix_hash << ENDL << "in_ephemeral_key: " << in_contexts[i].in_ephemeral.sec << ENDL << "real_output: " << src_entr.real_output << ENDL;

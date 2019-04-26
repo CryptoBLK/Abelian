@@ -131,22 +131,23 @@ static const struct {
   time_t time;
 } testnet_hard_forks[] = {
   // version 1 from the start of the blockchain
-  { 1, 1, 0, 1341378000 },
+  //{ 1, 1, 0, 1341378000 },
 
   // version 2 starts from block 624634, which is on or around the 23rd of November, 2015. Fork time finalised on 2015-11-20. No fork voting occurs for the v2 fork.
-  { 2, 624634, 0, 1445355000 },
+//  { 2, 624634, 0, 1445355000 },
 
   // versions 3-5 were passed in rapid succession from September 18th, 2016
-  { 3, 800500, 0, 1472415034 },
-  { 4, 801219, 0, 1472415035 },
-  { 5, 802660, 0, 1472415036 + 86400*180 }, // add 5 months on testnet to shut the update warning up since there's a large gap to v6
+  //{ 3, 800500, 0, 1472415034 },
+  //{ 4, 801219, 0, 1472415035 },
+  //{ 5, 802660, 0, 1472415036 + 86400*180 }, // add 5 months on testnet to shut the update warning up since there's a large gap to v6
 
-  { 6, 971400, 0, 1501709789 },
-  { 7, 1057027, 0, 1512211236 },
-  { 8, 1057058, 0, 1533211200 },
-  { 9, 1057778, 0, 1533297600 },
-  { 10, 1154318, 0, 1550153694 },
-  { 11, 1155038, 0, 1550225678 },
+ // { 6, 971400, 0, 1501709789 },
+  //{ 7, 1057027, 0, 1512211236 },
+  //{ 8, 1057058, 0, 1533211200 },
+  //{ 9, 1057778, 0, 1533297600 },
+  //{ 10, 1154318, 0, 1550153694 },
+  { 1, 1, 0, 1341378000 },
+  { 3, 400, 0, 1556189000 },
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
 
@@ -2589,6 +2590,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, uint64_t& max_used_block_heigh
 #endif
 
   TIME_MEASURE_START(a);
+  //Now check input based on RNG field
   bool res = check_tx_inputs(tx, tvc, &max_used_block_height);
   TIME_MEASURE_FINISH(a);
   if(m_show_time_stats)
@@ -2824,6 +2826,8 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
       }
     }
 
+    // Get Transaction version
+    LOG_PRINT_L0("Version: "<< tx.version);
     if (((hf_version == HF_VERSION_MIN_MIXIN_10 || hf_version == HF_VERSION_MIN_MIXIN_10+1) && mixin != 10) || (hf_version >= HF_VERSION_MIN_MIXIN_10+2 && mixin > 10))
     {
       MERROR_VER("Tx " << get_transaction_hash(tx) << " has invalid ring size (" << (mixin + 1) << "), it should be 11");
@@ -2898,7 +2902,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
   tools::threadpool& tpool = tools::threadpool::getInstance();
   tools::threadpool::waiter waiter;
   const auto waiter_guard = epee::misc_utils::create_scope_leave_handler([&]() { waiter.wait(&tpool); });
-  int threads = tpool.get_max_concurrency();
+  int threads = tpool.get_max_concurrency(); // TODO: Multithreaded capabilities.
 
   for (const auto& txin : tx.vin)
   {
@@ -2907,14 +2911,15 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
     CHECK_AND_ASSERT_MES(txin.type() == typeid(txin_to_key), false, "wrong type id in tx input at Blockchain::check_tx_inputs");
     const txin_to_key& in_to_key = boost::get<txin_to_key>(txin);
 
-    // make sure tx output has key offset(s) (is signed to be used)
+    // TODO: make sure tx output has key offset(s) (is signed to be used)
     CHECK_AND_ASSERT_MES(in_to_key.key_offsets.size(), false, "empty in_to_key.key_offsets in transaction with id " << get_transaction_hash(tx));
 
+    // Instead of checking the spend key image check if RNG field is already spend.
     if(have_tx_keyimg_as_spent(in_to_key.k_image))
     {
       MERROR_VER("Key image already spent in blockchain: " << epee::string_tools::pod_to_hex(in_to_key.k_image));
-      tvc.m_double_spend = true;
-      return false;
+      //tvc.m_double_spend = true;
+      //return false;
     }
 
     if (tx.version == 1)
@@ -2959,11 +2964,15 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
       {
         // ND: Speedup
         // 1. Thread ring signature verification if possible.
-        tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[sig_index]), std::cref(tx.signatures[sig_index]), std::ref(results[sig_index])), true);
+        //tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[sig_index]), std::cref(tx.signatures[sig_index]), std::ref(results[sig_index])), true);
+        //TODO: Nothing to check, signatures are not working yet.
+        results[sig_index] = 1;
       }
       else
       {
-        check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[sig_index], tx.signatures[sig_index], results[sig_index]);
+        //check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[sig_index], tx.signatures[sig_index], results[sig_index]);
+        // TODO: Check how verify the poorly constructed signature.
+        results[sig_index] = 1;
         if (!results[sig_index])
         {
           it->second[in_to_key.k_image] = false;
@@ -2983,7 +2992,8 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
     sig_index++;
   }
   if (tx.version == 1 && threads > 1)
-    waiter.wait(&tpool);
+      waiter.wait(&tpool);
+ //   TODO: work on this, why tx object gets deleted after it gets to threadlock
 
   if (tx.version == 1)
   {
@@ -3177,8 +3187,12 @@ void Blockchain::check_ring_signature(const crypto::hash &tx_prefix_hash, const 
     // rct::key and crypto::public_key have the same structure, avoid object ctor/memcpy
     p_output_keys.push_back(&(const crypto::public_key&)key.dest);
   }
+  // Dilithium - sig verification
+  crypto::public_key k_i;
+  std::memcpy(&k_i, &key_image, CRYPTO_PUBLICKEYBYTES);
+  auto ok = crypto::check_signature(tx_prefix_hash, k_i, *sig.data());
 
-  result = crypto::check_ring_signature(tx_prefix_hash, key_image, p_output_keys, sig.data()) ? 1 : 0;
+  result = ok ? 1 : 0;//crypto::check_ring_signature(tx_prefix_hash, key_image, p_output_keys, sig.data()) ? 1 : 0;
 }
 
 //------------------------------------------------------------------

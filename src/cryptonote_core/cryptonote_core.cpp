@@ -1096,11 +1096,13 @@ namespace cryptonote
     }
 
     //check if tx use different key images
-    if(!check_tx_inputs_keyimages_diff(tx))
+    // TODO: Bypass the key_image checking, instead check for the RNG in input
+    // Or just disregard this check?
+    /*if(!check_tx_inputs_keyimages_diff(tx))
     {
       MERROR_VER("tx uses a single key image more than once");
       return false;
-    }
+    }*/
 
     if (!check_tx_inputs_ring_members_diff(tx))
     {
@@ -1211,8 +1213,9 @@ namespace cryptonote
     for(const auto& in: tx.vin)
     {
       CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, tokey_in, false);
-      if (!(rct::scalarmultKey(rct::ki2rct(tokey_in.k_image), rct::curveOrder()) == rct::identity()))
-        return false;
+      LOG_PRINT_L0("RCT2PK cryptonote core");
+     // if (!(rct::scalarmultKey(rct::ki2rct(tokey_in.k_image), rct::curveOrder()) == rct::identity()))
+     //   return false;
     }
     return true;
   }

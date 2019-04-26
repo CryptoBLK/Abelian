@@ -289,6 +289,8 @@ private:
       boost::optional<cryptonote::subaddress_receive_info> received;
 
       tx_scan_info_t(): amount(0), money_transfered(0), error(true) {}
+      // Random bytes
+      crypto::pq_seed random;
     };
 
     struct transfer_details
@@ -891,6 +893,7 @@ private:
       a & m_transfers;
       a & m_account_public_address;
       a & m_key_images;
+      a & m_tx_rng; // Add this for serialization
       if(ver < 6)
         return;
       a & m_unconfirmed_txs;
@@ -1437,6 +1440,8 @@ private:
     payment_container m_payments;
     std::unordered_map<crypto::key_image, size_t> m_key_images;
     std::unordered_map<crypto::public_key, size_t> m_pub_keys;
+    // Add an additional field for rand ID checking.
+    std::unordered_map<crypto::pq_seed, size_t> m_tx_rng;
     cryptonote::account_public_address m_account_public_address;
     std::unordered_map<crypto::public_key, cryptonote::subaddress_index> m_subaddresses;
     std::vector<std::vector<std::string>> m_subaddress_labels;
