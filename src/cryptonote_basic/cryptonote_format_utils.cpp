@@ -867,8 +867,6 @@ namespace cryptonote
         return subaddress_receive_info{ found->second, additional_derivations[output_index] };
     }
     return boost::none;
-    //return subaddress_receive_info{ subaddresses.begin()->second, derivation };
-
   }
   //---------------------------------------------------------------
   bool lookup_acc_outs(const account_keys& acc, const transaction& tx, std::vector<size_t>& outs, uint64_t& money_transfered)

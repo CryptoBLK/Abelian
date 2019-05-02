@@ -478,6 +478,7 @@ namespace cryptonote
 
       std::stringstream ss_ring_s;
       size_t i = 0;
+      bool alreadySigned = false;
       for(const tx_source_entry& src_entr:  sources)
       {
         ss_ring_s << "pub_keys:" << ENDL;
@@ -495,17 +496,20 @@ namespace cryptonote
         tx.signatures.push_back(std::vector<crypto::signature>());
         std::vector<crypto::signature>& sigs = tx.signatures.back();
         sigs.resize(src_entr.outputs.size());
-        if (!zero_secret_key)
+        //sigs.resize(src_entr.real_output);
+        //tx.signatures.resize(src_entr.real_output);
+        LOG_PRINT_L1("Outputs: " << src_entr.real_output <<" Fake: "<<src_entr.outputs.size());
+        if (!zero_secret_key && !alreadySigned)
         {
-            //crypto::generate_ring_signature(tx_prefix_hash, boost::get<txin_to_key>(tx.vin[i]).k_image, keys_ptrs, in_contexts[i].in_ephemeral.sec, src_entr.real_output, sigs.data());
-            //unsigned char keyImage[CRYPTO_PUBLICKEYBYTES];
             // Dilithium - signature
             crypto::public_key k_i;
             crypto::secret_key sec;
-            std::memcpy(&k_i, &boost::get<txin_to_key>(tx.vin[i]).k_image, CRYPTO_PUBLICKEYBYTES);
-            std::memcpy(&sec, &sender_account_keys.m_spend_secret_key.data[i], CRYPTO_SECRETKEYBYTES);
-	    LOG_PRINT_L1("Signatures: " << sigs.size() <<" = "<<tx.signatures.size() <<" Output :" <<src_entr.outputs.size());
-            crypto::generate_signature(tx_prefix_hash, k_i, sec, *sigs.data());//sender_account_keys.m_spend_secret_key, *sigs.data());
+
+            std::memcpy(&k_i, &sender_account_keys.m_account_address.m_spend_public_key, CRYPTO_PUBLICKEYBYTES);
+            std::memcpy(&sec, &sender_account_keys.m_spend_secret_key, CRYPTO_SECRETKEYBYTES);
+            
+            crypto::generate_signature(tx_prefix_hash, k_i, sec, *sigs.data());
+            alreadySigned = true;
         }
         ss_ring_s << "signatures:" << ENDL;
         std::for_each(sigs.begin(), sigs.end(), [&](const crypto::signature& s){ss_ring_s << s << ENDL;});

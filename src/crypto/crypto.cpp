@@ -311,7 +311,7 @@ namespace crypto {
     
     LOG_PRINT_L1("::check_signature result = " <<result);
 
-    return result ? true : false;
+    return result == 0 ? true : false;
   }
 
   void crypto_ops::generate_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &D, const secret_key &r, signature &sig) {
