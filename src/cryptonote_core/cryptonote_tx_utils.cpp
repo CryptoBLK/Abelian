@@ -501,7 +501,7 @@ namespace cryptonote
 
             std::memcpy(&k_i, &sender_account_keys.m_account_address.m_spend_public_key, CRYPTO_PUBLICKEYBYTES);
             std::memcpy(&sec, &sender_account_keys.m_spend_secret_key, CRYPTO_SECRETKEYBYTES);
-            
+
             crypto::generate_signature(tx_prefix_hash, k_i, sec, *sigs.data());
             alreadySigned = true;
         }
