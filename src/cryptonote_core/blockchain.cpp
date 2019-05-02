@@ -148,7 +148,7 @@ static const struct {
   //{ 9, 1057778, 0, 1533297600 },
   //{ 10, 1154318, 0, 1550153694 },
   { 1, 1, 0, 1341378000 },
-  { 3, 400, 0, 1556189000 },
+  //{ 3, 400, 0, 1556189000 },
 };
 static const uint64_t testnet_hard_fork_version_1_till = 624633;
 
@@ -2718,15 +2718,21 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
       {
         // ND: Speedup
         // 1. Thread ring signature verification if possible.
-        //tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[sig_index]), std::cref(tx.signatures[sig_index]), std::ref(results[sig_index])), true);
-        //TODO: Nothing to check, signatures are not working yet.
+        // Check only the first sig others are null.
+        tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[0]), std::cref(tx.signatures[0]), std::ref(results[sig_index])), true);
+
+        // A bit dirty, but an effective hack since we will just be verifying one sig, if the check is true, all
+        // sig_index should have a true value.
         results[sig_index] = 1;
+        LOG_PRINT_L1("Results after signing -> " << results[0] << " sig_index: " << results[sig_index]);;
       }
       else
       {
-        //check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[sig_index], tx.signatures[sig_index], results[sig_index]);
-        // TODO: Check how verify the poorly constructed signature.
-        results[sig_index] = 1;
+        check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[0]); 
+        if(results[0] == 1)
+        {
+            results[sig_index] = 1;
+        }
         if (!results[sig_index])
         {
           it->second[in_to_key.k_image] = false;
@@ -2745,15 +2751,18 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
     sig_index++;
   }
+
   if (tx.version == 1 && threads > 1)
+  {
       waiter.wait(&tpool);
- //   TODO: work on this, why tx object gets deleted after it gets to threadlock
+  }
 
   if (tx.version == 1)
   {
     if (threads > 1)
     {
       // save results to table, passed or otherwise
+      // Check only the first signature in the list
       bool failed = false;
       for (size_t i = 0; i < tx.vin.size(); i++)
       {
@@ -2934,6 +2943,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 //------------------------------------------------------------------
 void Blockchain::check_ring_signature(const crypto::hash &tx_prefix_hash, const crypto::key_image &key_image, const std::vector<rct::ctkey> &pubkeys, const std::vector<crypto::signature>& sig, uint64_t &result)
 {
+  LOG_PRINT_L1("Public spend key: " << key_image);
   std::vector<const crypto::public_key *> p_output_keys;
   p_output_keys.reserve(pubkeys.size());
   for (auto &key : pubkeys)
@@ -2945,8 +2955,9 @@ void Blockchain::check_ring_signature(const crypto::hash &tx_prefix_hash, const 
   crypto::public_key k_i;
   std::memcpy(&k_i, &key_image, CRYPTO_PUBLICKEYBYTES);
   auto ok = crypto::check_signature(tx_prefix_hash, k_i, *sig.data());
-
   result = ok ? 1 : 0;//crypto::check_ring_signature(tx_prefix_hash, key_image, p_output_keys, sig.data()) ? 1 : 0;
+  
+  LOG_PRINT_L1("Result: " << result <<" Ok: " << ok);
 }
 
 //------------------------------------------------------------------
