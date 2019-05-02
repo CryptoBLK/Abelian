@@ -2021,7 +2021,7 @@ bool Blockchain::get_output_distribution(uint64_t amount, uint64_t from_height, 
     switch (m_nettype)
     {
       case STAGENET: start_height = stagenet_hard_forks[3].height; break;
-      case TESTNET: start_height = testnet_hard_forks[3].height; break;
+      //case TESTNET: start_height = testnet_hard_forks[3].height; break;
       case MAINNET: start_height = mainnet_hard_forks[3].height; break;
       case FAKECHAIN: start_height = 0; break;
       default: return false;
@@ -2902,8 +2902,8 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
   tools::threadpool& tpool = tools::threadpool::getInstance();
   tools::threadpool::waiter waiter;
   const auto waiter_guard = epee::misc_utils::create_scope_leave_handler([&]() { waiter.wait(&tpool); });
-  int threads = tpool.get_max_concurrency(); // TODO: Multithreaded capabilities.
-
+  int threads = tpool.get_max_concurrency();
+  bool checkedSig = false;
   for (const auto& txin : tx.vin)
   {
     // make sure output being spent is of type txin_to_key, rather than
@@ -2965,16 +2965,24 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
         // ND: Speedup
         // 1. Thread ring signature verification if possible.
         // Check only the first sig others are null.
-        tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[0]), std::cref(tx.signatures[0]), std::ref(results[sig_index])), true);
-
-        // A bit dirty, but an effective hack since we will just be verifying one sig, if the check is true, all
-        // sig_index should have a true value.
-        results[sig_index] = 1;
-        LOG_PRINT_L1("Results after signing -> " << results[0] << " sig_index: " << results[sig_index]);;
+        if (!checkedSig)
+        {
+            LOG_PRINT_L1("Verify only the first signature");
+            //tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[0]), std::cref(tx.signatures[0]), std::ref(results[sig_index])), true);
+            check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[sig_index]);
+            // A bit dirty, but an effective hack since we will just be verifying one sig, if the check is true, all
+            // sig_index should have a true value.
+            if(results[0] == 1)
+            {
+                std::fill(results.begin(), results.end(), 1);
+            }
+            checkedSig = true;
+        }
+        LOG_PRINT_L1("Results after signing -> " << results[0] << " sig_index: " << results[sig_index]);
       }
       else
       {
-        check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[0]); 
+        check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[sig_index]);
         if(results[0] == 1)
         {
             results[sig_index] = 1;
@@ -2998,10 +3006,10 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
     sig_index++;
   }
 
-  if (tx.version == 1 && threads > 1)
-  {
-      waiter.wait(&tpool);
-  }
+  //if (tx.version == 1 && threads > 1)
+  //{
+  //    waiter.wait(&tpool);
+  //}
 
   if (tx.version == 1)
   {
