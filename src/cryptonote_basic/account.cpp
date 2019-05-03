@@ -38,7 +38,7 @@
 extern "C"
 {
 #include "crypto/keccak.h"
-#include <dilithium/fips202.h>
+#include "dilithium/ref/fips202.h"
 
 }
 #include "cryptonote_basic_impl.h"
