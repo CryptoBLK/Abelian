@@ -155,12 +155,12 @@ namespace crypto {
       const public_key *const *, std::size_t, const signature *);
   };
 
-  void generate_random_bytes_thread_safe(size_t N, uint8_t *bytes);
+  void generate_random_bytes_thread_safe(size_t _N, uint8_t *bytes);
 
   /* Generate N random bytes
    */
-  inline void rand(size_t N, uint8_t *bytes) {
-    generate_random_bytes_thread_safe(N, bytes);
+  inline void rand(size_t _N, uint8_t *bytes) {
+    generate_random_bytes_thread_safe(_N, bytes);
   }
 
   /* Generate a value filled with random bytes.
@@ -253,11 +253,11 @@ namespace crypto {
    * derivation D, the signature proves the knowledge of the tx secret key r such that R=r*G and D=r*A
    * When the recipient's address is a subaddress, the tx pubkey R is defined as R=r*B where B is the recipient's spend pubkey
    */
-  inline void generate_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &D, const secret_key &r, signature &sig) {
-    crypto_ops::generate_tx_proof(prefix_hash, R, A, B, D, r, sig);
+  inline void generate_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &_D, const secret_key &r, signature &sig) {
+    crypto_ops::generate_tx_proof(prefix_hash, R, A, B, _D, r, sig);
   }
-  inline bool check_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &D, const signature &sig) {
-    return crypto_ops::check_tx_proof(prefix_hash, R, A, B, D, sig);
+  inline bool check_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &_D, const signature &sig) {
+    return crypto_ops::check_tx_proof(prefix_hash, R, A, B, _D, sig);
   }
 
   /* To send money to a key:
