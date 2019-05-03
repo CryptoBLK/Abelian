@@ -14,4 +14,4 @@
 	url = https://github.com/trezor/trezor-common.git
 [submodule "src/dilithium"]
 	path = src/dilithium
-	url = https://github.com/pq-crystals/dilithium
+	url = https://github.com/josephnicholas/dilithium
