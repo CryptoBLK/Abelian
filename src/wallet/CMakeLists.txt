@@ -88,6 +88,7 @@ target_link_libraries(wallet_rpc_server
     rpc_base
     cryptonote_core
     cncrypto
+    dilithium
     common
     version
     daemonizer
@@ -115,6 +116,7 @@ if (BUILD_GUI_DEPS)
             mnemonics
             common
             cncrypto
+            dilithium
             device
             ringct
             ringct_basic

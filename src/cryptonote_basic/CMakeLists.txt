@@ -70,7 +70,7 @@ monero_add_library(cryptonote_basic
 target_link_libraries(cryptonote_basic
   PUBLIC
     common
-        dilithium
+    dilithium
     cncrypto
     checkpoints
     device
