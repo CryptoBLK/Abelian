@@ -46,6 +46,7 @@ target_link_libraries(simplewallet
     rpc_base
     cryptonote_core
     cncrypto
+    dilithium
     common
     mnemonics
     ${EPEE_READLINE}
