@@ -50,7 +50,7 @@ using namespace crypto;
 namespace cryptonote
 {
     extern "C" {
-    #include "dilithium/randombytes.h"
+    #include "dilithium/ref/randombytes.h"
     }
   //---------------------------------------------------------------
   void classify_addresses(const std::vector<tx_destination_entry> &destinations, const boost::optional<cryptonote::account_public_address>& change_addr, size_t &num_stdaddresses, size_t &num_subaddresses, account_public_address &single_dest_subaddress)
