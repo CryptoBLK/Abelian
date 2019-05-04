@@ -65,7 +65,7 @@ namespace crypto {
 
   // Randomness data type
   POD_CLASS pq_seed {
-        char data[32]; // We need to agree on this!
+        char data[32U]; // We need to agree on this!
   };
 
   POD_CLASS public_key: ec_point {
