@@ -1052,8 +1052,8 @@ namespace cryptonote
       if(true)
       {
         //if we already failed on this height and id, skip actual ring signature check
-        if(txd.last_failed_id == m_blockchain.get_block_id_by_height(txd.last_failed_height))
-          return false;
+        //if(txd.last_failed_id == m_blockchain.get_block_id_by_height(txd.last_failed_height))
+        //  return false;
         //check ring signature again, it is possible (with very small chance) that this transaction become again valid
         tx_verification_context tvc;
         if(!check_tx_inputs([&lazy_tx]()->cryptonote::transaction&{ return lazy_tx(); }, txid, txd.max_used_block_height, txd.max_used_block_id, tvc))
@@ -1067,7 +1067,8 @@ namespace cryptonote
     //if we here, transaction seems valid, but, anyway, check for key_images collisions with blockchain, just to be sure
     if(m_blockchain.have_tx_keyimges_as_spent(lazy_tx()))
     {
-      txd.double_spend_seen = true;
+        //TODO Don't check key images just yet.
+      //txd.double_spend_seen = true;
       //return false;
     }
 
