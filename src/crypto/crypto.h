@@ -100,7 +100,7 @@ namespace crypto {
 
   POD_CLASS signature {
     //ec_scalar c, r; // TODO: changed to 32 byte rand for creating and checking ring sigs
-    char data[CRYPTO_BYTES + 32]; //32 is prefix hash length
+    char data[CRYPTO_BYTES + HASH_SIZE]; //32 is prefix hash length
     friend class crypto_ops;
   };
 #pragma pack(pop)

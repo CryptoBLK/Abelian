@@ -49,18 +49,6 @@
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "crypto"
 
-namespace {
-  static void local_abort(const char *msg)
-  {
-    fprintf(stderr, "%s\n", msg);
-#ifdef NDEBUG
-    _exit(1);
-#else
-    abort();
-#endif
-  }
-}
-
 namespace crypto {
 
   using std::abort;
@@ -74,7 +62,6 @@ namespace crypto {
 #include "crypto-ops.h"
 #include "random.h"
 #include "dilithium/ref/rng.h"
-#include "dilithium/ref/params.h"
   }
 
   const crypto::public_key null_pkey = crypto::public_key{};
@@ -128,7 +115,7 @@ namespace crypto {
   }
   /* generate a random 32-byte (256-bit) integer and copy it to res */
   static inline void random_scalar(pq_seed &res) {
-      randombytes((unsigned char*)res.data, SEEDBYTES);
+      randombytes((unsigned char*)res.data, 32U);
   }
 
   void hash_to_scalar(const void *data, size_t length, ec_scalar &res) {
