@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
       public_key key;
       ec_point expected, actual;
       get(input, key, expected);
-      hash_to_ec(key, actual);
+      //hash_to_ec(key, actual);
       if (expected != actual) {
         goto error;
       }
