@@ -39,10 +39,16 @@ if (IOS)
     INCLUDE(CmakeLists_IOS.txt)
 endif()
 
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.10)
 message(STATUS "CMake version ${CMAKE_VERSION}")
 
 project(abelian)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(CMAKE_CXX_STANDARD  14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_language(C ASM)
 
@@ -314,9 +320,6 @@ else()
 endif()
 set(PIC_FLAG "-fPIC")
 
-set(ADDRESS_SANITIZER "-fno-omit-frame-pointer -fsanitize=address")
-set(ADDRESS_SANITIZER_LINKER "-fno-omit-frame-pointer -fsanitize=address")
-
 if(MINGW)
   string(REGEX MATCH "^[^/]:/[^/]*" msys2_install_path "${CMAKE_C_COMPILER}")
   message(STATUS "MSYS location: ${msys2_install_path}")
@@ -344,8 +347,8 @@ if(SANITIZE)
     message(FATAL_ERROR "Cannot sanitize with MSVC")
   else()
     message(STATUS "Using ASAN")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=thread -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=thread -g")
   endif()
 endif()
 
@@ -605,7 +608,7 @@ else()
       set(WARNINGS "${WARNINGS} -Wno-error=inline-asm")
     endif()
   else()
-    set(WARNINGS "${WARNINGS} -Wlogical-op -Wno-error=maybe-uninitialized -Wno-error=cpp")
+    set(WARNINGS "${WARNINGS} -Wlogical-op -Wno-error=uninitialized -Wno-error=cpp")
   endif()
   if(MINGW)
     set(WARNINGS "${WARNINGS} -Wno-error=unused-value -Wno-error=unused-but-set-variable")
