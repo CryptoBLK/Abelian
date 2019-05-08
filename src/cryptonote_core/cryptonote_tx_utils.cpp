@@ -158,7 +158,7 @@ namespace cryptonote
       tk.key = out_eph_public_key;
 
       txout_to_randid rng;
-      randombytes((unsigned char *)&rng.rng, 32U);
+      dilithium_randombytes((unsigned char *)&rng.rng, 32U);
 
       tx_out out;
       summary_amounts += out.amount = out_amounts[no];
@@ -431,7 +431,7 @@ namespace cryptonote
       txout_to_key tk;
       tk.key = out_eph_public_key;
       txout_to_randid rng;
-      randombytes((unsigned char *)&rng.rng, 32U);
+      dilithium_randombytes((unsigned char *)&rng.rng, 32U);
       out.target = tk;
       out.random = rng;
       tx.vout.push_back(out);

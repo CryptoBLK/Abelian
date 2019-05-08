@@ -60,8 +60,6 @@ namespace crypto {
 
   extern "C" {
 #include "crypto-ops.h"
-#include "random.h"
-#include "dilithium/ref/rng.h"
   }
 
   const crypto::public_key null_pkey = crypto::public_key{};
@@ -87,7 +85,7 @@ namespace crypto {
   {
     static boost::mutex random_lock;
     boost::lock_guard<boost::mutex> lock(random_lock);
-    generate_random_bytes_not_thread_safe(_N, bytes);
+    dilithium_randombytes(bytes, _N);
   }
 
   static inline bool less32(const unsigned char *k0, const unsigned char *k1)
@@ -115,7 +113,7 @@ namespace crypto {
   }
   /* generate a random 32-byte (256-bit) integer and copy it to res */
   static inline void random_scalar(pq_seed &res) {
-      randombytes((unsigned char*)res.data, 32U);
+      dilithium_randombytes((unsigned char*)res.data, 32U);
   }
 
   void hash_to_scalar(const void *data, size_t length, ec_scalar &res) {
@@ -123,11 +121,6 @@ namespace crypto {
     sc_reduce32(&res);
   }
 
-  /* 
-   * generate public and secret keys from a random 256-bit integer
-   * TODO: allow specifying random value (for wallet recovery)
-   * 
-   */
   rand_seed crypto_ops::generate_keys(public_key &pub, secret_key &sec, const rand_seed& recovery_key, bool recover) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
     rand_seed rng;
@@ -193,13 +186,11 @@ namespace crypto {
     tools::write_varint(end, output_index);
     assert(end <= buf.output_index + sizeof buf.output_index);
     hash_to_scalar(&buf, end - reinterpret_cast<char *>(&buf), res);
-    //TODO: Hash function for the one time public key - output_index to ensure key uniqueness
   }
 
   bool crypto_ops::derive_public_key(const key_derivation &derivation, size_t output_index,
     const public_key &base, public_key &derived_key) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
-
     // TODO: No Dilithium implementation yet, so derived_key = PSk
     std::memcpy(&derived_key, &base, CRYPTO_PUBLICKEYBYTES);
 
@@ -241,26 +232,23 @@ namespace crypto {
 
     unsigned long long len = sizeof(prefix_hash);
     auto result = crypto_sign_dilithium_open((unsigned char *)&prefix_hash, &len, (unsigned char *)&sig, sizeof(sig), &pub);
-    
-    LOG_PRINT_L1("::check_signature result = " <<result);
+    assert(result == 0);
 
+    LOG_PRINT_L1("::check_signature result = " <<result);
     return result == 0 ? true : false;
   }
 
   void crypto_ops::generate_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &_D, const secret_key &r, signature &sig) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
-
   }
 
   bool crypto_ops::check_tx_proof(const hash &prefix_hash, const public_key &R, const public_key &A, const boost::optional<public_key> &B, const public_key &_D, const signature &sig) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
-
       return true;
   }
 
   void crypto_ops::generate_key_image(const public_key &pub, const secret_key &sec, key_image &image) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
-
     std::memcpy(&image, &pub, CRYPTO_PUBLICKEYBYTES);
   }
 

@@ -2968,8 +2968,10 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
         if (!checkedSig)
         {
             LOG_PRINT_L1("Verify only the first signature");
-            //tpool.submit(&waiter, boost::bind(&Blockchain::check_ring_signature, this, std::cref(tx_prefix_hash), std::cref(in_to_key.k_image), std::cref(pubkeys[0]), std::cref(tx.signatures[0]), std::ref(results[sig_index])), true);
+            // TODO: We don't need the thread handling for now, since we will just verify 1 signature, this will just cause racing conditions.
+            // we need results right away.
             check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[sig_index]);
+
             // A bit dirty, but an effective hack since we will just be verifying one sig, if the check is true, all
             // sig_index should have a true value.
             if(results[0] == 1)
@@ -2985,7 +2987,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
         check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[sig_index]);
         if(results[0] == 1)
         {
-            results[sig_index] = 1;
+            std::fill(results.begin(), results.end(), 1);
         }
         if (!results[sig_index])
         {
@@ -3005,11 +3007,6 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
     sig_index++;
   }
-
-  //if (tx.version == 1 && threads > 1)
-  //{
-  //    waiter.wait(&tpool);
-  //}
 
   if (tx.version == 1)
   {
