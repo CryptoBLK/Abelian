@@ -50,8 +50,8 @@
 namespace crypto {
 
   extern "C" {
-  #include "random.h"
   #include "dilithium/ref/api.h"
+  #include "dilithium/ref/rng.h"
   }
 
 #pragma pack(push, 1)
@@ -162,7 +162,7 @@ namespace crypto {
   /* Generate N random bytes
    */
   inline void rand(size_t _N, uint8_t *bytes) {
-    generate_random_bytes_thread_safe(_N, bytes);
+    dilithium_randombytes(bytes, _N);
   }
 
   /* Generate a value filled with random bytes.
@@ -170,7 +170,7 @@ namespace crypto {
   template<typename T>
   typename std::enable_if<std::is_pod<T>::value, T>::type rand() {
     typename std::remove_cv<T>::type res;
-    generate_random_bytes_thread_safe(sizeof(T), (uint8_t*)&res);
+    dilithium_randombytes((uint8_t *)&res, sizeof(T));
     return res;
   }
 

@@ -440,11 +440,12 @@ namespace cryptonote
   {
     crypto::public_key pub;
     crypto::secret_key sec;
+    crypto::rand_seed seed;
 
     static inline keypair generate(hw::device &hwdev)
     {
       keypair k;
-      hwdev.generate_keys(k.pub, k.sec);
+      k.seed = hwdev.generate_keys(k.pub, k.sec);
       return k;
     }
   };
