@@ -61,6 +61,7 @@ namespace crypto {
 
   extern "C" {
 #include "crypto-ops.h"
+#include "random.h"	  
   }
 
   const crypto::public_key null_pkey = crypto::public_key{};
@@ -86,7 +87,7 @@ namespace crypto {
   {
     static boost::mutex random_lock;
     boost::lock_guard<boost::mutex> lock(random_lock);
-    dilithium_randombytes(bytes, _N);
+    generate_random_bytes_not_thread_safe(_N, bytes);
   }
 
   static inline bool less32(const unsigned char *k0, const unsigned char *k1)
@@ -114,7 +115,7 @@ namespace crypto {
   }
   /* generate a random 32-byte (256-bit) integer and copy it to res */
   static inline void random_scalar(pq_seed &res) {
-      dilithium_randombytes((unsigned char*)res.data, 32U);
+  	random32_unbiased((unsigned char*)res.data);
   }
 
   void hash_to_scalar(const void *data, size_t length, ec_scalar &res) {
