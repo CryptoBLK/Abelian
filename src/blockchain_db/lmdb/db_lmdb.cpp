@@ -3191,6 +3191,7 @@ bool BlockchainLMDB::has_key_image(const crypto::key_image& img) const
   ret = (mdb_cursor_get(m_cur_spent_keys, (MDB_val *)&zerokval, &k, MDB_GET_BOTH) == 0);
 
   TXN_POSTFIX_RDONLY();
+  LOG_PRINT_L1("BlockchainLMDB:: ret = " << ret);
   return ret;
 }
 
