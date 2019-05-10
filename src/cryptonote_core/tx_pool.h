@@ -188,6 +188,8 @@ namespace cryptonote
      */
     void lock() const;
 
+    bool try_lock() const;
+
     /**
      * @brief unlocks the transaction pool
      */
@@ -501,7 +503,7 @@ namespace cryptonote
      *
      * @return false if any append fails, otherwise true
      */
-    static bool append_key_images(std::unordered_set<crypto::key_image>& kic, const transaction& tx);
+    static bool append_key_images(std::vector<crypto::key_image>& kic, const transaction& tx);
 
     /**
      * @brief check if a transaction is a valid candidate for inclusion in a block
