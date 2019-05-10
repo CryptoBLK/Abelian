@@ -44,12 +44,6 @@ message(STATUS "CMake version ${CMAKE_VERSION}")
 
 project(abelian)
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-
-set(CMAKE_CXX_STANDARD  14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 enable_language(C ASM)
 
 function (die msg)
@@ -342,13 +336,15 @@ if(STATIC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DZMQ_STATIC")
 endif()
 
+set(SANITIZE true)
+
 if(SANITIZE)
   if (MSVC)
     message(FATAL_ERROR "Cannot sanitize with MSVC")
   else()
     message(STATUS "Using ASAN")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=thread -g")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=thread -g")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address -fsanitize-recover=address -g")
   endif()
 endif()
 
@@ -674,8 +670,8 @@ else()
   if (NOT WIN32)
     add_c_flag_if_supported(-fcf-protection=full C_SECURITY_FLAGS)
     add_cxx_flag_if_supported(-fcf-protection=full CXX_SECURITY_FLAGS)
-    add_c_flag_if_supported(-fstack-clash-protection C_SECURITY_FLAGS)
-    add_cxx_flag_if_supported(-fstack-clash-protection CXX_SECURITY_FLAGS)
+    add_c_flag_if_supported(-fno-stack-clash-protection C_SECURITY_FLAGS)
+    add_cxx_flag_if_supported(-fno-stack-clash-protection CXX_SECURITY_FLAGS)
   endif()
 
   # Removed in GCC 9.1 (or before ?), but still accepted, so spams the output
