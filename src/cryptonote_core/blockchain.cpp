@@ -1263,6 +1263,7 @@ bool Blockchain::create_block_template(block& b, const account_public_address& m
 
   m_tx_pool.lock();
   const auto txpool_unlocker = epee::misc_utils::create_scope_leave_handler([&]() { m_tx_pool.unlock(); });
+
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
   height = m_db->height();
@@ -2653,10 +2654,8 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
   std::vector < uint64_t > results;
   results.resize(tx.vin.size(), 0);
 
-  tools::threadpool& tpool = tools::threadpool::getInstance();
-  tools::threadpool::waiter waiter;
-  const auto waiter_guard = epee::misc_utils::create_scope_leave_handler([&]() { waiter.wait(&tpool); });
-  int threads = tpool.get_max_concurrency();
+  // Removed handling for multiple threads.
+  int threads = 1;
   bool checkedSig = false;
   for (const auto& txin : tx.vin)
   {
@@ -2738,11 +2737,23 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
       }
       else
       {
-        check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[sig_index]);
-        if(results[0] == 1)
+        LOG_PRINT_L1("Single threaded");
+        if (!checkedSig)
         {
-            std::fill(results.begin(), results.end(), 1);
+          LOG_PRINT_L1("Verify only the first signature");
+          // TODO: We don't need the thread handling for now, since we will just verify 1 signature, this will just cause racing conditions.
+          // we need results right away.
+          check_ring_signature(tx_prefix_hash, in_to_key.k_image, pubkeys[0], tx.signatures[0], results[sig_index]);
+
+          // A bit dirty, but an effective hack since we will just be verifying one sig, if the check is true, all
+          // sig_index should have a true value.
+          if(results[0] == 1)
+          {
+              std::fill(results.begin(), results.end(), 1);
+          }
+          checkedSig = true;
         }
+
         if (!results[sig_index])
         {
           it->second[in_to_key.k_image] = false;
@@ -2767,7 +2778,6 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
     if (threads > 1)
     {
       // save results to table, passed or otherwise
-      // Check only the first signature in the list
       bool failed = false;
       for (size_t i = 0; i < tx.vin.size(); i++)
       {
