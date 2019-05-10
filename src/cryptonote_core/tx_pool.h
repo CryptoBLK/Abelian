@@ -189,6 +189,8 @@ namespace cryptonote
      */
     void lock() const;
 
+    bool try_lock() const;
+
     /**
      * @brief unlocks the transaction pool
      */
@@ -500,10 +502,12 @@ namespace cryptonote
      *
      * @param kic the set of key images to append to
      * @param tx the transaction
+     * 
+     * FYI revert to unordered set when SALRS comes
      *
      * @return false if any append fails, otherwise true
      */
-    static bool append_key_images(std::unordered_set<crypto::key_image>& kic, const transaction_prefix& tx);
+    static bool append_key_images(std::vector<crypto::key_image>& kic, const transaction& tx);
 
     /**
      * @brief check if a transaction is a valid candidate for inclusion in a block

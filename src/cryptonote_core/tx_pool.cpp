@@ -960,6 +960,7 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::have_tx_keyimges_as_spent(const transaction& tx) const
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
     for(const auto& in: tx.vin)
@@ -973,6 +974,7 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::have_tx_keyimg_as_spent(const crypto::key_image& key_im) const
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     CRITICAL_REGION_LOCAL(m_transactions_lock);
 //    return m_spent_key_images.end() != m_spent_key_images.find(key_im);
 //    TODO: Not needed for now, but let it run anyway.
@@ -987,6 +989,11 @@ namespace cryptonote
   void tx_memory_pool::unlock() const
   {
     m_transactions_lock.unlock();
+  }
+  //---------------------------------------------------------------------------------
+  bool tx_memory_pool::try_lock() const
+  {
+    return m_transactions_lock.tryLock();
   }
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::check_tx_inputs(const std::function<cryptonote::transaction&(void)> &get_tx, const crypto::hash &txid, uint64_t &max_used_block_height, crypto::hash &max_used_block_id, tx_verification_context &tvc, bool kept_by_block) const
@@ -1010,6 +1017,7 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::is_transaction_ready_to_go(txpool_tx_meta_t& txd, const crypto::hash &txid, const cryptonote::blobdata &txblob, transaction &tx) const
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     struct transction_parser
     {
       transction_parser(const cryptonote::blobdata &txblob, const crypto::hash &txid, transaction &tx): txblob(txblob), txid(txid), tx(tx), parsed(false) {}
@@ -1067,7 +1075,7 @@ namespace cryptonote
     //if we here, transaction seems valid, but, anyway, check for key_images collisions with blockchain, just to be sure
     if(m_blockchain.have_tx_keyimges_as_spent(lazy_tx()))
     {
-        //TODO Don't check key images just yet.
+      //TODO Don't check key images just yet.
       //txd.double_spend_seen = true;
       //return false;
     }
@@ -1078,6 +1086,7 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::have_key_images(const std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     for(size_t i = 0; i!= tx.vin.size(); i++)
     {
       CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_to_key, itk, false);
@@ -1087,21 +1096,22 @@ namespace cryptonote
     return false;
   }
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::append_key_images(std::unordered_set<crypto::key_image>& k_images, const transaction_prefix& tx)
+  bool tx_memory_pool::append_key_images(std::vector<crypto::key_image>& k_images, const transaction& tx)
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     // TODO: Experimental, instead of checking the Ki in set, try checking with RNG.
-    k_images.clear();
     for(size_t i = 0; i!= tx.vin.size(); i++)
     {
       CHECKED_GET_SPECIFIC_VARIANT(tx.vin[i], const txin_to_key, itk, false);
-      auto i_res = k_images.insert(itk.k_image);
-      CHECK_AND_ASSERT_MES(i_res.second, false, "internal error: key images pool cache - inserted duplicate image in set: " << itk.k_image);
+      k_images.emplace_back(itk.k_image);
+      LOG_PRINT_L1("Appending: ki: <" << itk.k_image <<">");
     }
     return true;
   }
   //---------------------------------------------------------------------------------
   void tx_memory_pool::mark_double_spend(const transaction &tx)
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
     bool changed = false;
@@ -1178,6 +1188,7 @@ namespace cryptonote
   //TODO: investigate whether boolean return is appropriate
   bool tx_memory_pool::fill_block_template(block &bl, size_t median_weight, uint64_t already_generated_coins, size_t &total_weight, uint64_t &fee, uint64_t &expected_reward, uint8_t version)
   {
+    LOG_PRINT_L1("tx_memory_pool::" << __func__);
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
 
@@ -1192,7 +1203,7 @@ namespace cryptonote
     size_t max_total_weight_pre_v5 = (130 * median_weight) / 100 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
     size_t max_total_weight_v5 = 2 * median_weight - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
     size_t max_total_weight = version >= 5 ? max_total_weight_v5 : max_total_weight_pre_v5;
-    std::unordered_set<crypto::key_image> k_images;
+    std::vector<crypto::key_image> k_images;
 
     LOG_PRINT_L2("Filling block template, median weight " << median_weight << ", " << m_txs_by_fee_and_receive_time.size() << " txes in the pool");
 
@@ -1264,26 +1275,26 @@ namespace cryptonote
       }
       if (memcmp(&original_meta, &meta, sizeof(meta)))
       {
-        try
-	{
-	  m_blockchain.update_txpool_tx(sorted_it->second, meta);
-	}
-        catch (const std::exception &e)
-	{
-	  MERROR("Failed to update tx meta: " << e.what());
-	  // continue, not fatal
-	}
+          try
+          {
+              m_blockchain.update_txpool_tx(sorted_it->second, meta);
+          }
+          catch (const std::exception &e)
+          {
+              MERROR("Failed to update tx meta: " << e.what());
+              // continue, not fatal
+          }
       }
       if (!ready)
       {
         LOG_PRINT_L2("  not ready to go");
         continue;
       }
-      if (have_key_images(k_images, tx))
+      /*if (have_key_images(k_images, tx))
       {
         LOG_PRINT_L2("  key images already seen");
         continue;
-      }
+      }*/
 
       bl.tx_hashes.push_back(sorted_it->second);
       total_weight += meta.weight;
