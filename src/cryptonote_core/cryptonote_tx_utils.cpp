@@ -496,10 +496,8 @@ namespace cryptonote
         tx.signatures.push_back(std::vector<crypto::signature>());
         std::vector<crypto::signature>& sigs = tx.signatures.back();
         sigs.resize(src_entr.outputs.size());
-        //sigs.resize(src_entr.real_output);
-        //tx.signatures.resize(src_entr.real_output);
         LOG_PRINT_L1("Outputs: " << src_entr.real_output <<" Fake: "<<src_entr.outputs.size());
-        if (!zero_secret_key && !alreadySigned)
+        if (!zero_secret_key)
         {
             // Dilithium - signature
             crypto::public_key k_i;
@@ -509,7 +507,6 @@ namespace cryptonote
             std::memcpy(&sec, &sender_account_keys.m_spend_secret_key, CRYPTO_SECRETKEYBYTES);
 
             crypto::generate_signature(tx_prefix_hash, k_i, sec, *sigs.data());
-            alreadySigned = true;
         }
         ss_ring_s << "signatures:" << ENDL;
         std::for_each(sigs.begin(), sigs.end(), [&](const crypto::signature& s){ss_ring_s << s << ENDL;});
