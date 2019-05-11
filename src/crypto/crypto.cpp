@@ -219,7 +219,7 @@ namespace crypto {
   void crypto_ops::generate_signature(const hash &prefix_hash, const public_key &pub, const secret_key &sec, signature &sig) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
 
-    uint64_t signatureLen{};
+    unsigned long long signatureLen = 0L;
     auto result = crypto_sign_dilithium((unsigned char*)&sig, &signatureLen, (unsigned char *)&prefix_hash, sizeof(prefix_hash), &sec);
     assert(result == 0);
   }
@@ -227,7 +227,7 @@ namespace crypto {
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
     LOG_PRINT_L1("crypto_ops " << __func__);
 
-    uint64_t mLen{};
+    unsigned long long mLen = 0L;
     unsigned char m[HASH_SIZE + CRYPTO_BYTES];
     auto result = crypto_sign_dilithium_open(m, &mLen, (unsigned char *)&sig, sizeof(sig), &pub);
     assert(result == 0);
