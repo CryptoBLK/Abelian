@@ -219,24 +219,20 @@ namespace crypto {
 // Dilithium Signature - crypto_sign
   void crypto_ops::generate_signature(const hash &prefix_hash, const public_key &pub, const secret_key &sec, signature &sig) {
     LOG_PRINT_L1("crypto_ops " <<__func__);
-    unsigned long long signatureLen = sizeof(sig);
-    LOG_PRINT_L1("::generate_signature size: " << signatureLen << "message length: " << sizeof(prefix_hash));
-    auto result = crypto_sign_dilithium((unsigned char *)&sig, &signatureLen, (unsigned char *)&prefix_hash, sizeof(prefix_hash), &sec);
 
-    // Try logging here!
-    LOG_PRINT_L1("::generate signature result = " << result);
-
+    uint64_t signatureLen{};
+    auto result = crypto_sign_dilithium((unsigned char*)&sig, &signatureLen, (unsigned char *)&prefix_hash, sizeof(prefix_hash), &sec);
     assert(result == 0);
   }
 // Dilithium Signature - crypto_open
   bool crypto_ops::check_signature(const hash &prefix_hash, const public_key &pub, const signature &sig) {
     LOG_PRINT_L1("crypto_ops " << __func__);
 
-    unsigned long long len = sizeof(prefix_hash);
-    auto result = crypto_sign_dilithium_open((unsigned char *)&prefix_hash, &len, (unsigned char *)&sig, sizeof(sig), &pub);
+    uint64_t mLen{};
+    unsigned char m[HASH_SIZE + CRYPTO_BYTES];
+    auto result = crypto_sign_dilithium_open(m, &mLen, (unsigned char *)&sig, sizeof(sig), &pub);
     assert(result == 0);
 
-    LOG_PRINT_L1("::check_signature result = " <<result);
     return result == 0 ? true : false;
   }
 
