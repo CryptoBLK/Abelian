@@ -340,7 +340,7 @@ namespace cryptonote
       //  return false;
       //}
 
-      std::memcpy(&in_ephemeral.pub, &src_entr.outputs[src_entr.real_output].second.dest, CRYPTO_PUBLICKEYBYTES);
+      std::memcpy(&in_ephemeral.pub, &src_entr.outputs[src_entr.real_output].second.dest, 32U);
       //check that derivated key is equal with real output key (if non multisig)
       if(!msout && !(in_ephemeral.pub == src_entr.outputs[src_entr.real_output].second.dest) )
       {
