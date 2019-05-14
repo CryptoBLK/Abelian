@@ -449,8 +449,8 @@ namespace nodetool
     if (nettype == cryptonote::TESTNET)
     {
       full_addrs.insert("172.104.34.62:28080");
-      /*full_addrs.insert("5.9.100.248:28080");
-      full_addrs.insert("163.172.182.165:28080");
+      full_addrs.insert("52.231.154.241:28080");
+      /*full_addrs.insert("163.172.182.165:28080");
       full_addrs.insert("195.154.123.123:28080");
       full_addrs.insert("212.83.172.165:28080");*/
     }
