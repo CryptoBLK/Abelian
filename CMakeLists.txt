@@ -330,7 +330,7 @@ if(STATIC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DZMQ_STATIC")
 endif()
 
-set(SANITIZE true)
+set(SANITIZE false)
 
 if(SANITIZE)
   if (MSVC)
