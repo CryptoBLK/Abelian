@@ -245,7 +245,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 enable_testing()
 
 option(BUILD_DOCUMENTATION "Build the Doxygen documentation." ON)
-option(BUILD_TESTS "Build tests." OFF)
+option(BUILD_TESTS "Build tests." ON)
 
 # Check whether we're on a 32-bit or 64-bit system
 if(CMAKE_SIZEOF_VOID_P EQUAL "8")
@@ -335,8 +335,6 @@ if(STATIC)
   endif()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DZMQ_STATIC")
 endif()
-
-set(SANITIZE false)
 
 if(SANITIZE)
   if (MSVC)

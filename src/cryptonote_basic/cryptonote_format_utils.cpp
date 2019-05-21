@@ -934,15 +934,15 @@ namespace cryptonote
     switch (decimal_point)
     {
       case 12:
-        return "monero";
+        return "abelian";
       case 9:
-        return "millinero";
+        return "millibelian";
       case 6:
-        return "micronero";
+        return "microbelian";
       case 3:
-        return "nanonero";
+        return "nanobelian";
       case 0:
-        return "piconero";
+        return "picobelian";
       default:
         ASSERT_MES_AND_THROW("Invalid decimal point specification: " << decimal_point);
     }
@@ -1147,7 +1147,9 @@ namespace cryptonote
   //---------------------------------------------------------------
   blobdata get_block_hashing_blob(const block& b)
   {
-    blobdata blob = t_serializable_object_to_blob(static_cast<block_header>(b));
+    //Readable code!
+    auto header = static_cast<block_header>(b);
+    blobdata blob = t_serializable_object_to_blob(header);
     crypto::hash tree_root_hash = get_tx_tree_hash(b);
     blob.append(reinterpret_cast<const char*>(&tree_root_hash), sizeof(tree_root_hash));
     blob.append(tools::get_varint_data(b.tx_hashes.size()+1));
