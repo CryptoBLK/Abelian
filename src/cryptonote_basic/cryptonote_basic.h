@@ -171,8 +171,6 @@ namespace cryptonote
     // tx information
     size_t   version;
     uint64_t unlock_time;  //number of block (or time), used as a limitation like: spend this tx not early then block/time
-// Create a random ID
-// Miner's tx and receive the reward
     std::vector<txin_v> vin;
     std::vector<tx_out> vout;
     //extra
