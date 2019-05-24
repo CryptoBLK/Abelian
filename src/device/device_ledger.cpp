@@ -1248,6 +1248,11 @@ namespace hw {
         return true;
     }
 
+    bool device_ledger::open_tx(crypto::secret_key &tx_key, crypto::public_key &tx_pub_key) {
+        // TODO: Create Ledger implementation
+        return true;
+    }
+
     bool device_ledger::encrypt_payment_id(crypto::hash8 &payment_id, const crypto::public_key &public_key, const crypto::secret_key &secret_key) {
         AUTO_LOCK_CMD();
 

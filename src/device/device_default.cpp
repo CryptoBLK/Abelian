@@ -292,6 +292,13 @@ namespace hw {
             return true;
         }
 
+        bool device_default::open_tx(crypto::secret_key &tx_key, crypto::public_key &tx_pub_key) {
+            cryptonote::keypair txkey = cryptonote::keypair::generate(*this);
+            tx_key = txkey.sec;
+            tx_pub_key = txkey.pub;
+            return true;
+        }
+
         bool device_default::generate_output_ephemeral_keys(const size_t tx_version,
                                                             const cryptonote::account_keys &sender_account_keys, const crypto::public_key &txkey_pub,  const crypto::secret_key &tx_key,
                                                             const cryptonote::tx_destination_entry &dst_entr, const boost::optional<cryptonote::account_public_address> &change_addr, const size_t output_index,
