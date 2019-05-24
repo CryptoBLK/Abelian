@@ -7321,8 +7321,9 @@ void wallet2::transfer_selected(const std::vector<cryptonote::tx_destination_ent
     {
       tx_output_entry oe;
       oe.first = std::get<0>(outs[out_index][n]);
-      oe.second.dest = rct::pk2rct(std::get<1>(outs[out_index][n]));
-      oe.second.mask = std::get<2>(outs[out_index][n]);
+      //oe.second = rct::pk2rct(std::get<1>(outs[out_index][n]));
+      //oe.second.mask = std::get<2>(outs[out_index][n]);
+      oe.second = std::get<1>(outs[out_index][n]);
 
       src.outputs.push_back(oe);
       ++i;
@@ -7338,8 +7339,9 @@ void wallet2::transfer_selected(const std::vector<cryptonote::tx_destination_ent
 
     tx_output_entry real_oe;
     real_oe.first = td.m_global_output_index;
-    real_oe.second.dest = rct::pk2rct(boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key);
-    real_oe.second.mask = rct::commit(td.amount(), td.m_mask);
+    //real_oe.second.dest = rct::pk2rct(boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key);
+    real_oe.second = boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key;
+    //real_oe.second.mask = rct::commit(td.amount(), td.m_mask);
     *it_to_replace = real_oe;
     src.real_out_tx_key = get_tx_pub_key_from_extra(td.m_tx, td.m_pk_index);
     src.real_out_additional_tx_keys = get_additional_tx_pub_keys_from_extra(td.m_tx);
@@ -7514,8 +7516,9 @@ void wallet2::transfer_selected_rct(std::vector<cryptonote::tx_destination_entry
     {
       tx_output_entry oe;
       oe.first = std::get<0>(outs[out_index][n]);
-      oe.second.dest = rct::pk2rct(std::get<1>(outs[out_index][n]));
-      oe.second.mask = std::get<2>(outs[out_index][n]);
+      //oe.second.dest = rct::pk2rct(std::get<1>(outs[out_index][n]));
+      oe.second = std::get<1>(outs[out_index][n]);
+      //oe.second.mask = std::get<2>(outs[out_index][n]);
       src.outputs.push_back(oe);
     }
     ++i;
@@ -7530,8 +7533,9 @@ void wallet2::transfer_selected_rct(std::vector<cryptonote::tx_destination_entry
 
     tx_output_entry real_oe;
     real_oe.first = td.m_global_output_index;
-    real_oe.second.dest = rct::pk2rct(td.get_public_key());
-    real_oe.second.mask = rct::commit(td.amount(), td.m_mask);
+    //real_oe.second.dest = rct::pk2rct(td.get_public_key());
+    real_oe.second = td.get_public_key();
+    //real_oe.second.mask = rct::commit(td.amount(), td.m_mask);
     *it_to_replace = real_oe;
     src.real_out_tx_key = get_tx_pub_key_from_extra(td.m_tx, td.m_pk_index);
     src.real_out_additional_tx_keys = get_additional_tx_pub_keys_from_extra(td.m_tx);
@@ -7594,7 +7598,7 @@ void wallet2::transfer_selected_rct(std::vector<cryptonote::tx_destination_entry
     {
       THROW_WALLET_EXCEPTION_IF((size_t)sources_copy[idx].real_output >= sources_copy[idx].outputs.size(),
           error::wallet_internal_error, "Invalid real_output");
-      if (sources_copy[idx].outputs[sources_copy[idx].real_output].second.dest == sources[n].outputs[sources[n].real_output].second.dest)
+      if (sources_copy[idx].outputs[sources_copy[idx].real_output].second == sources[n].outputs[sources[n].real_output].second)
         ins_order.push_back(idx);
     }
   }
