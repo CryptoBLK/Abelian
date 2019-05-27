@@ -641,12 +641,20 @@ namespace cryptonote
 
           //Dilithium change
           std::memcpy(&img, &sender_account_keys.m_account_address.m_spend_public_key, CRYPTO_PUBLICKEYBYTES);
-          //const auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second.dest);
+          const auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second);
           //if(!generate_key_image_helper(sender_account_keys, subaddresses, out_key, src_entr.real_out_tx_key, src_entr.real_out_additional_tx_keys, src_entr.real_output_in_tx_index, in_ephemeral,img, hwdev))
           //{
           //  LOG_ERROR("Key image generation failed!");
           //  return false;
           //}
+
+          // From Hydrogen Helix, Point Release 4
+          if(!generate_key_image_helper(sender_account_keys, src_entr.real_out_tx_key, src_entr.real_output_in_tx_index, in_ephemeral, img))
+          {
+            LOG_ERROR("Key image generation failed!");
+            return false;
+          }
+
 
           std::memcpy(&in_ephemeral.pub, &src_entr.outputs[src_entr.real_output].second, CRYPTO_PUBLICKEYBYTES);
           //check that derivated key is equal with real output key (if non multisig)
