@@ -1652,7 +1652,7 @@ void wallet2::scan_output(const cryptonote::transaction &tx, bool miner_tx, cons
   }
 
   // Add random number generator from tx
-  tx_scan_info.random = boost::get<cryptonote::txout_to_randid>(tx.vout[i].random).rng;
+  tx_scan_info.random = boost::get<crypto::pq_seed>(tx.vout[i].random);
 
   THROW_WALLET_EXCEPTION_IF(std::find(outs.begin(), outs.end(), i) != outs.end(), error::wallet_internal_error, "Same output cannot be added twice");
   outs.push_back(i);

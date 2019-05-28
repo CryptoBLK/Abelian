@@ -157,13 +157,10 @@ namespace cryptonote
       txout_to_key tk;
       tk.key = out_eph_public_key;
 
-      txout_to_randid rng;
-      dilithium_randombytes((unsigned char *)&rng.rng, 32U);
-
       tx_out out;
       summary_amounts += out.amount = out_amounts[no];
       out.target = tk;
-      out.random = rng;
+      dilithium_randombytes((unsigned char *)&out.random, 32U);
       tx.vout.push_back(out);
     }
 
@@ -430,10 +427,8 @@ namespace cryptonote
       out.amount = dst_entr.amount;
       txout_to_key tk;
       tk.key = out_eph_public_key;
-      txout_to_randid rng;
-      dilithium_randombytes((unsigned char *)&rng.rng, 32U);
       out.target = tk;
-      out.random = rng;
+      dilithium_randombytes((unsigned char *)&out.random, 32U);
       tx.vout.push_back(out);
       output_index++;
       summary_outs_money += dst_entr.amount;
@@ -756,10 +751,8 @@ namespace cryptonote
           out.amount = dst_entr.amount;
           txout_to_key tk;
           tk.key = out_eph_public_key;
-          txout_to_randid rng;
-          dilithium_randombytes((unsigned char *)&rng.rng, 32U);
           out.target = tk;
-          out.random = rng;
+          dilithium_randombytes((unsigned char *)&out.random, 32U);
           tx.vout.push_back(out);
           output_index++;
           summary_outs_money += dst_entr.amount;

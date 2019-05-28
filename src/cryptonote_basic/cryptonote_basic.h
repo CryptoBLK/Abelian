@@ -80,14 +80,6 @@ namespace cryptonote
     crypto::public_key key;
   };
 
-  struct txout_to_randid
-  {
-      explicit txout_to_randid() { }
-      explicit txout_to_randid(const crypto::pq_seed &_randID) : rng(_randID){ }
-      crypto::pq_seed rng;
-  };
-
-
   /* inputs */
 
   struct txin_gen
@@ -145,14 +137,12 @@ namespace cryptonote
 
   typedef boost::variant<txout_to_script, txout_to_scripthash, txout_to_key> txout_target_v;
 
-  typedef boost::variant<txout_to_randid> txout_rand;
-
   //typedef std::pair<uint64_t, txout> out_t;
   struct tx_out
   {
     uint64_t amount;
     txout_target_v target;
-    txout_rand random;
+    crypto::pq_seed random;
 
     BEGIN_SERIALIZE_OBJECT()
       VARINT_FIELD(amount)
@@ -501,7 +491,6 @@ namespace std {
 }
 
 BLOB_SERIALIZER(cryptonote::txout_to_key);
-BLOB_SERIALIZER(cryptonote::txout_to_randid);
 BLOB_SERIALIZER(cryptonote::txout_to_scripthash);
 
 VARIANT_TAG(binary_archive, cryptonote::txin_gen, 0xff);
@@ -511,7 +500,6 @@ VARIANT_TAG(binary_archive, cryptonote::txin_to_key, 0x2);
 VARIANT_TAG(binary_archive, cryptonote::txout_to_script, 0x0);
 VARIANT_TAG(binary_archive, cryptonote::txout_to_scripthash, 0x1);
 VARIANT_TAG(binary_archive, cryptonote::txout_to_key, 0x2);
-VARIANT_TAG(binary_archive, cryptonote::txout_to_randid, 0x3);
 VARIANT_TAG(binary_archive, cryptonote::transaction, 0xcc);
 VARIANT_TAG(binary_archive, cryptonote::block, 0xbb);
 
@@ -522,7 +510,6 @@ VARIANT_TAG(json_archive, cryptonote::txin_to_key, "key");
 VARIANT_TAG(json_archive, cryptonote::txout_to_script, "script");
 VARIANT_TAG(json_archive, cryptonote::txout_to_scripthash, "scripthash");
 VARIANT_TAG(json_archive, cryptonote::txout_to_key, "key");
-VARIANT_TAG(json_archive, cryptonote::txout_to_randid, "rng");
 VARIANT_TAG(json_archive, cryptonote::transaction, "tx");
 VARIANT_TAG(json_archive, cryptonote::block, "block");
 
@@ -533,6 +520,5 @@ VARIANT_TAG(debug_archive, cryptonote::txin_to_key, "key");
 VARIANT_TAG(debug_archive, cryptonote::txout_to_script, "script");
 VARIANT_TAG(debug_archive, cryptonote::txout_to_scripthash, "scripthash");
 VARIANT_TAG(debug_archive, cryptonote::txout_to_key, "key");
-VARIANT_TAG(debug_archive, cryptonote::txout_to_randid, "rng");
 VARIANT_TAG(debug_archive, cryptonote::transaction, "tx");
 VARIANT_TAG(debug_archive, cryptonote::block, "block");
