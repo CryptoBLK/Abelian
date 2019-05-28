@@ -181,11 +181,6 @@ inline void toJsonValue(rapidjson::Document& doc, const long i, rapidjson::Value
 void fromJsonValue(const rapidjson::Value& val, long& i);
 
 // end integers
-
-//Serialization changes
-void toJsonValue(rapidjson::Document& doc, const cryptonote::txout_to_randid& txout, rapidjson::Value& val);
-void fromJsonValue(const rapidjson::Value& val, cryptonote::txout_to_randid& txout);
-
 void toJsonValue(rapidjson::Document& doc, const cryptonote::transaction& tx, rapidjson::Value& val);
 void fromJsonValue(const rapidjson::Value& val, cryptonote::transaction& tx);
 
