@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include "cpucycles.h"
 #include "speed.h"
-#include "../params.h"
-#include "../randombytes.h"
-#include "../poly.h"
+#include "params.h"
+#include "randombytes.h"
+#include "poly.h"
 
 #define NTESTS 1000
 

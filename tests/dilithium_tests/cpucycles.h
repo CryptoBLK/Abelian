@@ -1,7 +1,7 @@
 #ifndef CPUCYCLES_H
 #define CPUCYCLES_H
 
-#include "../config.h"
+#include "config.h"
 
 #ifdef DBENCH
 #define DBENCH_START() unsigned long long time = cpucycles_start()

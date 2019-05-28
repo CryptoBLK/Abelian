@@ -1,10 +1,10 @@
 #include <stdio.h>
-#include "../params.h"
-#include "../sign.h"
-#include "../poly.h"
-#include "../polyvec.h"
-#include "../packing.h"
-#include "../rng.h"
+#include "params.h"
+#include "sign.h"
+#include "poly.h"
+#include "polyvec.h"
+#include "packing.h"
+#include "rng.h"
 
 #define NVECTORS 1000
 
@@ -25,7 +25,7 @@ int main(void) {
   for(i = 0; i < NVECTORS; ++i) {
     printf("count = %u\n", i);
 
-    randombytes(seed, sizeof(seed));
+    dilithium_randombytes(seed, sizeof(seed));
     printf("seed = ");
     for(j = 0; j < sizeof(seed); ++j)
       printf("%.2hhX", seed[j]);

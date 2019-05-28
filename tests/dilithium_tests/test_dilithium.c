@@ -2,9 +2,9 @@
 #include <string.h>
 #include "cpucycles.h"
 #include "speed.h"
-#include "../randombytes.h"
-#include "../params.h"
-#include "../sign.h"
+#include "randombytes.h"
+#include "params.h"
+#include "sign.h"
 
 #define MLEN 59
 #define NTESTS 1000
@@ -25,6 +25,10 @@ int main(void)
   unsigned char pk[CRYPTO_PUBLICKEYBYTES];
   unsigned char sk[CRYPTO_SECRETKEYBYTES];
   unsigned long long tkeygen[NTESTS], tsign[NTESTS], tverify[NTESTS];
+
+  unsigned char seed[CRHBYTES];
+  randombytes(seed, sizeof(seed));
+
 #ifdef DBENCH
   unsigned long long t[7][NTESTS], dummy;
 
@@ -38,7 +42,7 @@ int main(void)
     randombytes(m, MLEN);
 
     tkeygen[i] = cpucycles_start();
-    crypto_sign_keypair(pk, sk);
+    crypto_sign_dilithium_keypair(pk, sk, seed);
     tkeygen[i] = cpucycles_stop() - tkeygen[i] - timing_overhead;
 
 #ifdef DBENCH
@@ -52,7 +56,7 @@ int main(void)
 #endif
 
     tsign[i] = cpucycles_start();
-    crypto_sign(sm, &smlen, m, MLEN, sk);
+    crypto_sign_dilithium(sm, &smlen, m, MLEN, sk);
     tsign[i] = cpucycles_stop() - tsign[i] - timing_overhead;
 
 #ifdef DBENCH
@@ -60,7 +64,7 @@ int main(void)
 #endif
 
     tverify[i] = cpucycles_start();
-    ret = crypto_sign_open(m2, &mlen, sm, smlen, pk);
+    ret = crypto_sign_dilithium_open(m2, &mlen, sm, smlen, pk);
     tverify[i] = cpucycles_stop() - tverify[i] - timing_overhead;
 
     if(ret) {
@@ -83,7 +87,7 @@ int main(void)
     randombytes((unsigned char *) &j, sizeof(j));
     randombytes(m2, 1);
     sm[j % CRYPTO_BYTES] += 1 + (m2[0] % 255);
-    ret = crypto_sign_open(m2, &mlen, sm, smlen, pk);
+    ret = crypto_sign_dilithium_open(m2, &mlen, sm, smlen, pk);
     if(!ret) {
       printf("Trivial forgeries possible\n");
       return -1;
