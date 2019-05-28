@@ -34,13 +34,12 @@ TEST(account, encrypt_keys)
 {
   cryptonote::keypair recovery_key = cryptonote::keypair::generate(hw::get_device("default"));
   cryptonote::account_base account;
-  crypto::rand_seed key = crypto::rand_seed();//account.generate(recovery_key);
+  crypto::rand_seed key = account.generate(recovery_key.seed);
   const cryptonote::account_keys keys = account.get_keys();
 
   ASSERT_EQ(account.get_keys().m_account_address, keys.m_account_address);
-  ASSERT_EQ(account.get_keys().m_spend_secret_key, keys.m_spend_secret_key);
-  ASSERT_EQ(account.get_keys().m_view_secret_key, keys.m_view_secret_key);
-  ASSERT_EQ(account.get_keys().m_multisig_keys, keys.m_multisig_keys);
+  ASSERT_STREQ(account.get_keys().m_spend_secret_key.data, keys.m_spend_secret_key.data);
+  ASSERT_STREQ(account.get_keys().m_view_secret_key.data, keys.m_view_secret_key.data);
 
   crypto::chacha_key chacha_key;
   crypto::generate_chacha_key(&recovery_key, sizeof(recovery_key), chacha_key, 1);
@@ -48,24 +47,25 @@ TEST(account, encrypt_keys)
   account.encrypt_keys(chacha_key);
 
   ASSERT_EQ(account.get_keys().m_account_address, keys.m_account_address);
-  ASSERT_NE(account.get_keys().m_spend_secret_key, keys.m_spend_secret_key);
-  ASSERT_NE(account.get_keys().m_view_secret_key, keys.m_view_secret_key);
+  ASSERT_STRNE(account.get_keys().m_spend_secret_key.data, keys.m_spend_secret_key.data);
+  ASSERT_STRNE(account.get_keys().m_view_secret_key.data, keys.m_view_secret_key.data);
+
 
   account.decrypt_viewkey(chacha_key);
 
   ASSERT_EQ(account.get_keys().m_account_address, keys.m_account_address);
-  ASSERT_NE(account.get_keys().m_spend_secret_key, keys.m_spend_secret_key);
-  ASSERT_EQ(account.get_keys().m_view_secret_key, keys.m_view_secret_key);
+  ASSERT_STRNE(account.get_keys().m_spend_secret_key.data, keys.m_spend_secret_key.data);
+  ASSERT_STREQ(account.get_keys().m_view_secret_key.data, keys.m_view_secret_key.data);
 
   account.encrypt_viewkey(chacha_key);
 
   ASSERT_EQ(account.get_keys().m_account_address, keys.m_account_address);
-  ASSERT_NE(account.get_keys().m_spend_secret_key, keys.m_spend_secret_key);
-  ASSERT_NE(account.get_keys().m_view_secret_key, keys.m_view_secret_key);
+  ASSERT_STRNE(account.get_keys().m_spend_secret_key.data, keys.m_spend_secret_key.data);
+  ASSERT_STRNE(account.get_keys().m_view_secret_key.data, keys.m_view_secret_key.data);
 
   account.decrypt_keys(chacha_key);
 
   ASSERT_EQ(account.get_keys().m_account_address, keys.m_account_address);
-  ASSERT_EQ(account.get_keys().m_spend_secret_key, keys.m_spend_secret_key);
-  ASSERT_EQ(account.get_keys().m_view_secret_key, keys.m_view_secret_key);
+  ASSERT_STREQ(account.get_keys().m_spend_secret_key.data, keys.m_spend_secret_key.data);
+  ASSERT_STREQ(account.get_keys().m_view_secret_key.data, keys.m_view_secret_key.data);
 }

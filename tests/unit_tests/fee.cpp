@@ -58,6 +58,7 @@ namespace
   TEST_F(fee, 10xmr)
   {
     // CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2 and lower are clamped
+    std::cout << Blockchain::get_dynamic_base_fee(10000000000000, CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2, 3) << "  ==  " << clamp_fee(2000000000) << "\n";
     ASSERT_EQ(Blockchain::get_dynamic_base_fee(10000000000000, CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2, 3), clamp_fee(2000000000));
     ASSERT_EQ(Blockchain::get_dynamic_base_fee(10000000000000, CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2 / 2, 3), clamp_fee(2000000000));
     ASSERT_EQ(Blockchain::get_dynamic_base_fee(10000000000000, CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2 / 100, 3), clamp_fee(2000000000));

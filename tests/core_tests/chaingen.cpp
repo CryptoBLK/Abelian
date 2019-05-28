@@ -385,10 +385,8 @@ bool fill_output_entries(std::vector<output_index>& out_indices, size_t sender_o
     {
       rct::key comm = oi.commitment();
       const txout_to_key& otk = boost::get<txout_to_key>(oi.out);
-      output_entries.push_back(tx_source_entry::output_entry(oi.idx, rct::ctkey({rct::pk2rct(otk.key), comm})));
-    }
+      output_entries.push_back(tx_source_entry::output_entry(oi.idx, otk.key));
   }
-
   return 0 == rest && sender_out_found;
 }
 

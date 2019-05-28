@@ -36,7 +36,7 @@ set(core_tests_sources
   chaingen_main.cpp
   double_spend.cpp
   integer_overflow.cpp
-  multisig.cpp
+  #multisig.cpp
   ring_signature_1.cpp
   transaction_tests.cpp
   tx_validation.cpp
@@ -55,7 +55,7 @@ set(core_tests_headers
   double_spend.h
   double_spend.inl
   integer_overflow.h
-  multisig.h
+  #multisig.h
   ring_signature_1.h
   transaction_tests.h
   tx_validation.h
@@ -69,7 +69,7 @@ add_executable(core_tests
   ${core_tests_headers})
 target_link_libraries(core_tests
   PRIVATE
-    multisig
+    #multisig
     cryptonote_core
     p2p
     version

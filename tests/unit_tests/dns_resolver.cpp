@@ -74,7 +74,7 @@ TEST(DNSResolver, DNSSECSuccess)
 
   bool avail, valid;
 
-  auto ips = resolver.get_ipv4("example.com", avail, valid);
+  auto ips = resolver.get_ipv4("www.example.com", avail, valid);
 
   ASSERT_EQ(1, ips.size());
 

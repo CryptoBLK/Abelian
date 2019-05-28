@@ -53,57 +53,57 @@ using namespace crypto;
 
 struct Struct
 {
-  int32_t a;
-  int32_t b;
-  char blob[8];
+    int32_t a;
+    int32_t b;
+    char blob[8];
 };
 
 template <class Archive>
 struct serializer<Archive, Struct>
 {
-  static bool serialize(Archive &ar, Struct &s) {
-    ar.begin_object();
-    ar.tag("a");
-    ar.serialize_int(s.a);
-    ar.tag("b");
-    ar.serialize_int(s.b);
-    ar.tag("blob");
-    ar.serialize_blob(s.blob, sizeof(s.blob));
-    ar.end_object();
-    return true;
-  }
+    static bool serialize(Archive &ar, Struct &s) {
+        ar.begin_object();
+        ar.tag("a");
+        ar.serialize_int(s.a);
+        ar.tag("b");
+        ar.serialize_int(s.b);
+        ar.tag("blob");
+        ar.serialize_blob(s.blob, sizeof(s.blob));
+        ar.end_object();
+        return true;
+    }
 };
 
 struct Struct1
 {
-  vector<boost::variant<Struct, int32_t>> si;
-  vector<int16_t> vi;
+    vector<boost::variant<Struct, int32_t>> si;
+    vector<int16_t> vi;
 
-  BEGIN_SERIALIZE_OBJECT()
-    FIELD(si)
-    FIELD(vi)
-  END_SERIALIZE()
-  /*template <bool W, template <bool> class Archive>
-  bool do_serialize(Archive<W> &ar)
-  {
-    ar.begin_object();
-    ar.tag("si");
-    ::do_serialize(ar, si);
-    ar.tag("vi");
-    ::do_serialize(ar, vi);
-    ar.end_object();
-  }*/
+    BEGIN_SERIALIZE_OBJECT()
+        FIELD(si)
+        FIELD(vi)
+    END_SERIALIZE()
+    /*template <bool W, template <bool> class Archive>
+    bool do_serialize(Archive<W> &ar)
+    {
+      ar.begin_object();
+      ar.tag("si");
+      ::do_serialize(ar, si);
+      ar.tag("vi");
+      ::do_serialize(ar, vi);
+      ar.end_object();
+    }*/
 };
 
 struct Blob
 {
-  uint64_t a;
-  uint32_t b;
+    uint64_t a;
+    uint32_t b;
 
-  bool operator==(const Blob& rhs) const
-  {
-    return a == rhs.a;
-  }
+    bool operator==(const Blob& rhs) const
+    {
+        return a == rhs.a;
+    }
 };
 
 VARIANT_TAG(binary_archive, Struct, 0xe0);
@@ -118,190 +118,190 @@ BLOB_SERIALIZER(Blob);
 
 bool try_parse(const string &blob)
 {
-  Struct1 s1;
-  return serialization::parse_binary(blob, s1);
+    Struct1 s1;
+    return serialization::parse_binary(blob, s1);
 }
 
 TEST(Serialization, BinaryArchiveInts) {
-  uint64_t x = 0xff00000000, x1;
+    uint64_t x = 0xff00000000, x1;
 
-  ostringstream oss;
-  binary_archive<true> oar(oss);
-  oar.serialize_int(x);
-  ASSERT_TRUE(oss.good());
-  ASSERT_EQ(8, oss.str().size());
-  ASSERT_EQ(string("\0\0\0\0\xff\0\0\0", 8), oss.str());
+    ostringstream oss;
+    binary_archive<true> oar(oss);
+    oar.serialize_int(x);
+    ASSERT_TRUE(oss.good());
+    ASSERT_EQ(8, oss.str().size());
+    ASSERT_EQ(string("\0\0\0\0\xff\0\0\0", 8), oss.str());
 
-  istringstream iss(oss.str());
-  binary_archive<false> iar(iss);
-  iar.serialize_int(x1);
-  ASSERT_EQ(8, iss.tellg());
-  ASSERT_TRUE(iss.good());
+    istringstream iss(oss.str());
+    binary_archive<false> iar(iss);
+    iar.serialize_int(x1);
+    ASSERT_EQ(8, iss.tellg());
+    ASSERT_TRUE(iss.good());
 
-  ASSERT_EQ(x, x1);
+    ASSERT_EQ(x, x1);
 }
 
 TEST(Serialization, BinaryArchiveVarInts) {
-  uint64_t x = 0xff00000000, x1;
+    uint64_t x = 0xff00000000, x1;
 
-  ostringstream oss;
-  binary_archive<true> oar(oss);
-  oar.serialize_varint(x);
-  ASSERT_TRUE(oss.good());
-  ASSERT_EQ(6, oss.str().size());
-  ASSERT_EQ(string("\x80\x80\x80\x80\xF0\x1F", 6), oss.str());
+    ostringstream oss;
+    binary_archive<true> oar(oss);
+    oar.serialize_varint(x);
+    ASSERT_TRUE(oss.good());
+    ASSERT_EQ(6, oss.str().size());
+    ASSERT_EQ(string("\x80\x80\x80\x80\xF0\x1F", 6), oss.str());
 
-  istringstream iss(oss.str());
-  binary_archive<false> iar(iss);
-  iar.serialize_varint(x1);
-  ASSERT_TRUE(iss.good());
-  ASSERT_EQ(x, x1);
+    istringstream iss(oss.str());
+    binary_archive<false> iar(iss);
+    iar.serialize_varint(x1);
+    ASSERT_TRUE(iss.good());
+    ASSERT_EQ(x, x1);
 }
 
 TEST(Serialization, Test1) {
-  ostringstream str;
-  binary_archive<true> ar(str);
+    ostringstream str;
+    binary_archive<true> ar(str);
 
-  Struct1 s1;
-  s1.si.push_back(0);
-  {
-    Struct s;
-    s.a = 5;
-    s.b = 65539;
-    std::memcpy(s.blob, "12345678", 8);
-    s1.si.push_back(s);
-  }
-  s1.si.push_back(1);
-  s1.vi.push_back(10);
-  s1.vi.push_back(22);
+    Struct1 s1;
+    s1.si.push_back(0);
+    {
+        Struct s;
+        s.a = 5;
+        s.b = 65539;
+        std::memcpy(s.blob, "12345678", 8);
+        s1.si.push_back(s);
+    }
+    s1.si.push_back(1);
+    s1.vi.push_back(10);
+    s1.vi.push_back(22);
 
-  string blob;
-  ASSERT_TRUE(serialization::dump_binary(s1, blob));
-  ASSERT_TRUE(try_parse(blob));
+    string blob;
+    ASSERT_TRUE(serialization::dump_binary(s1, blob));
+    ASSERT_TRUE(try_parse(blob));
 
-  ASSERT_EQ('\xE0', blob[6]);
-  blob[6] = '\xE1';
-  ASSERT_FALSE(try_parse(blob));
-  blob[6] = '\xE2';
-  ASSERT_FALSE(try_parse(blob));
+    ASSERT_EQ('\xE0', blob[6]);
+    blob[6] = '\xE1';
+    ASSERT_FALSE(try_parse(blob));
+    blob[6] = '\xE2';
+    ASSERT_FALSE(try_parse(blob));
 }
 
 TEST(Serialization, Overflow) {
-  Blob x = { 0xff00000000 };
-  Blob x1;
+    Blob x = { 0xff00000000 };
+    Blob x1;
 
-  string blob;
-  ASSERT_TRUE(serialization::dump_binary(x, blob));
-  ASSERT_EQ(sizeof(Blob), blob.size());
+    string blob;
+    ASSERT_TRUE(serialization::dump_binary(x, blob));
+    ASSERT_EQ(sizeof(Blob), blob.size());
 
-  ASSERT_TRUE(serialization::parse_binary(blob, x1));
-  ASSERT_EQ(x, x1);
+    ASSERT_TRUE(serialization::parse_binary(blob, x1));
+    ASSERT_EQ(x, x1);
 
-  vector<Blob> bigvector;
-  ASSERT_FALSE(serialization::parse_binary(blob, bigvector));
-  ASSERT_EQ(0, bigvector.size());
+    vector<Blob> bigvector;
+    ASSERT_FALSE(serialization::parse_binary(blob, bigvector));
+    ASSERT_EQ(0, bigvector.size());
 }
 
 TEST(Serialization, serializes_vector_uint64_as_varint)
 {
-  std::vector<uint64_t> v;
-  string blob;
+    std::vector<uint64_t> v;
+    string blob;
 
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(1, blob.size());
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(1, blob.size());
 
-  // +1 byte
-  v.push_back(0);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(2, blob.size());
+    // +1 byte
+    v.push_back(0);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(2, blob.size());
 
-  // +1 byte
-  v.push_back(1);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(3, blob.size());
+    // +1 byte
+    v.push_back(1);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(3, blob.size());
 
-  // +2 bytes
-  v.push_back(0x80);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(5, blob.size());
+    // +2 bytes
+    v.push_back(0x80);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(5, blob.size());
 
-  // +2 bytes
-  v.push_back(0xFF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(7, blob.size());
+    // +2 bytes
+    v.push_back(0xFF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(7, blob.size());
 
-  // +2 bytes
-  v.push_back(0x3FFF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(9, blob.size());
+    // +2 bytes
+    v.push_back(0x3FFF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(9, blob.size());
 
-  // +3 bytes
-  v.push_back(0x40FF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(12, blob.size());
+    // +3 bytes
+    v.push_back(0x40FF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(12, blob.size());
 
-  // +10 bytes
-  v.push_back(0xFFFFFFFFFFFFFFFF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(22, blob.size());
+    // +10 bytes
+    v.push_back(0xFFFFFFFFFFFFFFFF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(22, blob.size());
 }
 
 TEST(Serialization, serializes_vector_int64_as_fixed_int)
 {
-  std::vector<int64_t> v;
-  string blob;
+    std::vector<int64_t> v;
+    string blob;
 
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(1, blob.size());
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(1, blob.size());
 
-  // +8 bytes
-  v.push_back(0);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(9, blob.size());
+    // +8 bytes
+    v.push_back(0);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(9, blob.size());
 
-  // +8 bytes
-  v.push_back(1);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(17, blob.size());
+    // +8 bytes
+    v.push_back(1);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(17, blob.size());
 
-  // +8 bytes
-  v.push_back(0x80);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(25, blob.size());
+    // +8 bytes
+    v.push_back(0x80);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(25, blob.size());
 
-  // +8 bytes
-  v.push_back(0xFF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(33, blob.size());
+    // +8 bytes
+    v.push_back(0xFF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(33, blob.size());
 
-  // +8 bytes
-  v.push_back(0x3FFF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(41, blob.size());
+    // +8 bytes
+    v.push_back(0x3FFF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(41, blob.size());
 
-  // +8 bytes
-  v.push_back(0x40FF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(49, blob.size());
+    // +8 bytes
+    v.push_back(0x40FF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(49, blob.size());
 
-  // +8 bytes
-  v.push_back(0xFFFFFFFFFFFFFFFF);
-  ASSERT_TRUE(serialization::dump_binary(v, blob));
-  ASSERT_EQ(57, blob.size());
+    // +8 bytes
+    v.push_back(0xFFFFFFFFFFFFFFFF);
+    ASSERT_TRUE(serialization::dump_binary(v, blob));
+    ASSERT_EQ(57, blob.size());
 }
 
 namespace
 {
-  template<typename T>
-  std::vector<T> linearize_vector2(const std::vector< std::vector<T> >& vec_vec)
-  {
-    std::vector<T> res;
-    BOOST_FOREACH(const auto& vec, vec_vec)
+    template<typename T>
+    std::vector<T> linearize_vector2(const std::vector< std::vector<T> >& vec_vec)
     {
-      res.insert(res.end(), vec.begin(), vec.end());
+        std::vector<T> res;
+        BOOST_FOREACH(const auto& vec, vec_vec)
+                    {
+                        res.insert(res.end(), vec.begin(), vec.end());
+                    }
+        return res;
     }
-    return res;
-  }
 }
 
 TEST(Serialization, serializes_transacion_signatures_correctly)

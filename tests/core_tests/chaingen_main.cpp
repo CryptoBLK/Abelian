@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 //    GENERATE_AND_PLAY(gen_v2_tx_unmixable_two);
     GENERATE_AND_PLAY(gen_v2_tx_dust);
 
-    GENERATE_AND_PLAY(gen_rct_tx_valid_from_pre_rct);
+/*    GENERATE_AND_PLAY(gen_rct_tx_valid_from_pre_rct);
     GENERATE_AND_PLAY(gen_rct_tx_valid_from_rct);
     GENERATE_AND_PLAY(gen_rct_tx_valid_from_mixed);
     GENERATE_AND_PLAY(gen_rct_tx_pre_rct_bad_real_dest);
@@ -251,7 +251,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_bp_tx_invalid_empty_proofs);
     GENERATE_AND_PLAY(gen_bp_tx_invalid_too_many_proofs);
     GENERATE_AND_PLAY(gen_bp_tx_invalid_wrong_amount);
-    GENERATE_AND_PLAY(gen_bp_tx_invalid_borromean_type);
+    GENERATE_AND_PLAY(gen_bp_tx_invalid_borromean_type);*/
 
     el::Level level = (failed_tests.empty() ? el::Level::Info : el::Level::Error);
     if (!list_tests)
