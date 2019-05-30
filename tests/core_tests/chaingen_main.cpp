@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   //set up logging options
   mlog_configure(mlog_get_default_log_path("core_tests.log"), true);
-  mlog_set_log_level(2);
+  mlog_set_log_level(4);
   
   po::options_description desc_options("Allowed options");
   command_line::add_arg(desc_options, command_line::arg_help);
@@ -97,16 +97,17 @@ int main(int argc, char* argv[])
   }
   else if (command_line::get_arg(vm, arg_generate_and_play_test_data))
   {
-    GENERATE_AND_PLAY(gen_simple_chain_001);
-    GENERATE_AND_PLAY(gen_simple_chain_split_1);
-    GENERATE_AND_PLAY(one_block);
-    GENERATE_AND_PLAY(gen_chain_switch_1);
-    GENERATE_AND_PLAY(gen_ring_signature_1);
-    GENERATE_AND_PLAY(gen_ring_signature_2);
+      GENERATE_AND_PLAY(gen_simple_chain_001);
+      //GENERATE_AND_PLAY(gen_block_reward);
+    //GENERATE_AND_PLAY(gen_simple_chain_split_1);
+    //GENERATE_AND_PLAY(one_block);
+    //GENERATE_AND_PLAY(gen_chain_switch_1);
+    //GENERATE_AND_PLAY(gen_ring_signature_1);
+    //GENERATE_AND_PLAY(gen_ring_signature_2);
     //GENERATE_AND_PLAY(gen_ring_signature_big); // Takes up to XXX hours (if CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW == 10)
 
     // Block verification tests
-    GENERATE_AND_PLAY(gen_block_big_major_version);
+    /*GENERATE_AND_PLAY(gen_block_big_major_version);
     GENERATE_AND_PLAY(gen_block_big_minor_version);
     GENERATE_AND_PLAY(gen_block_ts_not_checked);
     GENERATE_AND_PLAY(gen_block_ts_in_past);
@@ -175,7 +176,7 @@ int main(int argc, char* argv[])
 //    GENERATE_AND_PLAY(gen_v2_tx_unmixable_one);
 //    GENERATE_AND_PLAY(gen_v2_tx_unmixable_two);
     GENERATE_AND_PLAY(gen_v2_tx_dust);
-
+*/
 /*    GENERATE_AND_PLAY(gen_rct_tx_valid_from_pre_rct);
     GENERATE_AND_PLAY(gen_rct_tx_valid_from_rct);
     GENERATE_AND_PLAY(gen_rct_tx_valid_from_mixed);
