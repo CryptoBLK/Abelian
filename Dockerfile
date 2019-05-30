@@ -140,8 +140,8 @@ VOLUME /root/.bitmonero
 # monero-wallet-cli
 VOLUME /wallet
 
-EXPOSE 18080
-EXPOSE 18081
+EXPOSE 19090
+EXPOSE 19091
 
-ENTRYPOINT ["monerod", "--p2p-bind-ip=0.0.0.0", "--p2p-bind-port=18080", "--rpc-bind-ip=0.0.0.0", "--rpc-bind-port=18081", "--non-interactive", "--confirm-external-bind"]
+ENTRYPOINT ["monerod", "--p2p-bind-ip=0.0.0.0", "--p2p-bind-port=19090", "--rpc-bind-ip=0.0.0.0", "--rpc-bind-port=19091", "--non-interactive", "--confirm-external-bind"]
 
