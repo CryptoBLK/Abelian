@@ -262,6 +262,10 @@ if(NOT WIN32 AND NOT APPLE)
   message(STATUS "LINUX_DISTRO: " ${LINUX_DISTRO})
 endif()
 
+if(LINUX_DISTRO STREQUAL "openSUSE")
+  set(OPENSUSE TRUE)
+endif() 
+
 # Check if we're on FreeBSD so we can exclude the local miniupnpc (it should be installed from ports instead)
 # CMAKE_SYSTEM_NAME checks are commonly known, but specifically taken from libsdl's CMakeLists
 if(CMAKE_SYSTEM_NAME MATCHES "kFreeBSD.*|FreeBSD")
@@ -594,12 +598,8 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAG}")
 
   set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-unused-variable -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized")
-  if(NOT MINGW)
+  if(NOT MINGW AND NOT OPENSUSE)
     set(WARNINGS_AS_ERRORS_FLAG "-Werror")
-  endif()
-
-  if(DISTRO STREQUAL "openSUSE")
-    set(WARNINGS_AS_ERRORS_FLAG "")
   endif()
 
   if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
