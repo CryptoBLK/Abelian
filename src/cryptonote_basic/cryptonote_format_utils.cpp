@@ -247,6 +247,22 @@ namespace cryptonote
     return generate_key_image_helper_precomp(ack, out_key, subaddr_recv_info->derivation, real_output_index, subaddr_recv_info->index, in_ephemeral, ki, hwdev);
   }
   //---------------------------------------------------------------
+  // From Hydrogen Helix, Point Release 4
+  bool generate_key_image_helper(const account_keys& ack, const crypto::public_key& tx_public_key, size_t real_output_index, keypair& in_ephemeral, crypto::key_image& ki)
+  {
+      crypto::key_derivation recv_derivation = AUTO_VAL_INIT(recv_derivation);
+      bool r = crypto::generate_key_derivation(tx_public_key, ack.m_view_secret_key, recv_derivation);
+      CHECK_AND_ASSERT_MES(r, false, "key image helper: failed to generate_key_derivation(" << tx_public_key << ", " << ack.m_view_secret_key << ")");
+
+      r = crypto::derive_public_key(recv_derivation, real_output_index, ack.m_account_address.m_spend_public_key, in_ephemeral.pub);
+      CHECK_AND_ASSERT_MES(r, false, "key image helper: failed to derive_public_key(" << recv_derivation << ", " << real_output_index <<  ", " << ack.m_account_address.m_spend_public_key << ")");
+
+      crypto::derive_secret_key(recv_derivation, real_output_index, ack.m_spend_secret_key, in_ephemeral.sec);
+
+      crypto::generate_key_image(in_ephemeral.pub, in_ephemeral.sec, ki);
+      return true;
+  }
+  //---------------------------------------------------------------
   bool generate_key_image_helper_precomp(const account_keys& ack, const crypto::public_key& out_key, const crypto::key_derivation& recv_derivation, size_t real_output_index, const subaddress_index& received_index, keypair& in_ephemeral, crypto::key_image& ki, hw::device &hwdev)
   {
 	LOG_PRINT_L1("::generate_key_image_helper_precomp");
@@ -284,7 +300,7 @@ namespace cryptonote
         // when not in multisig, we know the full spend secret key, so the output pubkey can be obtained by scalarmultBase
         //CHECK_AND_ASSERT_MES(hwdev.secret_key_to_public_key(in_ephemeral.sec, in_ephemeral.pub), false, "Failed to derive public key"); TODO
         in_ephemeral.pub = out_key;
-	LOG_PRINT_L1("::generate_key_image_helper_precomp in_ephermal.pub = " << in_ephemeral.sec);
+	    LOG_PRINT_L1("::generate_key_image_helper_precomp in_ephermal.pub = " << in_ephemeral.sec);
       }
       else
       {
@@ -798,15 +814,15 @@ namespace cryptonote
     switch (std::atomic_load(&default_decimal_point))
     {
       case 12:
-        return "monero";
+        return "abelian";
       case 9:
-        return "millinero";
+        return "millibelian";
       case 6:
-        return "micronero";
+        return "microbelian";
       case 3:
-        return "nanonero";
+        return "nanobelian";
       case 0:
-        return "piconero";
+        return "picobelian";
       default:
         ASSERT_MES_AND_THROW("Invalid decimal point specification: " << default_decimal_point);
     }
@@ -989,7 +1005,9 @@ namespace cryptonote
   //---------------------------------------------------------------
   blobdata get_block_hashing_blob(const block& b)
   {
-    blobdata blob = t_serializable_object_to_blob(static_cast<block_header>(b));
+    //Readable code!
+    auto header = static_cast<block_header>(b);
+    blobdata blob = t_serializable_object_to_blob(header);
     crypto::hash tree_root_hash = get_tx_tree_hash(b);
     blob.append(reinterpret_cast<const char*>(&tree_root_hash), sizeof(tree_root_hash));
     blob.append(tools::get_varint_data(b.tx_hashes.size()+1));

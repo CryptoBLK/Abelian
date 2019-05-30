@@ -35,7 +35,7 @@ set(unit_tests_sources
   blockchain_db.cpp
   block_queue.cpp
   block_reward.cpp
-  bulletproofs.cpp
+  #bulletproofs.cpp
   canonical_amounts.cpp
   chacha.cpp
   checkpoints.cpp
@@ -61,7 +61,7 @@ set(unit_tests_sources
   mnemonics.cpp
   mul_div.cpp
   multiexp.cpp
-  multisig.cpp
+  #multisig.cpp
   notify.cpp
   parse_amount.cpp
   random.cpp

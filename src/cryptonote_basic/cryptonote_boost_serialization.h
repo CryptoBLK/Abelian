@@ -109,12 +109,6 @@ namespace boost
   }
 
   template <class Archive>
-  inline void serialize(Archive &a, cryptonote::txout_to_randid &x, const boost::serialization::version_type ver) //Serialization changes
-  {
-      a & x.rng;
-  }
-
-  template <class Archive>
   inline void serialize(Archive &a, cryptonote::txout_to_scripthash &x, const boost::serialization::version_type ver)
   {
     a & x.hash;

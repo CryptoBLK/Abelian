@@ -231,7 +231,7 @@ namespace crypto {
     unsigned long long mLen = 0L;
     unsigned char m[HASH_SIZE + CRYPTO_BYTES];
     auto result = crypto_sign_dilithium_open(m, &mLen, (unsigned char *)&sig, sizeof(sig), &pub);
-    assert(result == 0);
+    LOG_PRINT_L1("crypto_ops signature: " << result);
 
     return result == 0 ? true : false;
   }

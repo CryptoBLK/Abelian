@@ -377,6 +377,10 @@ std::string address_from_txt_record(const std::string& s)
     {
       return s.substr(pos, 106);
     }
+    else if (pos2 - pos == 2471) // We are now lattice-based key sizes
+    {
+        return s.substr(pos, 2471);
+    }
   }
   return {};
 }

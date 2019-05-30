@@ -62,7 +62,7 @@ namespace
         crypto::key_image img;
         std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
         subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
-        auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second.dest);
+        auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second);
         generate_key_image_helper(sender_account_keys, subaddresses, out_key, src_entr.real_out_tx_key, src_entr.real_out_additional_tx_keys, src_entr.real_output_in_tx_index, in_ephemeral, img, hw::get_device(("default")));
 
         // put key image into tx input
@@ -116,7 +116,7 @@ namespace
         size_t j = 0;
         BOOST_FOREACH(const tx_source_entry::output_entry& o, src_entr.outputs)
         {
-          keys[j] = rct::rct2pk(o.second.dest);
+          keys[j] = o.second;
           keys_ptrs.push_back(&keys[j]);
           ++j;
         }
@@ -124,7 +124,13 @@ namespace
         m_tx.signatures.push_back(std::vector<crypto::signature>());
         std::vector<crypto::signature>& sigs = m_tx.signatures.back();
         sigs.resize(src_entr.outputs.size());
-        generate_ring_signature(m_tx_prefix_hash, boost::get<txin_to_key>(m_tx.vin[i]).k_image, keys_ptrs, m_in_contexts[i].sec, src_entr.real_output, sigs.data());
+        //generate_ring_signature(m_tx_prefix_hash, boost::get<txin_to_key>(m_tx.vin[i]).k_image, keys_ptrs, m_in_contexts[i].sec, src_entr.real_output, sigs.data());
+
+        // Dilithium - signature
+        crypto::public_key k_i;
+        std::memcpy(&k_i, &boost::get<txin_to_key>(m_tx.vin[i]).k_image, CRYPTO_PUBLICKEYBYTES);
+
+        generate_signature(m_tx_prefix_hash, k_i, m_in_contexts[i].sec, *sigs.data());
         i++;
       }
     }
