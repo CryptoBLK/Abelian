@@ -57,7 +57,7 @@
 
 #define CRYPTONOTE_REWARD_BLOCKS_WINDOW                 100
 #define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2    60000 //size of block (bytes) after which reward for block calculated using block size
-#define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1    300000 //size of block (bytes) after which reward for block calculated using block size - before first fork, used by Abelian need to change and calculate
+#define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1    600000 //size of block (bytes) after which reward for block calculated using block size - before first fork, used by Abelian need to change and calculate
 #define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V5    300000 //size of block (bytes) after which reward for block calculated using block size - second change, from v5
 #define CRYPTONOTE_LONG_TERM_BLOCK_WEIGHT_WINDOW_SIZE   100000 // size in blocks of the long term block weight median window
 #define CRYPTONOTE_SHORT_TERM_BLOCK_WEIGHT_SURGE_FACTOR 50

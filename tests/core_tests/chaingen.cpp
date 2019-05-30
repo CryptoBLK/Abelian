@@ -398,11 +398,21 @@ bool fill_tx_sources(std::vector<tx_source_entry>& sources, const std::vector<te
 
     std::vector<cryptonote::block> blockchain;
     map_hash2tx_t mtx;
+
+    auto temp = find_block_chain(events, blockchain, mtx, get_block_hash(blk_head));
+    assert(temp);
+
     if (!find_block_chain(events, blockchain, mtx, get_block_hash(blk_head)))
         return false;
 
+    temp = init_output_indices(outs, outs_mine, blockchain, mtx, from);
+    assert(temp);
+
     if (!init_output_indices(outs, outs_mine, blockchain, mtx, from))
         return false;
+
+    temp = init_spent_output_indices(outs, outs_mine, blockchain, mtx, from);
+    assert(temp);
 
     if (!init_spent_output_indices(outs, outs_mine, blockchain, mtx, from))
         return false;
@@ -440,7 +450,10 @@ bool fill_tx_sources(std::vector<tx_source_entry>& sources, const std::vector<te
             sources.push_back(ts);
 
             sources_amount += ts.amount;
-            sources_found = amount <= sources_amount;
+
+            std::cout << amount << " <= " << sources_amount << "\n";
+
+            sources_found = true;//amount <= sources_amount;
         }
 
         if (sources_found)
