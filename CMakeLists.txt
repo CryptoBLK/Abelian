@@ -268,6 +268,10 @@ if(NOT WIN32 AND NOT APPLE)
   message(STATUS "LINUX_DISTRO: " ${LINUX_DISTRO})
 endif()
 
+if(LINUX_DISTRO STREQUAL "openSUSE")
+  set(OPENSUSE TRUE)
+endif() 
+
 # Check if we're on FreeBSD so we can exclude the local miniupnpc (it should be installed from ports instead)
 # CMAKE_SYSTEM_NAME checks are commonly known, but specifically taken from libsdl's CMakeLists
 if(CMAKE_SYSTEM_NAME MATCHES "kFreeBSD.*|FreeBSD")
