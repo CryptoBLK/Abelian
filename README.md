@@ -111,7 +111,7 @@ FreeBSD one liner for required to build dependencies
 
 Clone recursively to pull-in needed submodule(s):
 
-`$ git clone --recursive https://github.com/abelian-project/abelian`
+`$ git clone --recursive https://gitlab.com/abeliancoin/abelian.git`
 
 If you already have a repo cloned, initialize and update:
 
@@ -196,7 +196,7 @@ Tested on a Raspberry Pi Zero with a clean install of minimal Raspbian Stretch (
 ```
 * Clone abelian and checkout most recent release version:
 ```
-        git clone https://github.com/abelian-project/abelian.git
+        git clone https://gitlab.com/abeliancoin/abelian.git
 	cd abelian
 	git checkout tags/v0.14.0.1
 ```
@@ -302,17 +302,13 @@ application.
 
 * To git clone, run:
 
-        git clone --recursive https://github.com/abelian-project/abelian.git
+        git clone --recursive https://gitlab.com/abeliancoin/abelian.git
 
 **Building**
 
 * Change to the cloned directory, run:
 	
         cd abelian
-
-* If you would like a specific [version/tag](https://github.com/abelian-project/abelian/tags), do a git checkout for that version. eg. 'v0.14.0.1'. If you dont care about the version and just want binaries from master, skip this step:
-	
-        git checkout v0.14.0.1
 
 * If you are on a 64-bit system, run:
 
