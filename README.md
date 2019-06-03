@@ -134,7 +134,6 @@ invokes cmake commands as needed.
 * Change to the root of the source code directory, change to the most recent release branch, and build:
 
         cd abelian
-        git checkout v0.14.0.1
         make
 
     *Optional*: If your machine has several cores and enough memory, enable
