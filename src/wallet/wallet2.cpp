@@ -2777,6 +2777,12 @@ void wallet2::refresh(bool trusted_daemon, uint64_t start_height, uint64_t & blo
       {
         LOG_PRINT_L1("Another try pull_blocks (try_count=" << try_count << ")...");
         first = true;
+        // Monero pull 5084
+        start_height = 0;
+        blocks.clear();
+        parsed_blocks.clear();
+        short_chain_history.clear();
+        get_short_chain_history(short_chain_history, 1);
         ++try_count;
       }
       else

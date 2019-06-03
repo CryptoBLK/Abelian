@@ -85,7 +85,8 @@ class BlockchainTest():
         daemon = Daemon()
         res = daemon.hard_fork_info()
 
-        # hard_fork version should be set at height 1
+        print(res['earliest_height'])
+
         assert 'earliest_height' in res.keys()
         assert res['earliest_height'] == 1;
 
