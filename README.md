@@ -123,7 +123,7 @@ If you already have a repo cloned, initialize and update:
 
 `$ cd abelian && git submodule init && git submodule update`
 
-*Note*: Running the above command will download and include the Dilithium library automatically.
+*Note*: The command will also download and include the required Dilithium library.  
 https://github.com/pq-crystals/dilithium
 
 ### Build instructions
