@@ -162,17 +162,6 @@ specified either on the command line or in a configuration file passed by the
 a line with the syntax `argumentname=value`, where `argumentname` is the name
 of the argument without the leading dashes, for example `log-level=1`.
 
-To run in background:
-
-    ./bin/abeliand --log-file abeliand.log --detach
-
-To run as a systemd service, copy
-[abeliand.service](utils/systemd/abeliand.service) to `/etc/systemd/system/` and
-[abeliand.conf](utils/conf/abeliand.conf) to `/etc/`. The [example
-service](utils/systemd/abeliand.service) assumes that the user `abelian` exists
-and its home is the data directory specified in the [example
-config](utils/conf/abeliand.conf).
-
 If you're on Mac, you may need to add the `--max-concurrency 1` option to
 abelian-wallet-cli, and possibly abeliand, if you get crashes refreshing.
 
