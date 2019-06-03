@@ -203,7 +203,6 @@ Tested on a Raspberry Pi Zero with a clean install of minimal Raspbian Stretch (
 ```
         git clone https://gitlab.com/abeliancoin/abelian.git
 	cd abelian
-	git checkout tags/v0.14.0.1
 ```
 * Build:
 
