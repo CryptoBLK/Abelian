@@ -410,65 +410,6 @@ By default, in either dynamically or statically linked builds, binaries target t
 * ```make release-static-win64``` builds binaries on 64-bit Windows portable across 64-bit Windows systems
 * ```make release-static-win32``` builds binaries on 64-bit or 32-bit Windows portable across 32-bit Windows systems
 
-## Installing Abelian from a package
-
-**DISCLAIMER: These packages are not part of this repository or maintained by this project's contributors, and as such, do not go through the same review process to ensure their trustworthiness and security.**
-
-Packages are available for
-
-* Ubuntu and [snap supported](https://snapcraft.io/docs/core/install) systems, via a community contributed build.
-
-	snap install abelian --beta
-
-Installing a snap is very quick. Snaps are secure. They are isolated with all of their dependencies. Snaps also auto update when a new version is released.
-
-* Arch Linux (via [AUR](https://aur.archlinux.org/)):
-  - Stable release: [`abelian`](https://aur.archlinux.org/packages/abelian)
-  - Bleeding edge: [`abelian-git`](https://aur.archlinux.org/packages/abelian-git)
-
-* Void Linux:
-
-        xbps-install -S abelian
-
-* GuixSD
-
-        guix package -i abelian
-
-* Docker
-
-        # Build using all available cores
-        docker build -t abelian .
-
-        # or build using a specific number of cores (reduce RAM requirement)
-        docker build --build-arg NPROC=1 -t abelian .
-
-        # either run in foreground
-        docker run -it -v /abelian/chain:/root/.bitabelian -v /abelian/wallet:/wallet -p 19090:19090 abelian
-
-        # or in background
-        docker run -it -d -v /abelian/chain:/root/.bitabelian -v /abelian/wallet:/wallet -p 19090:19090 abelian
-
-* The build needs 3 GB space.
-* Wait one  hour or more
-
-Packaging for your favorite distribution would be a welcome contribution!
-
-You can also cross-compile binaries on linux for windows and macos with the depends system. Go to contrib/depends and type:
-
-* ```make HOST=x86_64-linux-gnu``` for 64-bit linux binaries.
-* ```make HOST=x86_64-w64-mingw32``` for 64-bit windows binaries. Requires: python3 nsis g++-mingw-w64-x86-64 wine1.6 bc
-* ```make HOST=x86_64-apple-darwin11``` for darwin binaries. Requires: cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev
-* ```make HOST=i686-linux-gnu``` for 32-bit linux binaries. Requires: g++-multilib bc
-* ```make HOST=i686-w64-mingw32``` for 32-bit windows binaries. Requires: python3 nsis g++-mingw-w64-i686
-* ```make HOST=arm-linux-gnueabihf``` for armv6 binaries. Requires: g++-arm-linux-gnueabihf
-
-The required packages are the names for each toolchain on apt. Depending on your distro, they may have different names.
-Then go back to the source dir and type for example for windows 64bit: 
-
-* ```cmake -DCMAKE_TOOLCHAIN_FILE=`pwd`/contrib/depends/x86_64-w64-mingw32```
-
-Using depends might also be easier to compile abelian on windows than using msys. Activate windows subsystem for linux (for example ubuntu) install the apt build-essentials and follow the depends steps as depicted above.
-
 ## Running abeliand
 
 The build places the binary in `bin/` sub-directory within the build directory
