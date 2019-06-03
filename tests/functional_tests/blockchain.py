@@ -139,6 +139,10 @@ class BlockchainTest():
         assert res_getblocktemplate.prev_hash == res_info.top_block_hash
 
         res_getlastblockheader = daemon.getlastblockheader()
+        print(res['earliest_height'])
+
+        assert 'earliest_height' in res.keys()
+        assert res['earliest_height'] == 1;
 
         # pop a block
         res_popblocks = daemon.pop_blocks(1)
