@@ -12,7 +12,7 @@ of software solid and usable.
 * If modifying code for which Doxygen headers exist, that header must be modified to match.
 * Tests would be nice to have if you're adding functionality.
 
-Patches are preferably to be sent via a Github pull request. If that
+Patches are preferably to be sent via a Gitlab pull request. If that
 can't be done, patches in "git format-patch" format can be sent
 (eg, posted to fpaste.org with a long enough timeout and a link
 posted to #abelian-dev on irc.freenode.net).
@@ -43,7 +43,7 @@ Commit messages should be sensible. That means a subject line that
 describes the patch, with an optional longer body that gives details,
 documentation, etc.
 
-When submitting a pull request on Github, make sure your branch is
+When submitting a pull request on GitLab, make sure your branch is
 rebased. No merge commits nor stray commits from other people in
 your submitted branch, please. You may be asked to rebase if there
 are conflicts (even trivially resolvable ones).
@@ -83,10 +83,10 @@ C4 is meant to provide a reusable optimal collaboration model for open source so
 
 ### Preliminaries
 
-- The project MUST use the git distributed revision control system.
-- The project MUST be hosted on github.com or equivalent, herein called the "Platform".
-- The project MUST use the Platform issue tracker.
-  - Non-GitHub example:
+- The project SHALL use the git distributed revision control system.
+- The project SHALL be hosted on gitlab.com or equivalent, herein called the "Platform".
+- The project SHALL use the Platform issue tracker.
+  - Non-GitLab example:
     - "Platform" could be a vanilla git repo and Trac hosted on the same machine/network.
     - The Platform issue tracker would be Trac.
 - The project SHOULD have clearly documented guidelines for code style.
