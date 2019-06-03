@@ -8,17 +8,23 @@ Portions Copyright (c) 2012-2013 The Cryptonote developers.
 
 - Web: [www.abelianfoundation.org](https://www.abelianfoundation.org)
 - Mail: [info@abelianfoundation.org](mailto:info@abelianfoundation.org)
-- GitHub: [https://gitlab.com/abeliancoin/abelian](https://gitlab.com/abeliancoin/abelian)
+- GitLab: [https://gitlab.com/abeliancoin/abelian](https://gitlab.com/abeliancoin/abelian)
 
 ## Introduction
 
-Abelian is a private, secure, untraceable, decentralised digital currency. You are your bank, you control your funds, and nobody can trace your transfers unless you allow them to do so.
+Led by Dr. Duncan Wong, the co-inventor of Monero’s Linkable Ring Signature, Abelian is an Accountable Privacy initiative for the cryptocurrency industry. It is a collaborative effort between research institutes of Nanyang Technological University, Shanghai Jiao Tong University, and University of Wollongong. The development is handled by Hong Kong based blockchain development firm CryptoBLK.
 
-**Privacy:** Abelian uses a cryptographically sound system to allow you to send and receive funds without your transactions being easily revealed on the blockchain (the ledger of transactions that everyone has). This ensures that your purchases, receipts, and all transfers remain absolutely private by default.
+**Privacy:** “What I buy in a supermarket may not be a secret, but do I necessarily want everyone to know? Probably not”  
+Somehow privacy in the cryptocurrency space carries negative connotation. But privacy on our transaction record is indeed a very basic need for the technology to gain wide spread adoptions.  
+In ABE, proven technologies including linkable ring signature and cryptographic commitment schemes are incorporated into the design to offer users uncompromising privacy.
 
-**Security:** Using the power of a distributed peer-to-peer consensus network, every transaction on the network is cryptographically secured. Individual wallets have a 25 word mnemonic seed that is only displayed once, and can be written down to backup the wallet. Wallet files are encrypted with a passphrase to ensure they are useless if stolen.
+**Accountability:** “Today’s financial regulatory framework is built on years of experience. We need to adopt an openminded yet carefully balanced approach…”  
+Enabling and abiding by regulations, such as AML and taxation policies, in the design solves a lot of concerns from enterprises. They could in turn promote the technology to more users.  
+We achieve this by introducing a cryptographic primitive called verifiable encryption into ABE.
 
-**Untraceability:** By taking advantage of ring signatures, a special property of a certain type of cryptography, Abelian is able to ensure that transactions are not only untraceable, but have an optional measure of ambiguity that ensures that transactions cannot easily be tied back to an individual user or computer.
+**Quantum-safe:** “Elliptic Curve Cryptography was invented in 1985. NSA endorsed it in 2005, and later on warned against it in 2015…”  
+Bitcoin, invented in 2008, is built on ECC. But if our target is to build something that enables widespread adoptions in a long term, it may not be wise to ignore the technological advancement trajectory over the past years.  
+The privacy and accountability features of ABE are built on Lattice-based cryptography, which enables post-quantum security.
 
 ## About this project
 
