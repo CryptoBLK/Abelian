@@ -500,10 +500,6 @@ config](utils/conf/abeliand.conf).
 If you're on Mac, you may need to add the `--max-concurrency 1` option to
 abelian-wallet-cli, and possibly abeliand, if you get crashes refreshing.
 
-## Internationalization
-
-See [README.i18n.md](README.i18n.md).
-
 ## Debugging
 
 This section contains general instructions for debugging failed installs or problems encountered with Abelian. First ensure you are running the latest version built from the Github repo.
