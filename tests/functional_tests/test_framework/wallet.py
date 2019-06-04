@@ -32,7 +32,7 @@ from .rpc import JSONRPC
 
 class Wallet(object):
 
-    def __init__(self, protocol='http', host='127.0.0.1', port=18083, path='/json_rpc'):
+    def __init__(self, protocol='http', host='127.0.0.1', port=29093, path='/json_rpc'):
         self.rpc = JSONRPC('{protocol}://{host}:{port}{path}'.format(protocol=protocol, host=host, port=port, path=path))
 
     def make_uniform_destinations(self, address, transfer_amount, transfer_number_of_destinations=1):
@@ -91,6 +91,27 @@ class Wallet(object):
             'id': '0'
         }
         return self.rpc.send_request(create_wallet)
+
+    def close_wallet(self, autosave_current = True):
+        close_wallet = {
+            'method': 'close_wallet',
+            'params' : {
+                'autosave_current': autosave_current
+            },
+            'jsonrpc': '2.0',
+            'id': '0'
+        }
+        return self.rpc.send_request(close_wallet)
+
+    def refresh(self):
+        refresh = {
+            'method': 'refresh',
+            'params' : {
+            },
+            'jsonrpc': '2.0',
+            'id': '0'
+        }
+        return self.rpc.send_request(refresh)
 
     def get_balance(self):
         get_balance = {

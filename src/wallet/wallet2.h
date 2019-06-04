@@ -259,6 +259,9 @@ namespace tools
       uint64_t amount() const { return m_amount; }
       const crypto::public_key &get_public_key() const { return boost::get<const cryptonote::txout_to_key>(m_tx.vout[m_internal_output_index].target).key; }
 
+      //RNG
+      const crypto::pq_seed &get_rng_key() const {return boost::get<const crypto::pq_seed>(m_tx.vout[m_internal_output_index].random);}
+
       BEGIN_SERIALIZE_OBJECT()
         FIELD(m_block_height)
         FIELD(m_tx)
