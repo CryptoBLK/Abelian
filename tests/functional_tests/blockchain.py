@@ -40,7 +40,13 @@ Test the following RPCs:
 from test_framework.daemon import Daemon
 from test_framework.wallet import Wallet
 
-mainnet_address ='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'
+# Testnet 1.0 Address
+mainnet_address ='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'
+
+# seed
+'''vats austere phase jargon drinks pierce puffin ounce
+inmate goggles payment gyrate ferry illness rest reunion
+nodes worry bevel stockpile casket soil inactive knee worry'''
 
 class BlockchainTest():
     def run_test(self):
@@ -56,19 +62,25 @@ class BlockchainTest():
 
         # difficulty should be set to 1 for this test
         assert 'difficulty' in res.keys()
-        assert res['difficulty'] == 1;
+        assert res['difficulty'] == 1
+
+        # Remove the checks below for Testnet 1.0
+
+        # nettype should not be Mainnet
+        assert 'mainnet' in res.keys()
+        assert res['mainnet'] == False;
 
         # nettype should not be TESTNET
-        assert 'testnet' in res.keys()
-        assert res['testnet'] == False;
+        #assert 'testnet' in res.keys()
+        #assert res['testnet'] == False;
 
         # nettype should not be STAGENET
-        assert 'stagenet' in res.keys()
-        assert res['stagenet'] == False;
+        #assert 'stagenet' in res.keys()
+        #assert res['stagenet'] == False;
 
         # nettype should be FAKECHAIN
-        assert 'nettype' in res.keys()
-        assert res['nettype'] == "fakechain";
+        #assert 'nettype' in res.keys()
+        #assert res['nettype'] == "fakechain";
 
         # free_space should be > 0
         assert 'free_space' in res.keys()
@@ -85,9 +97,8 @@ class BlockchainTest():
         daemon = Daemon()
         res = daemon.hard_fork_info()
 
-        # hard_fork version should be set at height 1
         assert 'earliest_height' in res.keys()
-        assert res['earliest_height'] == 1;
+        assert res['earliest_height'] == 1
 
 
     def _test_generateblocks(self, blocks):

@@ -32,7 +32,7 @@ from .rpc import JSONRPC
 
 class Daemon(object):
 
-    def __init__(self, protocol='http', host='127.0.0.1', port=18081, path='/json_rpc'):
+    def __init__(self, protocol='http', host='127.0.0.1', port=29091, path='/json_rpc'):
         self.rpc = JSONRPC('{protocol}://{host}:{port}{path}'.format(protocol=protocol, host=host, port=port, path=path))
 
     def getblocktemplate(self, address):
