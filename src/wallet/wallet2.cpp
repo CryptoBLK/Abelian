@@ -1911,6 +1911,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
         //if (boost::get<txout_to_key>(tx.vout[o].target).key == m_account.get_keys().m_account_address.m_spend_public_key)
         if(rng == m_tx_rng.end()) // random tx rng workaround
         {
+            LOG_PRINT_L0("RNG: ");
           uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
           if (!pool)
           {
@@ -1963,30 +1964,31 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
           total_received_1 += amount;
           notify = true;
         }
-	 else if (m_transfers[kit->second].m_spent || m_transfers[kit->second].amount() >= tx_scan_info[o].amount)
+        else if (m_transfers[rng->second].m_spent || m_transfers[rng->second].amount() >= tx_scan_info[o].amount)
         {
-	      LOG_ERROR("Public key " << epee::string_tools::pod_to_hex(kit->first)
-              << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
-              << (m_transfers[kit->second].m_spent ? "spent" : "unspent") << " "
-              << print_money(m_transfers[kit->second].amount()) << " in tx " << m_transfers[kit->second].m_txid << ", received output ignored");
-          THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info[o].received->index] < tx_scan_info[o].amount,
-              error::wallet_internal_error, "Unexpected values of new and old outputs");
-          tx_money_got_in_outs[tx_scan_info[o].received->index] -= tx_scan_info[o].amount;
+            LOG_ERROR("RNG tx key " << epee::string_tools::pod_to_hex(rng->first)
+                                    << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
+                                    << (m_transfers[rng->second].m_spent ? "spent" : "unspent") << " "
+                                    << print_money(m_transfers[rng->second].amount()) << " in tx " << m_transfers[rng->second].m_txid << ", received output ignored");
+            THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info[o].received->index] < tx_scan_info[o].amount,
+                                      error::wallet_internal_error, "Unexpected values of new and old outputs");
+            tx_money_got_in_outs[tx_scan_info[o].received->index] -= tx_scan_info[o].amount;
         }
         else
         {
-	  LOG_ERROR("Public key " << epee::string_tools::pod_to_hex(kit->first)
+            LOG_PRINT_L0("NOT_RNG: ");
+	  LOG_ERROR("RNG tx key " << epee::string_tools::pod_to_hex(rng->first)
               << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
-              << print_money(m_transfers[kit->second].amount()) << ", replacing with new output");
+              << print_money(m_transfers[rng->second].amount()) << ", replacing with new output");
           // The new larger output replaced a previous smaller one
           THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info[o].received->index] < tx_scan_info[o].amount,
+              error::wallet_internal_error, "Unexpected values of new and old outputxs");
+          THROW_WALLET_EXCEPTION_IF(m_transfers[rng->second].amount() > tx_scan_info[o].amount,
               error::wallet_internal_error, "Unexpected values of new and old outputs");
-          THROW_WALLET_EXCEPTION_IF(m_transfers[kit->second].amount() > tx_scan_info[o].amount,
-              error::wallet_internal_error, "Unexpected values of new and old outputs");
-          tx_money_got_in_outs[tx_scan_info[o].received->index] -= m_transfers[kit->second].amount();
+          tx_money_got_in_outs[tx_scan_info[o].received->index] -= m_transfers[rng->second].amount();
 
           uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
-          uint64_t extra_amount = amount - m_transfers[kit->second].amount();
+          uint64_t extra_amount = amount - m_transfers[rng->second].amount();
           if (!pool)
           {
             transfer_details &td = m_transfers[kit->second];
@@ -3333,20 +3335,34 @@ void wallet2::detach_blockchain(uint64_t height, std::map<std::pair<uint64_t, ui
   auto it = std::find_if(m_transfers.begin(), m_transfers.end(), [&](const transfer_details& td){return td.m_block_height >= height;});
   size_t i_start = it - m_transfers.begin();
 
+/*  for(size_t i = i_start; i!= m_transfers.size();i++)
+  {
+    // RNG workaround
+    //if (!m_transfers[i].m_key_image_known || m_transfers[i].m_key_image_partial)
+    //  continue;
+    //auto it_ki = m_key_images.find(m_transfers[i].m_key_image);
+    auto it_rk = m_tx_rng.find(m_transfers[i].get_rng_key());
+    //THROW_WALLET_EXCEPTION_IF(it_ki == m_key_images.end(), error::wallet_internal_error, "key image not found: index " + std::to_string(i) + ", ki " + epee::string_tools::pod_to_hex(m_transfers[i].m_key_image) + ", " + std::to_string(m_key_images.size()) + " key images known");
+    THROW_WALLET_EXCEPTION_IF(it_rk == m_tx_rng.end(), error::wallet_internal_error, "rng not found: index " + std::to_string(i) + ", rng " + epee::string_tools::pod_to_hex(m_transfers[i].get_rng_key()) + ", " + std::to_string(m_tx_rng.size()) + " rng images known");
+    //m_key_images.erase(it_ki);
+    m_tx_rng.erase(it_rk);
+  }*/
+
   for(size_t i = i_start; i!= m_transfers.size();i++)
   {
-    if (!m_transfers[i].m_key_image_known || m_transfers[i].m_key_image_partial)
-      continue;
-    auto it_ki = m_key_images.find(m_transfers[i].m_key_image);
-    THROW_WALLET_EXCEPTION_IF(it_ki == m_key_images.end(), error::wallet_internal_error, "key image not found: index " + std::to_string(i) + ", ki " + epee::string_tools::pod_to_hex(m_transfers[i].m_key_image) + ", " + std::to_string(m_key_images.size()) + " key images known");
-    m_key_images.erase(it_ki);
+    // RNG workaround
+    //auto it_rk = m_tx_rng.find(m_transfers[i].get_rng_key());
+    auto it_pk = m_pub_keys.find(m_transfers[i].get_public_key());
+    THROW_WALLET_EXCEPTION_IF(it_pk == m_pub_keys.end(), error::wallet_internal_error, "pub key key not found");
+    m_pub_keys.erase(it_pk);
   }
 
   for(size_t i = i_start; i!= m_transfers.size();i++)
   {
-    auto it_pk = m_pub_keys.find(m_transfers[i].get_public_key());
-    THROW_WALLET_EXCEPTION_IF(it_pk == m_pub_keys.end(), error::wallet_internal_error, "public key not found");
-    m_pub_keys.erase(it_pk);
+      // RNG workaround
+      auto it_rk = m_tx_rng.find(m_transfers[i].get_rng_key());
+      THROW_WALLET_EXCEPTION_IF(it_rk == m_tx_rng.end(), error::wallet_internal_error, "rng key not found");
+      m_tx_rng.erase(it_rk);
   }
   m_transfers.erase(it, m_transfers.end());
 
@@ -12082,6 +12098,7 @@ process:
     m_key_images[td.m_key_image] = i + offset;
     m_pub_keys[td.get_public_key()] = i + offset;
     m_transfers[i + offset] = std::move(td);
+    m_tx_rng[td.get_rng_key()] = i + offset;
   }
 
   return m_transfers.size();

@@ -1352,12 +1352,13 @@ namespace cryptonote
     
     res.status = CORE_RPC_STATUS_OK;
 
-    if(m_core.get_nettype() != FAKECHAIN)
-    {
-      error_resp.code = CORE_RPC_ERROR_CODE_REGTEST_REQUIRED;
-      error_resp.message = "Regtest required when generating blocks";      
-      return false;
-    }
+    // TODO: for Testnet 1.0 we enable generating blocks for testnet to run specific rpc commands.
+    //if(m_core.get_nettype() != FAKECHAIN)
+    //{
+    //  error_resp.code = CORE_RPC_ERROR_CODE_REGTEST_REQUIRED;
+    //  error_resp.message = "Regtest required when generating blocks";
+    //  return false;
+    //}
 
     COMMAND_RPC_GETBLOCKTEMPLATE::request template_req;
     COMMAND_RPC_GETBLOCKTEMPLATE::response template_res;
