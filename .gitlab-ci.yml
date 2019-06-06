@@ -1,0 +1,48 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_STRATEGY: fetch
+  GIT_DEPTH: "1"
+
+stages:
+  - build
+  - test
+
+build:windows:
+  tags:
+    - windows
+  stage: build
+  script:
+    - export USE_SINGLE_BUILDDIR=1
+    - cat /proc/version
+    - make release-static-win64
+  artifacts:
+    paths:
+      - "build/release/bin"
+
+build:osx:
+  tags:
+    - osx
+  stage: build
+  script:
+    - sw_vers
+    - export USE_SINGLE_BUILDDIR=1
+    - make -j4 release-static-mac-x86_64
+  artifacts:
+    paths:
+      - "build/release/bin"
+
+build:linux:
+  image: ubuntu:latest:latest
+  tags:
+    - ubuntu
+  stage: build
+  script:
+    - export USE_SINGLE_BUILDDIR=1
+    # print our runner distro
+    - cat /proc/version
+    # print the current commit hash
+    - echo $CI_COMMIT_SHA
+    - make -j$THREAD_COUNT release-static
+  artifacts:
+    paths:
+      - "build/release/bin"
