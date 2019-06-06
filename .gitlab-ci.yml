@@ -8,8 +8,6 @@ stages:
   - test
 
 build:windows:
-  tags:
-    - windows
   stage: build
   script:
     - export USE_SINGLE_BUILDDIR=1
@@ -20,8 +18,6 @@ build:windows:
       - "build/release/bin"
 
 build:osx:
-  tags:
-    - osx
   stage: build
   script:
     - sw_vers
@@ -32,9 +28,7 @@ build:osx:
       - "build/release/bin"
 
 build:linux:
-  image: ubuntu:latest:latest
-  tags:
-    - ubuntu
+  image: ubuntu:latest
   stage: build
   script:
     - export USE_SINGLE_BUILDDIR=1
