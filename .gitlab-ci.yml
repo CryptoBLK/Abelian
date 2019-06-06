@@ -10,9 +10,9 @@ stages:
 build:osx:
   stage: build
   script:
-    - /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+    - which ruby
+    - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
     - brew update && brew bundle --file=contrib/brew/Brewfile
-    - sw_vers
     - export USE_SINGLE_BUILDDIR=1
     - make -j4 release-static-mac-x86_64
   artifacts:
@@ -23,7 +23,7 @@ build:linux:
   image: ubuntu:latest
   stage: build
   script:
-    - apt update &&  apt install build-essential cmake pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev
+    - apt update &&  apt -y install build-essential cmake pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev
     - export USE_SINGLE_BUILDDIR=1
     # print our runner distro
     - cat /proc/version
