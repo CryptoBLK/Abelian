@@ -247,6 +247,39 @@ namespace rpc
     res.status = Message::STATUS_OK;
   }
 
+  // RNG
+  void DaemonHandler::handle(const RNGSpent::Request& req, RNGSpent::Response& res)
+  {
+    res.rng_spent_status.resize(req.rngs.size(), RNGSpent::STATUS::RNG_UNSPENT);
+
+    std::vector<bool> chain_spent_status;
+    std::vector<bool> pool_spent_status;
+
+    m_core.are_rngs_spent(req.rngs, chain_spent_status);
+    m_core.are_rngs_spent_in_pool(req.rngs, pool_spent_status);
+
+    if ((chain_spent_status.size() != req.rngs.size()) || (pool_spent_status.size() != req.rngs.size()))
+    {
+      res.status = Message::STATUS_FAILED;
+      res.error_details = "tx_pool::have_rngs_as_spent() gave vectors of wrong size(s).";
+      return;
+    }
+
+    for(size_t i=0; i < req.rngs.size(); i++)
+    {
+      if ( chain_spent_status[i] )
+      {
+        res.rng_spent_status[i] = RNGSpent::STATUS::RNG_SPENT_IN_BLOCKCHAIN;
+      }
+      else if ( pool_spent_status[i] )
+      {
+        res.rng_spent_status[i] = RNGSpent::STATUS::RNG_SPENT_IN_POOL;
+      }
+    }
+
+    res.status = Message::STATUS_OK;
+  }
+
   void DaemonHandler::handle(const GetTxGlobalOutputIndices::Request& req, GetTxGlobalOutputIndices::Response& res)
   {
     if (!m_core.get_tx_outputs_gindexs(req.tx_hash, res.output_indices))
@@ -805,6 +838,7 @@ namespace rpc
       REQ_RESP_TYPES_MACRO(request_type, GetOutputKeys, req_json, resp_message, handle);
       REQ_RESP_TYPES_MACRO(request_type, GetRPCVersion, req_json, resp_message, handle);
       REQ_RESP_TYPES_MACRO(request_type, GetPerKBFeeEstimate, req_json, resp_message, handle);
+      REQ_RESP_TYPES_MACRO(request_type, RNGSpent, req_json, resp_message, handle);
 
       // if none of the request types matches
       if (resp_message == NULL)

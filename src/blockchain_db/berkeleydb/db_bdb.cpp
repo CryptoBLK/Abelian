@@ -583,6 +583,32 @@ void BlockchainBDB::add_spent_key(const crypto::key_image& k_image)
         throw1(DB_ERROR("Error adding spent key image to db transaction."));
 }
 
+//RNG
+void BlockchainBDB::add_spent_rng(const crypto::pq_seed& rand)
+{
+  LOG_PRINT_L3("BlockchainBDB::" << __func__);
+  check_open();
+
+  Dbt_copy<crypto::key_image> val_key(k_image);
+  if (m_spent_keys->exists(DB_DEFAULT_TX, &val_key, 0) == 0)
+  throw1(KEY_IMAGE_EXISTS("Attempting to add spent key image that's already in the db"));
+
+  Dbt_copy<char> val('\0');
+  if (m_spent_keys->put(DB_DEFAULT_TX, &val_key, &val, 0))
+  throw1(DB_ERROR("Error adding spent key image to db transaction."));
+}
+
+void BlockchainBDB::remove_spent_rng(const crypto::pq_seed& rand)
+{
+  LOG_PRINT_L3("BlockchainBDB::" << __func__);
+  check_open();
+
+  Dbt_copy<crypto::key_image> k(k_image);
+  auto result = m_spent_keys->del(DB_DEFAULT_TX, &k, 0);
+  if (result != 0 && result != DB_NOTFOUND)
+    throw1(DB_ERROR("Error adding removal of key image to db transaction"));
+}
+
 void BlockchainBDB::remove_spent_key(const crypto::key_image& k_image)
 {
     LOG_PRINT_L3("BlockchainBDB::" << __func__);
@@ -1813,6 +1839,12 @@ bool BlockchainBDB::has_key_image(const crypto::key_image& img) const
     }
 
     return false;
+}
+
+// RNG
+bool BlockchainBDB::has_spent_rng(const crypto::pq_seed& rng) const
+{
+  return false;
 }
 
 // Ostensibly BerkeleyDB has batch transaction support built-in,

@@ -60,7 +60,7 @@ const char* const GetOutputHistogram::name = "get_output_histogram";
 const char* const GetOutputKeys::name = "get_output_keys";
 const char* const GetRPCVersion::name = "get_rpc_version";
 const char* const GetPerKBFeeEstimate::name = "get_dynamic_per_kb_fee_estimate";
-
+const char* const RNGSpent::name = "rngs_spent";
 
 
 
@@ -239,6 +239,38 @@ void KeyImagesSpent::Response::fromJson(rapidjson::Value& val)
   GET_FROM_JSON_OBJECT(val, spent_status, spent_status);
 }
 
+// RNG
+rapidjson::Value RNGSpent::Request::toJson(rapidjson::Document& doc) const
+{
+  auto val = Message::toJson(doc);
+
+  auto& al = doc.GetAllocator();
+
+  INSERT_INTO_JSON_OBJECT(val, doc, rngs, rngs);
+
+  return val;
+}
+
+void RNGSpent::Request::fromJson(rapidjson::Value& val)
+{
+  GET_FROM_JSON_OBJECT(val, rngs, rngs);
+}
+
+rapidjson::Value RNGSpent::Response::toJson(rapidjson::Document& doc) const
+{
+  auto val = Message::toJson(doc);
+
+  auto& al = doc.GetAllocator();
+
+  INSERT_INTO_JSON_OBJECT(val, doc, rng_spent_status, rng_spent_status);
+
+  return val;
+}
+
+void RNGSpent::Response::fromJson(rapidjson::Value& val)
+{
+  GET_FROM_JSON_OBJECT(val, rng_spent_status, rng_spent_status);
+}
 
 rapidjson::Value GetTxGlobalOutputIndices::Request::toJson(rapidjson::Document& doc) const
 {

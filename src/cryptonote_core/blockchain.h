@@ -246,6 +246,9 @@ namespace cryptonote
      */
     bool have_tx_keyimges_as_spent(const transaction &tx) const;
 
+    // RNG
+    bool have_tx_rngs_as_spent(const transaction &tx) const;
+
     /**
      * @brief check if a key image is already spent on the blockchain
      *
@@ -259,6 +262,9 @@ namespace cryptonote
      * @return true if the key image is already spent in the blockchain, else false
      */
     bool have_tx_keyimg_as_spent(const crypto::key_image &key_im) const;
+
+    // RNG
+    bool have_tx_rng_as_spent(const crypto::pq_seed &rng) const;
 
     /**
      * @brief get the current height of the blockchain
@@ -982,6 +988,9 @@ namespace cryptonote
     typedef std::unordered_map<crypto::hash, transaction_chain_entry> transactions_container;
 
     typedef std::unordered_set<crypto::key_image> key_images_container;
+
+    // RNG
+    typedef std::unordered_set<crypto::pq_seed> rng_container;
 
     typedef std::vector<block_extended_info> blocks_container;
 

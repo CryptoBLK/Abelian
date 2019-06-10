@@ -148,6 +148,9 @@ void BlockchainDB::add_transaction(const crypto::hash& blk_hash, const transacti
     if (tx_input.type() == typeid(txin_to_key))
     {
       add_spent_key(boost::get<txin_to_key>(tx_input).k_image);
+
+      // Add spent RNG
+      add_spent_rng(boost::get<txin_to_key>(tx_input).random);
     }
     else if (tx_input.type() == typeid(txin_gen))
     {
@@ -162,6 +165,9 @@ void BlockchainDB::add_transaction(const crypto::hash& blk_hash, const transacti
         if (tx_input.type() == typeid(txin_to_key))
         {
           remove_spent_key(boost::get<txin_to_key>(tx_input).k_image);
+
+          // Remove speng RNG
+          remove_spent_rng(boost::get<txin_to_key>(tx_input).random);
         }
       }
       return;
@@ -288,6 +294,9 @@ void BlockchainDB::remove_transaction(const crypto::hash& tx_hash)
     if (tx_input.type() == typeid(txin_to_key))
     {
       remove_spent_key(boost::get<txin_to_key>(tx_input).k_image);
+
+      // Remove spent RNG
+      remove_spent_rng(boost::get<txin_to_key>(tx_input).random);
     }
   }
 

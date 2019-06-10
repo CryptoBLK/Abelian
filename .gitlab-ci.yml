@@ -1,0 +1,22 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_STRATEGY: fetch
+  GIT_DEPTH: "1"
+
+stages:
+  - build
+  - test
+
+build:linux:
+  image: ubuntu:latest
+  stage: build
+  script:
+    - apt update &&  apt -y install build-essential cmake pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev
+    # print our runner distro
+    - cat /proc/version
+    # print the current commit hash
+    - echo $CI_COMMIT_SHA
+    - make -j4 debug
+  artifacts:
+    paths:
+      - "build/debug/bin"

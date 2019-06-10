@@ -26,19 +26,21 @@ class AbelianTransferTest():
         destination = wallet.make_uniform_destinations(
             mainnet_address_2, 1)
 
+        # Pre-mining
         self.mine(daemon=daemon, blocks=100)
-        self.transfer_100(wallet)
 
+        # Start Transfer - 1
+        self.transfer_100(wallet)
         self.mine(daemon=daemon, blocks=10)
+
+        # Start Transfer - 2
         self.transfer_100_random(wallet)
+        self.mine(daemon=daemon, blocks=10)
 
     def mine(self, daemon, blocks):
         print("Mining some blocks")
-
         start = time.time()
-
         daemon.generateblocks(mainnet_address_1, 400)
-
         print('Generating 500 blocks took: ', time.time() - start, 'seconds')
 
     def transfer_100(self, wallet):
@@ -55,6 +57,7 @@ class AbelianTransferTest():
             res = wallet.transfer(dest, 1)
             print(res)
 
+        print('Balance: %2d' % wallet.get_balance()['unlocked_balance'])
         print('Transfer tx took: ', time.time() - start, 'seconds')
 
     def transfer_100_random(self, wallet):
@@ -78,7 +81,7 @@ class AbelianTransferTest():
             res = wallet.transfer(dest_100, 1)
             print(res)
 
-            res = wallet.transfer(dest_1000, 1)
+            res = wallet.transfer(dest_1000)
             print(res)
 
         print('Transfer tx took: ', time.time() - start, 'seconds')

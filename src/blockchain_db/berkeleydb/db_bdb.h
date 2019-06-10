@@ -317,6 +317,9 @@ public:
 
   virtual bool has_key_image(const crypto::key_image& img) const;
 
+  //RNG
+  virtual bool has_spent_rng(const crypto::pq_seed& rng) const;
+
   virtual uint64_t add_block( const block& blk
                             , size_t block_weight
                             , const difficulty_type& cumulative_difficulty
@@ -376,11 +379,19 @@ private:
 
   virtual void add_spent_key(const crypto::key_image& k_image);
 
+  //RNG
+  virtual void add_spent_rng(const crypto::pq_seed& rand);
+  virtual void remove_spent_rng(const crypto::pq_seed& rand);
+
   virtual void remove_spent_key(const crypto::key_image& k_image);
 
   void get_output_global_indices(const uint64_t& amount, const std::vector<uint64_t> &offsets, std::vector<uint64_t> &global_indices);
 
   virtual bool for_all_key_images(std::function<bool(const crypto::key_image&)>) const;
+
+  // RNG
+  virtual bool for_all_rng(std::function<bool(const crypto::pq_seed&)>) const;
+
   virtual bool for_all_blocks(std::function<bool(uint64_t, const crypto::hash&, const cryptonote::block&)>) const;
   virtual bool for_all_transactions(std::function<bool(const crypto::hash&, const cryptonote::transaction&)>, bool pruned) const;
   virtual bool for_all_outputs(std::function<bool(uint64_t amount, const crypto::hash &tx_hash, size_t tx_idx)> f) const;

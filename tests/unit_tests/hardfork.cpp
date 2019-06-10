@@ -102,6 +102,10 @@ public:
   virtual std::vector<uint64_t> get_tx_output_indices(const crypto::hash& h) const { return std::vector<uint64_t>(); }
   virtual std::vector<uint64_t> get_tx_amount_output_indices(const uint64_t tx_index) const { return std::vector<uint64_t>(); }
   virtual bool has_key_image(const crypto::key_image& img) const { return false; }
+
+  //RNG
+  virtual bool has_spent_rng(const crypto::pq_seed& rng) const { return false; }
+
   virtual void remove_block() { blocks.pop_back(); }
   virtual uint64_t add_transaction_data(const crypto::hash& blk_hash, const transaction& tx, const crypto::hash& tx_hash, const crypto::hash& tx_prunable_hash) {return 0;}
   virtual void remove_transaction_data(const crypto::hash& tx_hash, const transaction& tx) {}
@@ -110,7 +114,15 @@ public:
   virtual void add_spent_key(const crypto::key_image& k_image) {}
   virtual void remove_spent_key(const crypto::key_image& k_image) {}
 
+  //RNG
+  virtual void add_spent_rng(const crypto::pq_seed& rand) {}
+  virtual void remove_spent_rng(const crypto::pq_seed& rand) {}
+
   virtual bool for_all_key_images(std::function<bool(const crypto::key_image&)>) const { return true; }
+
+  // RNG
+  virtual bool for_all_rng(std::function<bool(const crypto::pq_seed&)>) const { return true; }
+
   virtual bool for_blocks_range(const uint64_t&, const uint64_t&, std::function<bool(uint64_t, const crypto::hash&, const cryptonote::block&)>) const { return true; }
   virtual bool for_all_transactions(std::function<bool(const crypto::hash&, const cryptonote::transaction&)>, bool pruned) const { return true; }
   virtual bool for_all_outputs(std::function<bool(uint64_t amount, const crypto::hash &tx_hash, uint64_t height, size_t tx_idx)> f) const { return true; }
