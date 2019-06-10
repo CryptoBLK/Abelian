@@ -7,16 +7,29 @@ stages:
   - build
   - test
 
+build:windows:
+    tags:
+      - windows
+    stage: build
+    script:
+      - export USE_SINGLE_BUILDDIR=1
+      - cat /proc/version
+      - make release-static-win64
+    artifacts:
+      paths:
+        - "build/release/bin"
+
 build:linux:
   image: ubuntu:latest
   stage: build
   script:
     - apt update &&  apt -y install build-essential cmake pkg-config libboost-all-dev libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpgm-dev
+    - export USE_SINGLE_BUILDDIR=1
     # print our runner distro
     - cat /proc/version
     # print the current commit hash
     - echo $CI_COMMIT_SHA
-    - make -j4 debug
+    - make -j4 release-static
   artifacts:
     paths:
-      - "build/debug/bin"
+      - "build/release/bin"
