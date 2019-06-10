@@ -449,6 +449,39 @@ namespace cryptonote
     typedef epee::misc_utils::struct_init<response_t> response;
   };
 
+//-----------------------------------------------
+struct COMMAND_RPC_IS_RNG_SPENT
+{
+  enum STATUS {
+    RNG_UNSPENT = 0,
+    RNG_SPENT_IN_BLOCKCHAIN = 1,
+    RNG_SPENT_IN_POOL = 2,
+  };
+
+  struct request
+  {
+    std::vector<std::string> rngs;
+
+  BEGIN_KV_SERIALIZE_MAP()
+      KV_SERIALIZE(rngs)
+    END_KV_SERIALIZE_MAP()
+  };
+
+
+  struct response
+  {
+    std::vector<int> rng_spent_status;
+    std::string status;
+    bool untrusted;
+
+  BEGIN_KV_SERIALIZE_MAP()
+      KV_SERIALIZE(rng_spent_status)
+      KV_SERIALIZE(status)
+      KV_SERIALIZE(untrusted)
+    END_KV_SERIALIZE_MAP()
+  };
+};
+
   //-----------------------------------------------
   struct COMMAND_RPC_GET_TX_GLOBAL_OUTPUTS_INDEXES
   {

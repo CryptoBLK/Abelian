@@ -70,6 +70,7 @@ typedef struct mdb_txn_cursors
   MDB_cursor *m_txc_hf_versions;
 
   MDB_cursor *m_txc_properties;
+  MDB_cursor *m_txc_spent_rng;
 } mdb_txn_cursors;
 
 #define m_cur_blocks	m_cursors->m_txc_blocks
@@ -89,6 +90,9 @@ typedef struct mdb_txn_cursors
 #define m_cur_txpool_blob	m_cursors->m_txc_txpool_blob
 #define m_cur_hf_versions	m_cursors->m_txc_hf_versions
 #define m_cur_properties	m_cursors->m_txc_properties
+
+// RNG
+#define m_cur_spent_rng         m_cursors->m_txc_spent_rng
 
 typedef struct mdb_rflags
 {
@@ -110,6 +114,7 @@ typedef struct mdb_rflags
   bool m_rf_txpool_blob;
   bool m_rf_hf_versions;
   bool m_rf_properties;
+  bool m_rf_spent_rng;
 } mdb_rflags;
 
 typedef struct mdb_threadinfo
@@ -274,6 +279,9 @@ public:
   virtual bool has_key_image(const crypto::key_image& img) const;
 
   virtual void add_txpool_tx(const crypto::hash &txid, const cryptonote::blobdata &blob, const txpool_tx_meta_t& meta);
+  //RNG
+  virtual bool has_spent_rng(const crypto::pq_seed& rng) const;
+
   virtual void update_txpool_tx(const crypto::hash &txid, const txpool_tx_meta_t& meta);
   virtual uint64_t get_txpool_tx_count(bool include_unrelayed_txes = true) const;
   virtual bool txpool_has_tx(const crypto::hash &txid) const;
@@ -289,6 +297,10 @@ public:
   virtual bool for_all_txpool_txes(std::function<bool(const crypto::hash&, const txpool_tx_meta_t&, const cryptonote::blobdata*)> f, bool include_blob = false, bool include_unrelayed_txes = true) const;
 
   virtual bool for_all_key_images(std::function<bool(const crypto::key_image&)>) const;
+
+  // RNG
+  virtual bool for_all_rng(std::function<bool(const crypto::pq_seed&)>) const;
+
   virtual bool for_blocks_range(const uint64_t& h1, const uint64_t& h2, std::function<bool(uint64_t, const crypto::hash&, const cryptonote::block&)>) const;
   virtual bool for_all_transactions(std::function<bool(const crypto::hash&, const cryptonote::transaction&)>, bool pruned) const;
   virtual bool for_all_outputs(std::function<bool(uint64_t amount, const crypto::hash &tx_hash, uint64_t height, size_t tx_idx)> f) const;
@@ -381,7 +393,11 @@ private:
 
   virtual void add_spent_key(const crypto::key_image& k_image);
 
+  virtual void add_spent_rng(const crypto::pq_seed& rand);
+
   virtual void remove_spent_key(const crypto::key_image& k_image);
+
+  virtual void remove_spent_rng(const crypto::pq_seed& rand);
 
   uint64_t num_outputs() const;
 
@@ -451,6 +467,8 @@ private:
   MDB_dbi m_hf_versions;
 
   MDB_dbi m_properties;
+
+  MDB_dbi m_spent_rng;
 
   mutable uint64_t m_cum_size;	// used in batch size estimation
   mutable unsigned int m_cum_count;

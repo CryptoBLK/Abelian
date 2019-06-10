@@ -165,6 +165,12 @@ bool Blockchain::have_tx_keyimg_as_spent(const crypto::key_image &key_im) const
   // lock if it is otherwise needed.
   return  m_db->has_key_image(key_im);
 }
+// RNG
+bool Blockchain::have_tx_rng_as_spent(const crypto::pq_seed &rng) const
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+  return m_db->has_spent_rng(rng);
+}
 //------------------------------------------------------------------
 // This function makes sure that each "input" in an input (mixins) exists
 // and collects the public key for each from the transaction it was included in
@@ -2657,6 +2663,19 @@ bool Blockchain::have_tx_keyimges_as_spent(const transaction &tx) const
   }
   return false;
 }
+//RNG---------------------------------------------------------------
+bool Blockchain::have_tx_rngs_as_spent(const cryptonote::transaction &tx) const
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+  for (const auto &in : tx.vin)
+  {
+    CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, in_to_key, true);
+    if(have_tx_rng_as_spent(in_to_key.random)){
+      return true;
+    }
+  }
+  return false;
+}
 bool Blockchain::expand_transaction_2(transaction &tx, const crypto::hash &tx_prefix_hash, const std::vector<std::vector<rct::ctkey>> &pubkeys)
 {
   PERF_TIMER(expand_transaction_2);
@@ -2867,11 +2886,12 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
     CHECK_AND_ASSERT_MES(in_to_key.key_offsets.size(), false, "empty in_to_key.key_offsets in transaction with id " << get_transaction_hash(tx));
 
     // Instead of checking the spend key image check if RNG field is already spend.
-    if(have_tx_keyimg_as_spent(in_to_key.k_image))
+    //if(have_tx_keyimg_as_spent(in_to_key.k_image))
+    if(have_tx_rng_as_spent(in_to_key.random))
     {
-      MERROR_VER("Key image already spent in blockchain: " << epee::string_tools::pod_to_hex(in_to_key.k_image));
-      //tvc.m_double_spend = true;
-      //return false;
+      MERROR_VER("RNG already spent in blockchain: " << epee::string_tools::pod_to_hex(in_to_key.random));
+      tvc.m_double_spend = true;
+      return false;
     }
 
     if (tx.version == 1)
@@ -3256,14 +3276,9 @@ bool Blockchain::check_fee(size_t tx_weight, uint64_t fee) const
   else
   {
     uint64_t fee_per_kb;
-    if (version < HF_VERSION_DYNAMIC_FEE)
-    {
-      fee_per_kb = FEE_PER_KB;
-    }
-    else
-    {
-      fee_per_kb = get_dynamic_base_fee(base_reward, median, version);
-    }
+
+    // Fix for fee/kb calculation.
+    fee_per_kb = get_dynamic_base_fee(base_reward, median, version);
     MDEBUG("Using " << print_money(fee_per_kb) << "/kB fee");
 
     needed_fee = tx_weight / 1024;
@@ -3824,6 +3839,13 @@ leave:
     {
       LOG_ERROR("Error adding block with hash: " << id << " to blockchain, what = " << e.what());
       m_batch_success = false;
+      bvc.m_verifivation_failed = true;
+      return_tx_to_pool(txs);
+      return false;
+    }
+    catch (const RNG_EXISTS& e)
+    {
+      LOG_ERROR("Error adding block with hash: " << id << " to blockchain, what = " << e.what());
       bvc.m_verifivation_failed = true;
       return_tx_to_pool(txs);
       return false;

@@ -419,6 +419,8 @@ void toJsonValue(rapidjson::Document& doc, const cryptonote::txin_to_key& txin, 
   INSERT_INTO_JSON_OBJECT(val, doc, amount, txin.amount);
   INSERT_INTO_JSON_OBJECT(val, doc, key_offsets, txin.key_offsets);
   INSERT_INTO_JSON_OBJECT(val, doc, key_image, txin.k_image);
+  INSERT_INTO_JSON_OBJECT(val, doc, random, txin.random);
+
 }
 
 
@@ -432,6 +434,7 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::txin_to_key& txin)
   GET_FROM_JSON_OBJECT(val, txin.amount, amount);
   GET_FROM_JSON_OBJECT(val, txin.key_offsets, key_offsets);
   GET_FROM_JSON_OBJECT(val, txin.k_image, key_image);
+  GET_FROM_JSON_OBJECT(val, txin.random, random);
 }
 
 void toJsonValue(rapidjson::Document& doc, const cryptonote::txout_to_script& txout, rapidjson::Value& val)
@@ -527,7 +530,7 @@ void fromJsonValue(const rapidjson::Value& val, cryptonote::tx_out& txout)
     throw WRONG_TYPE("json object");
   }
 
-  if (val.MemberCount() != 2)
+  if (val.MemberCount() != 3)
   {
     throw MISSING_KEY("Invalid input object");
   }

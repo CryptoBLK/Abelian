@@ -132,6 +132,8 @@ class DaemonHandler : public RpcHandler
 
     void handle(const GetOutputDistribution::Request& req, GetOutputDistribution::Response& res);
 
+    void handle(const RNGSpent::Request& req, RNGSpent::Response& res);
+
     std::string handle(const std::string& request);
 
   private:

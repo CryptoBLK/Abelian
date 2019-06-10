@@ -305,6 +305,11 @@ namespace cryptonote
     bool check_for_key_images(const std::vector<crypto::key_image>& key_images, std::vector<bool> spent) const;
 
     /**
+     * RNG implementation of check_for_key_images
+     */
+     bool check_for_rngs(const std::vector<crypto::pq_seed>& rng, std::vector<bool> spent) const;
+
+    /**
      * @brief get a specific transaction from the pool
      *
      * @param h the hash of the transaction to get
@@ -440,6 +445,11 @@ namespace cryptonote
     bool insert_key_images(const transaction_prefix &tx, const crypto::hash &txid, bool kept_by_block);
 
     /**
+     * RNG implementation for insert_key_images
+     */
+    bool insert_rngs(const transaction &tx, bool kept_by_block);
+
+    /**
      * @brief remove old transactions from the pool
      *
      * After a certain time, it is assumed that a transaction which has not
@@ -460,6 +470,11 @@ namespace cryptonote
     bool have_tx_keyimg_as_spent(const crypto::key_image& key_im) const;
 
     /**
+     * Experimental RNG
+     */
+    bool have_tx_rng_as_spent(const crypto::pq_seed& rng) const;
+
+    /**
      * @brief check if any spent key image in a transaction is in the pool
      *
      * Checks if any of the spent key images in a given transaction are present
@@ -472,6 +487,11 @@ namespace cryptonote
      * @return true if any spent key images are present in the pool, otherwise false
      */
     bool have_tx_keyimges_as_spent(const transaction& tx) const;
+
+    /**
+     * Experimental RNG
+     */
+    bool have_tx_rngs_as_spent(const transaction& tx) const;
 
     /**
      * @brief forget a transaction's spent key images
@@ -488,6 +508,11 @@ namespace cryptonote
     bool remove_transaction_keyimages(const transaction_prefix& tx, const crypto::hash &txid);
 
     /**
+     * RNG implementation for remove_transaction_keyimages
+     */
+    bool remove_transaction_rngs(const transaction& tx);
+
+    /**
      * @brief check if any of a transaction's spent key images are present in a given set
      *
      * @param kic the set of key images to check against
@@ -496,6 +521,11 @@ namespace cryptonote
      * @return true if any key images present in the set, otherwise false
      */
     static bool have_key_images(const std::unordered_set<crypto::key_image>& kic, const transaction_prefix& tx);
+
+    /**
+     * RNG for handling have_key_images
+     */
+     static bool have_rngs(const std::unordered_set<crypto::pq_seed> &rng, const transaction& tx);
 
     /**
      * @brief append the key images from a transaction to the given set
@@ -508,6 +538,11 @@ namespace cryptonote
      * @return false if any append fails, otherwise true
      */
     static bool append_key_images(std::vector<crypto::key_image>& kic, const transaction& tx);
+
+    /**
+     * RNG for handling append_key_images
+     */
+     static bool append_rngs(std::unordered_set<crypto::pq_seed>& rng, const transaction& tx);
 
     /**
      * @brief check if a transaction is a valid candidate for inclusion in a block
@@ -527,6 +562,11 @@ namespace cryptonote
     void mark_double_spend(const transaction &tx);
 
     /**
+     * RNG version for mark_double_spend
+     */
+    void mark_double_spend_rng(const transaction &tx);
+
+    /**
      * @brief prune lowest fee/byte txes till we're not above bytes
      *
      * if bytes is 0, use m_txpool_max_weight
@@ -544,6 +584,9 @@ namespace cryptonote
      */
     typedef std::unordered_map<crypto::key_image, std::unordered_set<crypto::hash> > key_images_container;
 
+    // RNG
+    typedef std::unordered_map<crypto::pq_seed, std::unordered_set<crypto::hash> > rng_container;
+
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
 public:
 #endif
@@ -553,7 +596,10 @@ private:
 #endif
 
     //! container for spent key images from the transactions in the pool
-    key_images_container m_spent_key_images;  
+    key_images_container m_spent_key_images;
+
+    //! container for spent rng from transactions in the pool
+    rng_container m_spent_rngs;
 
     //TODO: this time should be a named constant somewhere, not hard-coded
     //! interval on which to check for stale/"stuck" transactions

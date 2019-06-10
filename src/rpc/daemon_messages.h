@@ -441,6 +441,20 @@ BEGIN_RPC_MESSAGE_CLASS(GetOutputDistribution);
   END_RPC_MESSAGE_RESPONSE;
 END_RPC_MESSAGE_CLASS;
 
+BEGIN_RPC_MESSAGE_CLASS(RNGSpent);
+  enum STATUS {
+    RNG_UNSPENT = 0,
+    RNG_SPENT_IN_BLOCKCHAIN = 1,
+    RNG_SPENT_IN_POOL = 2,
+  };
+  BEGIN_RPC_MESSAGE_REQUEST;
+    RPC_MESSAGE_MEMBER(std::vector<crypto::pq_seed>, rngs);
+  END_RPC_MESSAGE_REQUEST;
+  BEGIN_RPC_MESSAGE_RESPONSE;
+    RPC_MESSAGE_MEMBER(std::vector<uint64_t>, rng_spent_status);
+  END_RPC_MESSAGE_RESPONSE;
+END_RPC_MESSAGE_CLASS;
+
 }  // namespace rpc
 
 }  // namespace cryptonote

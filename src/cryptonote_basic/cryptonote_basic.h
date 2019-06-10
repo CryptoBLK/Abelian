@@ -125,10 +125,14 @@ namespace cryptonote
     std::vector<uint64_t> key_offsets;
     crypto::key_image k_image;      // double spending protection TODO
 
+    // Add a RNG field in input.
+    crypto::pq_seed random;
+
     BEGIN_SERIALIZE_OBJECT()
       VARINT_FIELD(amount)
       FIELD(key_offsets)
       FIELD(k_image)
+      FIELD(random)
     END_SERIALIZE()
   };
 
