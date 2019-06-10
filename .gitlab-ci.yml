@@ -7,18 +7,6 @@ stages:
   - build
   - test
 
-build:osx:
-  stage: build
-  script:
-    - which ruby
-    - ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-    - brew update && brew bundle --file=contrib/brew/Brewfile
-    - export USE_SINGLE_BUILDDIR=1
-    - make -j4 release-static-mac-x86_64
-  artifacts:
-    paths:
-      - "build/release/bin"
-
 build:linux:
   image: ubuntu:latest
   stage: build
@@ -29,7 +17,7 @@ build:linux:
     - cat /proc/version
     # print the current commit hash
     - echo $CI_COMMIT_SHA
-    - make -j4 release-static
+    - make -j8 release-static
   artifacts:
     paths:
       - "build/release/bin"
