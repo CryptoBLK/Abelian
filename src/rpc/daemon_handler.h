@@ -128,6 +128,8 @@ class DaemonHandler : public RpcHandler
 
     void handle(const GetPerKBFeeEstimate::Request& req, GetPerKBFeeEstimate::Response& res);
 
+    void handle(const RNGSpent::Request& req, RNGSpent::Response& res);
+
     std::string handle(const std::string& request);
 
   private:

@@ -1583,11 +1583,13 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
 
         auto kit = m_pub_keys.find(tx_scan_info[o].in_ephemeral.pub);
         auto rng = m_tx_rng.find(tx_scan_info[o].random); // Workaround for checking instead of the key image.
+
 	THROW_WALLET_EXCEPTION_IF(kit != m_pub_keys.end() && kit->second >= m_transfers.size(),
             error::wallet_internal_error, std::string("Unexpected transfer index from public key: ")
             + "got " + (kit == m_pub_keys.end() ? "<none>" : boost::lexical_cast<std::string>(kit->second))
             + ", m_transfers.size() is " + boost::lexical_cast<std::string>(m_transfers.size()));
-	    // If "kit" -> transaction public key is not found, accept transaction
+
+	    // If "kit" -> "transaction public key" is not found, accept transaction
 	    // if not tx -> garbage
         //if (kit == m_pub_keys.end())//Removed this on second condition
         //Check for the random tx ID, if id is not in container add it.
@@ -1653,28 +1655,33 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
                                     << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
                                     << (m_transfers[rng->second].m_spent ? "spent" : "unspent") << " "
                                     << print_money(m_transfers[rng->second].amount()) << " in tx " << m_transfers[rng->second].m_txid << ", received output ignored");
+
             THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info[o].received->index] < tx_scan_info[o].amount,
                                       error::wallet_internal_error, "Unexpected values of new and old outputs");
+
             tx_money_got_in_outs[tx_scan_info[o].received->index] -= tx_scan_info[o].amount;
         }
         else
         {
-            LOG_PRINT_L0("NOT_RNG: ");
 	  LOG_ERROR("RNG tx key " << epee::string_tools::pod_to_hex(rng->first)
               << " from received " << print_money(tx_scan_info[o].amount) << " output already exists with "
               << print_money(m_transfers[rng->second].amount()) << ", replacing with new output");
+
           // The new larger output replaced a previous smaller one
           THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info[o].received->index] < tx_scan_info[o].amount,
               error::wallet_internal_error, "Unexpected values of new and old outputxs");
+
           THROW_WALLET_EXCEPTION_IF(m_transfers[rng->second].amount() > tx_scan_info[o].amount,
               error::wallet_internal_error, "Unexpected values of new and old outputs");
+
           tx_money_got_in_outs[tx_scan_info[o].received->index] -= m_transfers[rng->second].amount();
 
           uint64_t amount = tx.vout[o].amount ? tx.vout[o].amount : tx_scan_info[o].amount;
           uint64_t extra_amount = amount - m_transfers[rng->second].amount();
           if (!pool)
           {
-            transfer_details &td = m_transfers[kit->second];
+            LOG_PRINT_L0("!pool wallet2::" <<__func__);
+            transfer_details &td = m_transfers[rng->second];
 	    td.m_block_height = height;
 	    td.m_internal_output_index = o;
 	    td.m_global_output_index = o_indices[o];
@@ -1722,7 +1729,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
 
   uint64_t tx_money_spent_in_ins = 0;
   // The line below is equivalent to "boost::optional<uint32_t> subaddr_account;", but avoids the GCC warning: ‘*((void*)& subaddr_account +4)’ may be used uninitialized in this function
-  // It's a GCC bug with boost::optional, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=47679
+  // It's a GCC bug with boost::optional, see https://gcc.gnu.org/bugzil1676la/show_bug.cgi?id=47679
   auto subaddr_account ([]()->boost::optional<uint32_t> {return boost::none;}());
   std::set<uint32_t> subaddr_indices;
   // check all outputs for spending (compare key images)
@@ -1731,10 +1738,14 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     if(in.type() != typeid(cryptonote::txin_to_key))
       continue;
     auto it = m_key_images.find(boost::get<cryptonote::txin_to_key>(in).k_image);
-    if(it != m_key_images.end())
+    auto itRng = m_tx_rng.find(boost::get<cryptonote::txin_to_key>(in).random);
+
+    if(it != m_key_images.end() && itRng != m_tx_rng.end())
     {
-      transfer_details& td = m_transfers[it->second];
+      LOG_PRINT_L0("found key_images and RNG");
+      transfer_details& td = m_transfers[itRng->second];
       uint64_t amount = boost::get<cryptonote::txin_to_key>(in).amount;
+
       if (amount > 0)
       {
         if(amount != td.amount())

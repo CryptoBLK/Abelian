@@ -210,6 +210,9 @@ const char* const LMDB_HF_VERSIONS = "hf_versions";
 
 const char* const LMDB_PROPERTIES = "properties";
 
+// RNG
+const char* const LMDB_SPENT_RNG = "spent_rng";
+
 const char zerokey[8] = {0};
 const MDB_val zerokval = { sizeof(zerokey), (void *)zerokey };
 
@@ -1109,6 +1112,47 @@ void BlockchainLMDB::add_spent_key(const crypto::key_image& k_image)
   }*/
 }
 
+//RNG
+void BlockchainLMDB::add_spent_rng(const crypto::pq_seed& rand)
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+  mdb_txn_cursors *m_cursors = &m_wcursors;
+
+  CURSOR(spent_rng)
+
+  MDB_val k = {sizeof(rand), (void *)&rand};
+  auto result = mdb_cursor_put(m_cur_spent_rng, (MDB_val *)&zerokval, &k, MDB_NODUPDATA);
+
+  LOG_PRINT_L3("::add_spent_rng in DB" << result);
+  if (result) {
+    if (result == MDB_KEYEXIST)
+      throw1(RNG_EXISTS("Attempting to add spent rng that's already in the db"));
+    else
+      throw1(DB_ERROR(lmdb_error("Error adding spent rng to db transaction: ", result).c_str()));
+  }
+}
+
+void BlockchainLMDB::remove_spent_rng(const crypto::pq_seed& rand)
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+  mdb_txn_cursors *m_cursors = &m_wcursors;
+
+  CURSOR(spent_rng)
+
+  MDB_val k = {sizeof(rand), (void *)&rand};
+  auto result = mdb_cursor_get(m_cur_spent_rng, (MDB_val *)&zerokval, &k, MDB_GET_BOTH);
+  if (result != 0 && result != MDB_NOTFOUND)
+    throw1(DB_ERROR(lmdb_error("Error finding spent rng to remove", result).c_str()));
+  if (!result)
+  {
+    result = mdb_cursor_del(m_cur_spent_rng, 0);
+    if (result)
+      throw1(DB_ERROR(lmdb_error("Error adding removal of rng to db transaction", result).c_str()));
+  }
+}
+
 void BlockchainLMDB::remove_spent_key(const crypto::key_image& k_image)
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
@@ -1311,6 +1355,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
 
   lmdb_db_open(txn, LMDB_SPENT_KEYS, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_spent_keys, "Failed to open db handle for m_spent_keys");
 
+  //RNG
+  lmdb_db_open(txn, LMDB_SPENT_RNG, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_spent_rng, "Failed to open db handle for m_spent_rng");
+
   lmdb_db_open(txn, LMDB_TXPOOL_META, MDB_CREATE, m_txpool_meta, "Failed to open db handle for m_txpool_meta");
   lmdb_db_open(txn, LMDB_TXPOOL_BLOB, MDB_CREATE, m_txpool_blob, "Failed to open db handle for m_txpool_blob");
 
@@ -1334,6 +1381,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
   mdb_set_compare(txn, m_txpool_meta, compare_hash32);
   mdb_set_compare(txn, m_txpool_blob, compare_hash32);
   mdb_set_compare(txn, m_properties, compare_string);
+
+  // RNG
+  mdb_set_dupsort(txn, m_spent_rng, compare_hash32);
 
   if (!(mdb_flags & MDB_RDONLY))
   {
@@ -1494,6 +1544,10 @@ void BlockchainLMDB::reset()
     throw0(DB_ERROR(lmdb_error("Failed to drop m_hf_versions: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_properties, 0))
     throw0(DB_ERROR(lmdb_error("Failed to drop m_properties: ", result).c_str()));
+
+  // RNG
+  if (auto result = mdb_drop(txn, m_spent_rng, 0))
+    throw0(DB_ERROR(lmdb_error("Failed to drop m_spent_rng: ", result).c_str()));
 
   // init with current version
   MDB_val_copy<const char*> k("version");
@@ -2638,6 +2692,60 @@ bool BlockchainLMDB::has_key_image(const crypto::key_image& img) const
   TXN_POSTFIX_RDONLY();
   LOG_PRINT_L1("BlockchainLMDB:: ret = " << ret);
   return ret;
+}
+
+// RNG
+bool BlockchainLMDB::has_spent_rng(const crypto::pq_seed& rng) const
+{
+    LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+    check_open();
+
+    bool ret;
+    TXN_PREFIX_RDONLY();
+    RCURSOR(spent_rng)
+
+    MDB_val k = { sizeof(rng), (void *)&rng };
+    ret = (mdb_cursor_get(m_cur_spent_rng, (MDB_val *)&zerokval, &k, MDB_GET_BOTH) == 0);
+
+    TXN_POSTFIX_RDONLY();
+    LOG_PRINT_L1("BlockchainLMDB:: ret = " << ret);
+
+    return ret;
+}
+
+bool BlockchainLMDB::for_all_rng(std::function<bool(const crypto::pq_seed&)> r) const
+{
+    LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+    check_open();
+
+    TXN_PREFIX_RDONLY();
+    RCURSOR(spent_rng)
+
+    bool fret = true;
+
+    auto k = zerokval, v = zerokval;
+
+    auto op = MDB_FIRST;
+    while(1)
+    {
+      auto ret = mdb_cursor_get(m_cur_spent_rng, &k, &v, op);
+      op = MDB_NEXT;
+      if (ret == MDB_NOTFOUND){
+        break;
+      }
+      if (ret < 0){
+        throw0(DB_ERROR("Failed to enumerate spent rng"));
+      }
+      const auto rng = *(const crypto::pq_seed*)v.mv_data;
+      if (!r(rng)) {
+        fret = false;
+        break;
+      }
+    }
+
+    TXN_POSTFIX_RDONLY()
+
+    return fret;
 }
 
 bool BlockchainLMDB::for_all_key_images(std::function<bool(const crypto::key_image&)> f) const
@@ -3937,6 +4045,7 @@ void BlockchainLMDB::migrate_0_1()
     DELETE_DB("output_amounts");
     DELETE_DB("tx_outputs");
     DELETE_DB("tx_unlocks");
+    DELETE_DB("spent_rng");
 
     /* reopen new DBs with correct flags */
     result = mdb_txn_begin(m_env, NULL, 0, txn);
@@ -3949,6 +4058,9 @@ void BlockchainLMDB::migrate_0_1()
     mdb_set_dupsort(txn, m_spent_keys, compare_hash32);
     lmdb_db_open(txn, LMDB_OUTPUT_AMOUNTS, MDB_INTEGERKEY | MDB_DUPSORT | MDB_DUPFIXED | MDB_CREATE, m_output_amounts, "Failed to open db handle for m_output_amounts");
     mdb_set_dupsort(txn, m_output_amounts, compare_uint64);
+    //RNG
+    lmdb_db_open(txn, LMDB_SPENT_RNG, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_spent_rng, "Failed to open db handle for m_spent_keys");
+    mdb_set_dupsort(txn, m_spent_rng, compare_hash32);
     txn.commit();
   } while(0);
 

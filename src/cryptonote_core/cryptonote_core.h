@@ -696,6 +696,9 @@ namespace cryptonote
       */
      bool is_key_image_spent(const crypto::key_image& key_im) const;
 
+     // RNG
+     bool is_rng_spent(const crypto::pq_seed& rng) const;
+
      /**
       * @brief check if multiple key images are spent
       *
@@ -709,6 +712,11 @@ namespace cryptonote
      bool are_key_images_spent(const std::vector<crypto::key_image>& key_im, std::vector<bool> &spent) const;
 
      /**
+      * RNG handler for are_key_images_spent
+      */
+     bool are_rngs_spent(const std::vector<crypto::pq_seed>& rng, std::vector<bool> &spent) const;
+
+     /**
       * @brief check if multiple key images are spent in the transaction pool
       *
       * @param key_im list of key images to check
@@ -717,6 +725,11 @@ namespace cryptonote
       * @return true
       */
      bool are_key_images_spent_in_pool(const std::vector<crypto::key_image>& key_im, std::vector<bool> &spent) const;
+
+     /**
+      * RNG implementation of are_key_images_spent_in_pool
+      */
+      bool are_rngs_spent_in_pool(const std::vector<crypto::pq_seed>& rngs, std::vector<bool> &spent) const;
 
      /**
       * @brief get the number of blocks to sync in one go
@@ -893,6 +906,11 @@ namespace cryptonote
       * @return false if any key image is repeated, otherwise true
       */
      bool check_tx_inputs_keyimages_diff(const transaction& tx) const;
+
+     /**
+      * RNG handler for check_tx_inputs_keyimages_diff
+      */
+     bool check_tx_inputs_rng_diff(const transaction& tx) const;
 
      /**
       * @brief verify that each ring uses distinct members

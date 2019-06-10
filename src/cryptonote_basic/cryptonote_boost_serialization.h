@@ -143,6 +143,7 @@ namespace boost
     a & x.amount;
     a & x.key_offsets;
     a & x.k_image;
+    a & x.random;
   }
 
   template <class Archive>

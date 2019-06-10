@@ -323,6 +323,16 @@ class KEY_IMAGE_EXISTS : public DB_EXCEPTION
     KEY_IMAGE_EXISTS(const char* s) : DB_EXCEPTION(s) { }
 };
 
+/**
+ * @brief thrown when a spent RNG exists, but shouldn't, namely when adding a block
+ */
+class RNG_EXISTS : public DB_EXCEPTION
+{
+public:
+  RNG_EXISTS() : DB_EXCEPTION("The spent RNG to be added already exists!") { }
+  RNG_EXISTS(const char* s) : DB_EXCEPTION(s) { }
+};
+
 /***********************************
  * End of Exception Definitions
  ***********************************/
@@ -480,6 +490,9 @@ private:
    */
   virtual void add_spent_key(const crypto::key_image& k_image) = 0;
 
+  //RNG
+  virtual void add_spent_rng(const crypto::pq_seed& rand) = 0;
+
   /**
    * @brief remove a spent key
    *
@@ -492,6 +505,8 @@ private:
    */
   virtual void remove_spent_key(const crypto::key_image& k_image) = 0;
 
+  //RNG
+  virtual void remove_spent_rng(const crypto::pq_seed& rand) = 0;
 
   /*********************************************************************
    * private concrete members
@@ -1359,6 +1374,8 @@ public:
    */
   virtual bool has_key_image(const crypto::key_image& img) const = 0;
 
+  virtual bool has_spent_rng(const crypto::pq_seed& rng) const = 0;
+
   /**
    * @brief add a txpool transaction
    *
@@ -1449,6 +1466,8 @@ public:
    * @return false if the function returns false for any key image, otherwise true
    */
   virtual bool for_all_key_images(std::function<bool(const crypto::key_image&)>) const = 0;
+
+  virtual bool for_all_rng(std::function<bool(const crypto::pq_seed&)>) const = 0;
 
   /**
    * @brief runs a function over a range of blocks
