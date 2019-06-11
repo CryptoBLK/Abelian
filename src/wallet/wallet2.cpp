@@ -3359,8 +3359,6 @@ void wallet2::detach_blockchain(uint64_t height, std::map<std::pair<uint64_t, ui
 
   for(size_t i = i_start; i!= m_transfers.size();i++)
   {
-    // RNG workaround
-    //auto it_rk = m_tx_rng.find(m_transfers[i].get_rng_key());
     auto it_pk = m_pub_keys.find(m_transfers[i].get_public_key());
     THROW_WALLET_EXCEPTION_IF(it_pk == m_pub_keys.end(), error::wallet_internal_error, "pub key key not found");
     m_pub_keys.erase(it_pk);
