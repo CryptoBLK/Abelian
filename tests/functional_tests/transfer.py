@@ -40,7 +40,7 @@ class AbelianTransferTest():
     def mine(self, daemon, blocks):
         print("Mining some blocks")
         start = time.time()
-        daemon.generateblocks(mainnet_address_1, 400)
+        daemon.generateblocks(mainnet_address_1, blocks)
         print('Generating 500 blocks took: ', time.time() - start, 'seconds')
 
     def transfer_100(self, wallet):
