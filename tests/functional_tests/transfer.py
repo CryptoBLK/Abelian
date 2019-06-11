@@ -27,7 +27,7 @@ class AbelianTransferTest():
             mainnet_address_2, 1)
 
         # Pre-mining
-        self.mine(daemon=daemon, blocks=100)
+        self.mine(daemon=daemon, blocks=400)
 
         # Start Transfer - 1
         self.transfer_100(wallet)
