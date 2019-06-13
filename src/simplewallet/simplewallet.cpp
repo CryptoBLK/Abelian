@@ -4193,9 +4193,6 @@ boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::pr
     std::cout << tr("View key: ");
     print_secret_key(m_wallet->get_account().get_keys().m_view_secret_key);
     putchar('\n');
-    std::cout << tr("Random seed: ");
-    print_random_key(m_wallet->get_account().get_keys().m_random_generate_key);
-    putchar('\n');
   }
   catch (const std::exception& e)
   {
