@@ -3409,6 +3409,7 @@ bool wallet2::clear()
   m_transfers.clear();
   m_key_images.clear();
   m_pub_keys.clear();
+  m_tx_rng.clear();
   m_unconfirmed_txs.clear();
   m_payments.clear();
   m_tx_keys.clear();
