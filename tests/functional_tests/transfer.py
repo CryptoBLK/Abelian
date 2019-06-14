@@ -668,7 +668,13 @@ if __name__ == '__main__':
         self.mine(daemon=daemon, blocks=100)
 
         # Start Transfer - 1
-        self.transfer_100(wallet)
+        self.transfer_100(wallet, count=10)
+        self.mine(daemon=daemon, blocks=100)
+        
+        self.transfer_100(wallet, count=100)
+        self.mine(daemon=daemon, blocks=100)
+        
+        self.transfer_100(wallet, count=1000)
         self.mine(daemon=daemon, blocks=100)
 
         # Start Transfer - 2
@@ -681,13 +687,13 @@ if __name__ == '__main__':
         daemon.generateblocks(mainnet_address_1, blocks)
         print('Generating 500 blocks took: ', time.time() - start, 'seconds')
 
-    def transfer_100(self, wallet):
+    def transfer_100(self, wallet, count):
         print("Initiating 100 transfers(1 ABE)")
 
         start = time.time()
 
         dest = wallet.make_uniform_destinations(mainnet_address_2, 1)
-        for x in range (0, 10):
+        for x in range (0, count):
             while wallet.get_balance()['unlocked_balance'] == 0:
                 print('Waiting for wallet to refresh...')
                 sleep(1)
