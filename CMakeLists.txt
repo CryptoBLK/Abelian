@@ -27,7 +27,6 @@
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
-
 list(INSERT CMAKE_MODULE_PATH 0
   "${CMAKE_SOURCE_DIR}/cmake")
 include(CheckCCompilerFlag)
@@ -259,6 +258,16 @@ else()
   set(ARCH_WIDTH "32")
 endif()
 message(STATUS "Building for a ${ARCH_WIDTH}-bit system")
+
+if(NOT WIN32 AND NOT APPLE)
+  file(READ "/etc/issue" ETC_ISSUE)
+  string(REGEX MATCH "openSUSE|Ubuntu" LINUX_DISTRO ${ETC_ISSUE})
+  message(STATUS "LINUX_DISTRO: " ${LINUX_DISTRO})
+endif()
+
+if(LINUX_DISTRO STREQUAL "openSUSE")
+  set(OPENSUSE TRUE)
+endif() 
 
 # Check if we're on FreeBSD so we can exclude the local miniupnpc (it should be installed from ports instead)
 # CMAKE_SYSTEM_NAME checks are commonly known, but specifically taken from libsdl's CMakeLists
@@ -592,6 +601,10 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ARCH_FLAG}")
 
   set(WARNINGS "-Wall -Wextra -Wpointer-arith -Wundef -Wvla -Wwrite-strings -Wno-error=extra -Wno-error=deprecated-declarations -Wno-unused-parameter -Wno-unused-variable -Wno-error=unused-variable -Wno-error=undef -Wno-error=uninitialized")
+  if(NOT MINGW AND NOT OPENSUSE)
+    set(WARNINGS_AS_ERRORS_FLAG "-Werror")
+  endif()
+
   if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     if(ARM)
       set(WARNINGS "${WARNINGS} -Wno-error=inline-asm")
