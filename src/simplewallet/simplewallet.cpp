@@ -534,18 +534,6 @@ namespace
       ++ptr;
     }
   }
-
-  void print_random_key(const crypto::rand_seed &k)
-  {
-      static constexpr const char hex[] = u8"0123456789abcdef";
-      const uint8_t *ptr = (const uint8_t*)k.data;
-      for (size_t i = 0, sz = sizeof(k); i < sz; ++i)
-      {
-          putchar(hex[*ptr >> 4]);
-          putchar(hex[*ptr & 15]);
-          ++ptr;
-      }
-  }
 }
 
 bool parse_priority(const std::string& arg, uint32_t& priority)
@@ -1566,7 +1554,7 @@ bool simple_wallet::print_ring(const std::vector<std::string> &args)
   {
     if (m_wallet->get_ring(key_image, ring))
       rings.push_back({key_image, ring});
-    else if (!m_wallet->get_rings(txid, rings))
+    else if (true/*!m_wallet->get_rings(txid, rings)*/)
     {
       fail_msg_writer() << tr("Key image either not spent, or spent with mixin 0");
       return true;
