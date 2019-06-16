@@ -108,6 +108,64 @@ static crypto::chacha_iv make_iv(const crypto::key_image &key_image, const crypt
   return iv;
 }
 
+// Random key implementation, since we can always have the key image in the DB.
+static crypto::chacha_iv make_iv(const crypto::pq_seed &rand_key, const crypto::chacha_key &key)
+{
+  static const char salt[] = "ringsdb";
+
+  uint8_t buffer[sizeof(rand_key) + sizeof(key) + sizeof(salt)];
+  memcpy(buffer, &rand_key, sizeof(rand_key));
+  memcpy(buffer + sizeof(rand_key), &key, sizeof(key));
+  memcpy(buffer + sizeof(rand_key) + sizeof(key), salt, sizeof(salt));
+  crypto::hash hash;
+  crypto::cn_fast_hash(buffer, sizeof(buffer), hash.data);
+  static_assert(sizeof(hash) >= CHACHA_IV_SIZE, "Incompatible hash and chacha IV sizes");
+  crypto::chacha_iv iv;
+  memcpy(&iv, &hash, CHACHA_IV_SIZE);
+  return iv;
+}
+
+static std::string encrypt(const std::string &plaintext, const crypto::pq_seed &rand_key, const crypto::chacha_key &key)
+{
+  const crypto::chacha_iv iv = make_iv(rand_key, key);
+  std::string ciphertext;
+  ciphertext.resize(plaintext.size() + sizeof(iv));
+  crypto::chacha20(plaintext.data(), plaintext.size(), key, iv, &ciphertext[sizeof(iv)]);
+  memcpy(&ciphertext[0], &iv, sizeof(iv));
+  return ciphertext;
+}
+
+static std::string encrypt(const crypto::pq_seed &rand_key, const crypto::chacha_key &key)
+{
+  return encrypt(std::string((const char*)&rand_key, sizeof(rand_key)), rand_key, key);
+}
+
+static std::string decrypt(const std::string &ciphertext, const crypto::pq_seed &rand_key, const crypto::chacha_key &key)
+{
+  const crypto::chacha_iv iv = make_iv(rand_key, key);
+  std::string plaintext;
+  THROW_WALLET_EXCEPTION_IF(ciphertext.size() < sizeof(iv), tools::error::wallet_internal_error, "Bad ciphertext text");
+  plaintext.resize(ciphertext.size() - sizeof(iv));
+  crypto::chacha20(ciphertext.data() + sizeof(iv), ciphertext.size() - sizeof(iv), key, iv, &plaintext[0]);
+  return plaintext;
+}
+
+static void store_relative_ring(MDB_txn *txn, MDB_dbi &dbi, const crypto::pq_seed &rand_key, const std::vector<uint64_t> &relative_ring, const crypto::chacha_key &chacha_key)
+{
+  MDB_val key, data;
+  std::string key_ciphertext = encrypt(rand_key, chacha_key);
+  key.mv_data = (void*)key_ciphertext.data();
+  key.mv_size = key_ciphertext.size();
+  std::string compressed_ring = compress_ring(relative_ring);
+  std::string data_ciphertext = encrypt(compressed_ring, rand_key, chacha_key);
+  data.mv_size = data_ciphertext.size();
+  data.mv_data = (void*)data_ciphertext.c_str();
+  int dbr = mdb_put(txn, dbi, &key, &data, 0);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to set ring for random key in LMDB table: " + std::string(mdb_strerror(dbr)));
+}
+
+// End
+
 static std::string encrypt(const std::string &plaintext, const crypto::key_image &key_image, const crypto::chacha_key &key)
 {
   const crypto::chacha_iv iv = make_iv(key_image, key);
@@ -478,6 +536,64 @@ bool ringdb::blackballed(const std::pair<uint64_t, uint64_t> &output)
 bool ringdb::clear_blackballs()
 {
   return blackball_worker(std::vector<std::pair<uint64_t, uint64_t>>(), BLACKBALL_CLEAR);
+}
+
+// Random key implementation - experimental
+bool ringdb::get_ring(const crypto::chacha_key &chacha_key, const crypto::pq_seed &rand_key, std::vector<uint64_t> &outs)
+{
+  MDB_txn *txn;
+  int dbr;
+  bool tx_active = false;
+
+  dbr = resize_env(env, filename.c_str(), 0);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to set env map size: " + std::string(mdb_strerror(dbr)));
+  dbr = mdb_txn_begin(env, NULL, 0, &txn);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to create LMDB transaction: " + std::string(mdb_strerror(dbr)));
+  epee::misc_utils::auto_scope_leave_caller txn_dtor = epee::misc_utils::create_scope_leave_handler([&](){if (tx_active) mdb_txn_abort(txn);});
+  tx_active = true;
+
+  MDB_val key, data;
+  std::string key_ciphertext = encrypt(rand_key, chacha_key);
+  key.mv_data = (void*)key_ciphertext.data();
+  key.mv_size = key_ciphertext.size();
+  dbr = mdb_get(txn, dbi_rings, &key, &data);
+  THROW_WALLET_EXCEPTION_IF(dbr && dbr != MDB_NOTFOUND, tools::error::wallet_internal_error, "Failed to look for random key in LMDB table: " + std::string(mdb_strerror(dbr)));
+  if (dbr == MDB_NOTFOUND)
+    return false;
+  THROW_WALLET_EXCEPTION_IF(data.mv_size <= 0, tools::error::wallet_internal_error, "Invalid ring data size");
+
+  std::string data_plaintext = decrypt(std::string((const char*)data.mv_data, data.mv_size), rand_key, chacha_key);
+  outs = decompress_ring(data_plaintext);
+  MDEBUG("Found ring for random key " << (unsigned char *)&rand_key << ":");
+  MDEBUG("Relative: " << boost::join(outs | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
+  outs = cryptonote::relative_output_offsets_to_absolute(outs);
+  MDEBUG("Absolute: " << boost::join(outs | boost::adaptors::transformed([](uint64_t out){return std::to_string(out);}), " "));
+
+  dbr = mdb_txn_commit(txn);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to commit txn getting ring from database: " + std::string(mdb_strerror(dbr)));
+  tx_active = false;
+  return true;
+}
+
+bool ringdb::set_ring(const crypto::chacha_key &chacha_key, const crypto::pq_seed &rand_key, const std::vector<uint64_t> &outs, bool relative)
+{
+  MDB_txn *txn;
+  int dbr;
+  bool tx_active = false;
+
+  dbr = resize_env(env, filename.c_str(), outs.size() * 64);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to set env map size: " + std::string(mdb_strerror(dbr)));
+  dbr = mdb_txn_begin(env, NULL, 0, &txn);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to create LMDB transaction: " + std::string(mdb_strerror(dbr)));
+  epee::misc_utils::auto_scope_leave_caller txn_dtor = epee::misc_utils::create_scope_leave_handler([&](){if (tx_active) mdb_txn_abort(txn);});
+  tx_active = true;
+
+  store_relative_ring(txn, dbi_rings, rand_key, relative ? outs : cryptonote::absolute_output_offsets_to_relative(outs), chacha_key);
+
+  dbr = mdb_txn_commit(txn);
+  THROW_WALLET_EXCEPTION_IF(dbr, tools::error::wallet_internal_error, "Failed to commit txn setting ring to database: " + std::string(mdb_strerror(dbr)));
+  tx_active = false;
+  return true;
 }
 
 }
