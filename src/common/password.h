@@ -51,6 +51,7 @@ namespace tools
 
     //! \return A password from stdin TTY prompt or `std::cin` pipe.
     static boost::optional<password_container> prompt(bool verify, const char *mesage = "Password", bool hide_input = true);
+    static boost::optional<password_container> prompt_offset_passphrase(bool verify, const char *mesage = "Password", bool hide_input = true);
     static std::atomic<bool> is_prompting;
 
     password_container(const password_container&) = delete;
