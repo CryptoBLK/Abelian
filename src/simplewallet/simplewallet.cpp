@@ -187,6 +187,19 @@ namespace
     return buf;
   }
 
+  boost::optional<tools::password_container> offset_passphrase_prompter(const char *prompt, bool verify)
+  {
+#ifdef HAVE_READLINE
+    rdln::suspend_readline pause_readline;
+#endif
+    auto pwd_container = tools::password_container::prompt_offset_passphrase(verify, prompt);
+    if (!pwd_container)
+    {
+      tools::fail_msg_writer() << sw::tr("failed to read wallet offset passphrase");
+    }
+    return pwd_container;
+  }
+
   boost::optional<tools::password_container> password_prompter(const char *prompt, bool verify)
   {
 #ifdef HAVE_READLINE
@@ -670,7 +683,7 @@ bool simple_wallet::print_seed(bool encrypted)
   epee::wipeable_string seed_pass;
   if (encrypted)
   {
-    auto pwd_container = password_prompter(tr("Enter optional seed offset passphrase, empty to see raw seed"), true);
+    auto pwd_container = offset_passphrase_prompter(tr("Enter optional seed offset passphrase, empty to see raw seed"), true);
     if (std::cin.eof() || !pwd_container)
       return true;
     seed_pass = pwd_container->password();
@@ -4075,7 +4088,7 @@ std::string simple_wallet::get_mnemonic_language()
   int language_number = -1;
   crypto::ElectrumWords::get_language_list(language_list_self, false);
   crypto::ElectrumWords::get_language_list(language_list_english, true);
-  std::cout << tr("List of available languages for your wallet's seed:") << std::endl;
+  /*std::cout << tr("List of available languages for your wallet's seed:") << std::endl;
   std::cout << tr("If your display freezes, exit blind with ^C, then run again with --use-english-language-names") << std::endl;
   int ii;
   std::vector<std::string>::const_iterator it;
@@ -4102,7 +4115,8 @@ std::string simple_wallet::get_mnemonic_language()
       fail_msg_writer() << tr("invalid language choice entered. Please try again.\n");
     }
   }
-  return language_list_self[language_number];
+  return language_list_self[language_number];*/
+  return language_list_self[1];
 }
 //----------------------------------------------------------------------------------------------------
 boost::optional<tools::password_container> simple_wallet::get_and_verify_password() const
@@ -4178,8 +4192,8 @@ boost::optional<epee::wipeable_string> simple_wallet::new_wallet(const boost::pr
     message_writer(console_color_white, true) << tr("Generated new wallet: ")
       << m_wallet->get_account().get_public_address_str(m_wallet->nettype());
     PAUSE_READLINE();
-    std::cout << tr("View key: ");
-    print_secret_key(m_wallet->get_account().get_keys().m_view_secret_key);
+    /*std::cout << tr("View key: ");
+    print_secret_key(m_wallet->get_account().get_keys().m_view_secret_key);*/
     putchar('\n');
   }
   catch (const std::exception& e)
@@ -5072,12 +5086,14 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
     extra += tr(" (Some owned outputs have missing key images - import_key_images needed)");
   success_msg_writer() << tr("Currently selected account: [") << m_current_subaddress_account << tr("] ") << m_wallet->get_subaddress_label({m_current_subaddress_account, 0});
   const std::string tag = m_wallet->get_account_tags().second[m_current_subaddress_account];
+
   success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{tr("(No tag assigned)")} : tag);
   uint64_t blocks_to_unlock;
   uint64_t unlocked_balance = m_wallet->unlocked_balance(m_current_subaddress_account, &blocks_to_unlock);
   std::string unlock_time_message;
   if (blocks_to_unlock > 0)
     unlock_time_message = (boost::format(" (%lu block(s) to unlock)") % blocks_to_unlock).str();
+
   success_msg_writer() << tr("Balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
     << tr("unlocked balance: ") << print_money(unlocked_balance) << unlock_time_message << extra;
   std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);

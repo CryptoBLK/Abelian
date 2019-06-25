@@ -205,6 +205,36 @@ namespace
     return false;
   }
 
+  bool read_from_tty_offset_passphrase(const bool verify, const char *message, bool hide_input, epee::wipeable_string& pass1, epee::wipeable_string& pass2)
+  {
+    while (true)
+    {
+      if (message)
+        std::cout << message <<": " << std::flush;
+      if (!read_from_tty(pass1, hide_input))
+        return false;
+      if (verify)
+      {
+        std::cout << "Confirm offset passphrase: ";
+        if (!read_from_tty(pass2, hide_input))
+          return false;
+        if(pass1!=pass2)
+        {
+          std::cout << "Passphrases do not match! Please try again." << std::endl;
+          pass1.clear();
+          pass2.clear();
+        }
+        else //new offset passphrase matches
+          return true;
+      }
+      else
+        return true;
+        //No need to verify offset passphrase entered at this point in the code
+    }
+
+    return false;
+  }
+
   bool read_from_file(epee::wipeable_string& pass)
   {
     pass.reserve(tools::password_container::max_password_size);
@@ -255,6 +285,21 @@ namespace tools
     password_container pass1{};
     password_container pass2{};
     if (is_cin_tty() ? read_from_tty(verify, message, hide_input, pass1.m_password, pass2.m_password) : read_from_file(pass1.m_password))
+    {
+      is_prompting = false;
+      return {std::move(pass1)};
+    }
+
+    is_prompting = false;
+    return boost::none;
+  }
+
+  boost::optional<password_container> password_container::prompt_offset_passphrase(const bool verify, const char *message, bool hide_input)
+  {
+    is_prompting = true;
+    password_container pass1{};
+    password_container pass2{};
+    if (is_cin_tty() ? read_from_tty_offset_passphrase(verify, message, hide_input, pass1.m_password, pass2.m_password) : read_from_file(pass1.m_password))
     {
       is_prompting = false;
       return {std::move(pass1)};
