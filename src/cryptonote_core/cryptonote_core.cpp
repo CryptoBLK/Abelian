@@ -1248,8 +1248,7 @@ namespace cryptonote
     for(const auto& in: tx.vin)
     {
       CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, tokey_in, false);
-      LOG_PRINT_L0("RCT2PK cryptonote core");
-     // if (!(rct::scalarmultKey(rct::ki2rct(tokey_in.k_image), rct::curveOrder()) == rct::identity()))
+     // if (!(rct::scalarmultKey(rct::ki2rct(tokey_in.k_image), rct::curveOrder()) == rct::identity())) TODO: Will fix in the next coming releases
      //   return false;
     }
     return true;
