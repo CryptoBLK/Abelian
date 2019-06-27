@@ -1,4 +1,4 @@
-# Abelian
+# Abelian [![Build Status](https://travis-ci.com/CryptoBLK/Abelian.svg?branch=master)](https://travis-ci.com/CryptoBLK/Abelian)
 
 Copyright (c) 2019 The Abelian Project.  
 Portions Copyright (c) 2014-2019 The Monero Project.  
