@@ -143,7 +143,7 @@
 #define HF_VERSION_MIN_MIXIN_4                  6
 #define HF_VERSION_MIN_MIXIN_6                  7
 #define HF_VERSION_MIN_MIXIN_10                 8
-#define HF_VERSION_ENFORCE_RCT                  6
+//#define HF_VERSION_ENFORCE_RCT                  6
 #define HF_VERSION_PER_BYTE_FEE                 8
 #define HF_VERSION_LONG_TERM_BLOCK_WEIGHT       10
 #define HF_VERSION_SMALLER_BP                   10
@@ -160,6 +160,10 @@
 #define CRYPTONOTE_PRUNING_LOG_STRIPES          3 // the higher, the more space saved
 #define CRYPTONOTE_PRUNING_TIP_BLOCKS           5500 // the smaller, the more space saved
 //#define CRYPTONOTE_PRUNING_DEBUG_SPOOF_SEED
+
+// This is a borrowed idea from AEON project
+constexpr uint8_t HF_VERSION_ALLOW_RCT     {255};
+constexpr uint8_t HF_VERSION_ENFORCE_RCT   {255};
 
 // New constants are intended to go here
 namespace config
