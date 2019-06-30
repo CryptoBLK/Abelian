@@ -1037,4 +1037,69 @@ std::string get_nix_version_display_string()
   }
 #endif
 
+  void closefrom(int fd)
+  {
+#if defined __FreeBSD__ || defined __OpenBSD__ || defined __NetBSD__ || defined __DragonFly__
+    ::closefrom(fd);
+#else
+#if defined __GLIBC__
+    const int sc_open_max =  sysconf(_SC_OPEN_MAX);
+    const int MAX_FDS = std::min(65536, sc_open_max);
+#else
+    const int MAX_FDS = 65536;
+#endif
+    while (fd < MAX_FDS)
+    {
+      close(fd);
+      ++fd;
+    }
+#endif
+  }
+
+  std::string get_human_readable_timestamp(uint64_t ts)
+  {
+    char buffer[64];
+    if (ts < 1234567890)
+      return "<unknown>";
+    time_t tt = ts;
+    struct tm tm;
+    misc_utils::get_gmt_time(tt, tm);
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &tm);
+    return std::string(buffer);
+  }
+
+  std::string get_human_readable_bytes(uint64_t bytes)
+  {
+    // Use 1024 for "kilo", 1024*1024 for "mega" and so on instead of the more modern and standard-conforming
+    // 1000, 1000*1000 and so on, to be consistent with other Monero code that also uses base 2 units
+    struct byte_map
+    {
+        const char* const format;
+        const std::uint64_t bytes;
+    };
+
+    static constexpr const byte_map sizes[] =
+    {
+        {"%.0f B", 1024},
+        {"%.2f KB", 1024 * 1024},
+        {"%.2f MB", std::uint64_t(1024) * 1024 * 1024},
+        {"%.2f GB", std::uint64_t(1024) * 1024 * 1024 * 1024},
+        {"%.2f TB", std::uint64_t(1024) * 1024 * 1024 * 1024 * 1024}
+    };
+
+    struct bytes_less
+    {
+        bool operator()(const byte_map& lhs, const byte_map& rhs) const noexcept
+        {
+            return lhs.bytes < rhs.bytes;
+        }
+    };
+
+    const auto size = std::upper_bound(
+        std::begin(sizes), std::end(sizes) - 1, byte_map{"", bytes}, bytes_less{}
+    );
+    const std::uint64_t divisor = size->bytes / 1024;
+    return (boost::format(size->format) % (double(bytes) / divisor)).str();
+  }
+
 }

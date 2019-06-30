@@ -55,6 +55,7 @@ namespace cryptonote
     struct account_keys;
     struct subaddress_index;
     struct tx_destination_entry;
+    struct keypair;
 }
 
 namespace hw {

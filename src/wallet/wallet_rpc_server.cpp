@@ -3024,16 +3024,15 @@ namespace tools
     bool r = wal->invoke_http_json("/getheight", hreq, hres);
     if (r)
       wal->set_refresh_from_block_height(hres.height);
-    crypto::secret_key dummy_key;
-    /*try {
+    crypto::rand_seed dummy_key{};
+    try {
       wal->generate(wallet_file, req.password, dummy_key, false, false);
     }
     catch (const std::exception& e)
     {
       handle_rpc_exception(std::current_exception(), er, WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR);
       return false;
-    }*/
-    // TODO: Fix this after build has passed.
+    }
     if (!wal)
     {
       er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
@@ -3476,7 +3475,7 @@ namespace tools
         return false;
       }
     }
-    crypto::secret_key recovery_key;
+    crypto::rand_seed recovery_key;
     std::string old_language;
 
     // check the given seed
@@ -3568,7 +3567,7 @@ namespace tools
 
     wal->set_seed_language(mnemonic_language);
 
-    crypto::secret_key recovery_val;
+    crypto::rand_seed recovery_val;
     try
     {
       recovery_val = wal->generate(wallet_file, std::move(rc.second).password(), recovery_key, true, false, false);
@@ -3851,11 +3850,7 @@ namespace tools
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD
   bool wallet_rpc_server::on_exchange_multisig_keys(const wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::request& req, wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::response& res, epee::json_rpc::error& er, const connection_context *ctx)
-=======
-  bool wallet_rpc_server::on_exchange_multisig_keys(const wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::request& req, wallet_rpc::COMMAND_RPC_EXCHANGE_MULTISIG_KEYS::response& res, epee::json_rpc::error& er)
->>>>>>> Merge pull request #4036
   {
     if (!m_wallet) return not_open(er);
     if (m_restricted)
@@ -3904,11 +3899,7 @@ namespace tools
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD
   bool wallet_rpc_server::on_sign_multisig(const wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::request& req, wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::response& res, epee::json_rpc::error& er, const connection_context *ctx)
-=======
-  bool wallet_rpc_server::on_sign_multisig(const wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::request& req, wallet_rpc::COMMAND_RPC_SIGN_MULTISIG::response& res, epee::json_rpc::error& er)
->>>>>>> Merge pull request #4036
   {
     if (!m_wallet) return not_open(er);
     if (m_restricted)

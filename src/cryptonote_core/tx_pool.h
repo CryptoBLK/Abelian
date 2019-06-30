@@ -442,12 +442,12 @@ namespace cryptonote
      *
      * @return true on success, false on error
      */
-    bool insert_key_images(const transaction_prefix &tx, const crypto::hash &txid, bool kept_by_block);
+    bool insert_key_images(const transaction_prefix &tx, const crypto::hash &id, bool kept_by_block);
 
     /**
      * RNG implementation for insert_key_images
      */
-    bool insert_rngs(const transaction &tx, bool kept_by_block);
+    bool insert_rngs(const transaction_prefix &tx,  const crypto::hash &txid, bool kept_by_block);
 
     /**
      * @brief remove old transactions from the pool
@@ -510,7 +510,7 @@ namespace cryptonote
     /**
      * RNG implementation for remove_transaction_keyimages
      */
-    bool remove_transaction_rngs(const transaction& tx);
+    bool remove_transaction_rngs(const transaction_prefix& tx, const crypto::hash &txid);
 
     /**
      * @brief check if any of a transaction's spent key images are present in a given set

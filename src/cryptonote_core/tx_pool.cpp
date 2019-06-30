@@ -259,7 +259,7 @@ namespace cryptonote
           LockedTXN lock(m_blockchain);
           m_blockchain.add_txpool_tx(id, blob, meta);
           //if (!insert_key_images(tx, kept_by_block))
-          if(!insert_rngs(tx, kept_by_block)){ return false; }
+          if(!insert_rngs(tx, id, kept_by_block)){ return false; }
           m_txs_by_fee_and_receive_time.emplace(std::pair<double, std::time_t>(fee / (double)tx_weight, receive_time), id);
           lock.commit();
         }
@@ -304,7 +304,7 @@ namespace cryptonote
         m_blockchain.remove_txpool_tx(id);
         m_blockchain.add_txpool_tx(id, blob, meta);
         //if (!insert_key_images(tx, kept_by_block))
-        if (!insert_rngs(tx, kept_by_block)){ return false; }
+        if (!insert_rngs(tx, id, kept_by_block)){ return false; }
         m_txs_by_fee_and_receive_time.emplace(std::pair<double, std::time_t>(fee / (double)tx_weight, receive_time), id);
         lock.commit();
       }
@@ -396,7 +396,7 @@ namespace cryptonote
         m_blockchain.remove_txpool_tx(txid);
         m_txpool_weight -= meta.weight;
         //remove_transaction_keyimages(tx, txid);
-        remove_transaction_rngs(tx);
+        remove_transaction_rngs(tx, txid);
         MINFO("Pruned tx " << txid << " from txpool: weight: " << meta.weight << ", fee/byte: " << it->first.first);
         m_txs_by_fee_and_receive_time.erase(it--);
         changed = true;
@@ -416,26 +416,24 @@ namespace cryptonote
   //---------------------------------------------------------------------------------
   bool tx_memory_pool::insert_key_images(const transaction_prefix &tx, const crypto::hash &id, bool kept_by_block)
   {
-    /*for(const auto& in: tx.vin)
-    {
-      CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, txin, false);
-      std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
-      //CHECK_AND_ASSERT_MES(kept_by_block || kei_image_set.size() == 0, false, "internal error: kept_by_block=" << kept_by_block
-      //                                    << ",  kei_image_set.size()=" << kei_image_set.size() << ENDL << "txin.k_image=" << txin.k_image << ENDL
-      //                                    << "tx_id=" << id );
-      // TODO: Basically this is saying that, if we found a spent key_image this might be a possible double spend                                    
-      auto ins_res = kei_image_set.insert(id);
-      CHECK_AND_ASSERT_MES(ins_res.second, false, "internal error: try to insert duplicate iterator in key_image set");
-    }*/
-    ++m_cookie;
-    return true;
+      for(const auto& in: tx.vin)
+      {
+          CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, txin, false);
+          std::unordered_set<crypto::hash>& kei_image_set = m_spent_key_images[txin.k_image];
+          CHECK_AND_ASSERT_MES(kept_by_block || kei_image_set.size() == 0, false, "internal error: kept_by_block=" << kept_by_block
+                                                                                                                   << ",  kei_image_set.size()=" << kei_image_set.size() << ENDL << "txin.k_image=" << txin.k_image << ENDL
+                                                                                                                   << "tx_id=" << id );
+          auto ins_res = kei_image_set.insert(id);
+          CHECK_AND_ASSERT_MES(ins_res.second, false, "internal error: try to insert duplicate iterator in key_image set");
+      }
+      ++m_cookie;
+      return true;
   }
   //RNG------------------------------------------------------------------------------
-  bool tx_memory_pool::insert_rngs(const cryptonote::transaction &tx, bool kept_by_block)
+  bool tx_memory_pool::insert_rngs(const cryptonote::transaction_prefix &tx,  const crypto::hash &id, bool kept_by_block)
   {
     for(const auto& in: tx.vin)
     {
-      const crypto::hash id = get_transaction_hash(tx);
       CHECKED_GET_SPECIFIC_VARIANT(in, const txin_to_key, txin, false);
       auto& rng_set = m_spent_rngs[txin.random];
       CHECK_AND_ASSERT_MES(kept_by_block || rng_set.size() == 0, false, "internal error: kept_by_block=" << kept_by_block
@@ -448,12 +446,11 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------------------------
-  bool tx_memory_pool::remove_transaction_rngs(const transaction& tx)
+  bool tx_memory_pool::remove_transaction_rngs(const transaction_prefix& tx, const crypto::hash &actual_hash)
   {
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
     // ND: Speedup
-    crypto::hash actual_hash = get_transaction_hash(tx);
     for(const txin_v& vi: tx.vin)
     {
       CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_to_key, txin, false);
@@ -487,8 +484,6 @@ namespace cryptonote
     CRITICAL_REGION_LOCAL(m_transactions_lock);
     CRITICAL_REGION_LOCAL1(m_blockchain);
     // ND: Speedup
-    // 1. Move transaction hash calcuation outside of loop. ._.
-    /*crypto::hash actual_hash = get_transaction_hash(tx);
     for(const txin_v& vi: tx.vin)
     {
       CHECKED_GET_SPECIFIC_VARIANT(vi, const txin_to_key, txin, false);
@@ -509,8 +504,7 @@ namespace cryptonote
         m_spent_key_images.erase(it);
       }
 
-    }*/
-    // TODO: Need to find a suitable way to compare RNG spent than Key Image
+    }
     ++m_cookie;
     return true;
   }
@@ -556,7 +550,7 @@ namespace cryptonote
       m_blockchain.remove_txpool_tx(id);
       m_txpool_weight -= tx_weight;
       //remove_transaction_keyimages(tx, id);
-      remove_transaction_rngs(tx);
+      remove_transaction_rngs(tx, id);
       lock.commit();
     }
     catch (const std::exception &e)
@@ -634,7 +628,7 @@ namespace cryptonote
             m_blockchain.remove_txpool_tx(txid);
             m_txpool_weight -= entry.second;
             //remove_transaction_keyimages(tx, txid);
-            remove_transaction_rngs(tx);
+            remove_transaction_rngs(tx, txid);
           }
         }
         catch (const std::exception &e)
@@ -1515,7 +1509,7 @@ namespace cryptonote
           m_blockchain.remove_txpool_tx(txid);
           m_txpool_weight -= get_transaction_weight(tx, txblob.size());
           //remove_transaction_keyimages(tx, txid);
-          remove_transaction_rngs(tx);
+          remove_transaction_rngs(tx, txid);
           auto sorted_it = find_tx_in_sorted_container(txid);
           if (sorted_it == m_txs_by_fee_and_receive_time.end())
           {
@@ -1567,7 +1561,7 @@ namespace cryptonote
           return true;
         }
         //if (!insert_key_images(tx, txid, meta.kept_by_block))
-        if (!insert_rngs(tx, meta.kept_by_block))
+        if (!insert_rngs(tx, txid, meta.kept_by_block))
         {
           MFATAL("Failed to insert key images from txpool tx");
           return false;

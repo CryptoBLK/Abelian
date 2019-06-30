@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "common/int-util.h"
+#include "int-util.h"
 #include "hash-ops.h"
 #include "variant4_random_math.h"
 #include "CryptonightR_JIT.h"
