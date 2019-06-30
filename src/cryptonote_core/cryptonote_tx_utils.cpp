@@ -85,7 +85,7 @@ namespace cryptonote
     tx.vout.clear();
     tx.extra.clear();
 
-    keypair txkey = keypair::generate(hw::get_device("default")); // creating r and R -- Only someone with r or a can derive the shared secret aR or rA (as used in the calculations above)
+    keypair txkey = keypair::generate(hw::get_device("default"));
     add_tx_pub_key_to_extra(tx, txkey.pub);
     if(!extra_nonce.empty())
       if(!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
@@ -146,7 +146,7 @@ namespace cryptonote
     uint64_t summary_amounts = 0;
     for (size_t no = 0; no < out_amounts.size(); no++)
     {
-      crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);
+      crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);;
       crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
       bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
       CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << miner_address.m_view_public_key << " ---- " << txkey.sec << ")");
@@ -390,13 +390,13 @@ namespace cryptonote
     classify_addresses(destinations, change_addr, num_stdaddresses, num_subaddresses, single_dest_subaddress);
 
     // if this is a single-destination transfer to a subaddress, we set the tx pubkey to R=s*D
-    // TODO: Will probably be look on where this heads to
-    if (num_stdaddresses == 0 && num_subaddresses == 1){
-        txkey_pub = rct::rct2pk(hwdev.scalarmultKey(rct::pk2rct(single_dest_subaddress.m_spend_public_key), rct::sk2rct(tx_key)));
+    if (num_stdaddresses == 0 && num_subaddresses == 1)
+    {
+      txkey_pub = rct::rct2pk(hwdev.scalarmultKey(rct::pk2rct(single_dest_subaddress.m_spend_public_key), rct::sk2rct(tx_key)));
     }
     else
     {
-        txkey_pub = rct::rct2pk(hwdev.scalarmultBase(rct::sk2rct(tx_key)));
+      txkey_pub = rct::rct2pk(hwdev.scalarmultBase(rct::sk2rct(tx_key)));
     }
     remove_field_from_tx_extra(tx.extra, typeid(tx_extra_pub_key));
     add_tx_pub_key_to_extra(tx, txkey_pub);
