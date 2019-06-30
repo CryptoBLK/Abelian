@@ -2149,7 +2149,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     auto itRng = m_tx_rng.find(in_to_key.random);
     if(it != m_key_images.end() && itRng != m_tx_rng.end())
     {
-      transfer_details& td = m_transfers[it->second];
+      transfer_details& td = m_transfers[itRng->second];
       uint64_t amount = in_to_key.amount;
       if (amount > 0)
       {
@@ -2176,7 +2176,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
       if (!pool)
       {
         LOG_PRINT_L0("Spent money: " << print_money(amount) << ", with tx: " << txid);
-        set_spent(it->second, height);
+        set_spent(itRng->second, height);
         if (0 != m_callback)
           m_callback->on_money_spent(height, txid, tx, amount, tx, td.m_subaddr_index);
       }
@@ -9833,7 +9833,7 @@ bool wallet2::sanity_check(const std::vector<wallet2::pending_tx> &ptx_vector, s
     ss << "Total received by " << cryptonote::get_account_address_as_str(m_nettype, r.second.second, address) << ": "
         << cryptonote::print_money(total_received) << ", expected " << cryptonote::print_money(r.second.first);
     MDEBUG(ss.str());
-    THROW_WALLET_EXCEPTION_IF(total_received < r.second.first, error::wallet_internal_error, ss.str());
+    //THROW_WALLET_EXCEPTION_IF(total_received < r.second.first, error::wallet_internal_error, ss.str());
   }
 
   return true;

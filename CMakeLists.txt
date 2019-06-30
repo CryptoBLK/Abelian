@@ -1013,6 +1013,14 @@ if(BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
+# Disable Pruning for alpha rekeases
+set(ENABLE_PRUNING 0)
+
+if(ENABLE_PRUNING)
+  message(STATUS "Pruning Enabled")
+  add_definitions("-DENABLE_PRUNING")
+endif()
+
 if(BUILD_DOCUMENTATION)
   set(DOC_GRAPHS "YES" CACHE STRING "Create dependency graphs (needs graphviz)")
   set(DOC_FULLGRAPHS "NO" CACHE STRING "Create call/callee graphs (large)")
