@@ -1016,6 +1016,14 @@ endif()
 # Disable Pruning for alpha rekeases
 set(ENABLE_PRUNING 0)
 
+# Disable multisig
+set(ENABLE_MULTISIG 0)
+
+if(ENABLE_MULTISIG)
+  message(STATUS "Multisig Enabled")
+  add_definitions("-DENABLE_MULTISIG")
+endif()
+
 if(ENABLE_PRUNING)
   message(STATUS "Pruning Enabled")
   add_definitions("-DENABLE_PRUNING")

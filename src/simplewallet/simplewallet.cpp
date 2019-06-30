@@ -88,7 +88,7 @@ typedef cryptonote::simple_wallet sw;
 
 #define EXTENDED_LOGS_FILE "wallet_details.log"
 
-#define DEFAULT_MIX 10
+#define DEFAULT_MIX 0
 
 #define MIN_RING_SIZE 11 // Used to inform user about min ring size -- does not track actual protocol
 
@@ -3028,6 +3028,7 @@ simple_wallet::simple_wallet()
   m_cmd_binder.set_handler("fee",
                            boost::bind(&simple_wallet::print_fee_info, this, _1),
                            tr("Print the information about the current fee and transaction backlog."));
+#ifdef ENABLE_MULTISIG
   m_cmd_binder.set_handler("prepare_multisig", boost::bind(&simple_wallet::prepare_multisig, this, _1),
                            tr("Export data needed to create a multisig wallet"));
   m_cmd_binder.set_handler("make_multisig", boost::bind(&simple_wallet::make_multisig, this, _1),
@@ -3144,6 +3145,7 @@ simple_wallet::simple_wallet()
                            boost::bind(&simple_wallet::mms, this, _1),
                            tr(USAGE_MMS_AUTO_CONFIG),
                            tr("Start auto-config by using the token received from the auto-config manager"));
+#endif
   m_cmd_binder.set_handler("print_ring",
                            boost::bind(&simple_wallet::print_ring, this, _1),
                            tr(USAGE_PRINT_RING),
